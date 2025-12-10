@@ -44,7 +44,7 @@ ViajeGrupo is a **collaborative expense tracking platform** designed for a group
     "dayjs": "^1.11.10",
     "firebase": "^11.0.2",
     "nuxt": "^4.0.3",
-    "pinia": "^2.3.0",
+    "pinia": "^3.0.4",
     "vue": "^3.5.13",
     "vue-chartjs": "^5.3.0",
     "vue3-toastify": "^0.2.8"
