@@ -51,8 +51,8 @@ export const useUserStore = defineStore('user', {
         const user = state.users.find((u) => u.id === userId)
         if (!user) return '??'
 
-        const names = user.name.split(' ')
-        if (names.length >= 2) {
+        const names = user.name.split(' ').filter(n => n.length > 0)
+        if (names.length >= 2 && names[0] && names[1]) {
           return `${names[0][0]}${names[1][0]}`.toUpperCase()
         }
         return user.name.substring(0, 2).toUpperCase()
