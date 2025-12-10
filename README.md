@@ -14,7 +14,7 @@ A collaborative expense tracking platform for group vacations with WhatsApp inte
 ## Tech Stack
 
 ### Frontend (Client)
-- **Framework**: Nuxt 3 (Vue 3)
+- **Framework**: Nuxt 4 (Vue 3)
 - **Language**: TypeScript
 - **State Management**: Pinia
 - **Styling**: Tailwind CSS
@@ -31,7 +31,7 @@ A collaborative expense tracking platform for group vacations with WhatsApp inte
 
 ```
 viaje-grupo/
-├── client/                 # Nuxt 3 frontend
+├── client/                 # Nuxt 4 frontend
 │   ├── assets/            # CSS and static assets
 │   ├── components/        # Vue components
 │   ├── composables/       # Vue composables
