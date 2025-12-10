@@ -1,4 +1,4 @@
-import express, { type Request, type Response, type NextFunction } from 'express'
+import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
@@ -29,7 +29,7 @@ app.use('/api/health', healthRoutes)
 app.use('/api/whatsapp', whatsappRoutes)
 
 // Root endpoint
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (req, res) => {
   res.json({
     name: 'ViajeGrupo API',
     version: '1.0.0',
@@ -42,7 +42,7 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 // 404 handler
-app.use((req: Request, res: Response) => {
+app.use((req, res) => {
   res.status(404).json({
     error: 'Not Found',
     message: `Cannot ${req.method} ${req.path}`
@@ -50,7 +50,7 @@ app.use((req: Request, res: Response) => {
 })
 
 // Error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err, req, res, next) => {
   console.error('❌ Error:', err)
   res.status(500).json({
     error: 'Internal Server Error',

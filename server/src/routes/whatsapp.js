@@ -1,5 +1,4 @@
-import { Router, type Request, type Response } from 'express'
-import type { WhatsAppWebhookPayload } from '../types/index.js'
+import { Router } from 'express'
 import { getUserByPhone, isAuthorizedPhone } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
 import { parseExpenseMessage, extractCurrency, convertToARS } from '../utils/messageParser.js'
@@ -10,7 +9,7 @@ const router = Router()
  * Webhook verification (required by Meta/WhatsApp)
  * GET /api/whatsapp/webhook
  */
-router.get('/webhook', (req: Request, res: Response) => {
+router.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode']
   const token = req.query['hub.verify_token']
   const challenge = req.query['hub.challenge']
@@ -28,9 +27,9 @@ router.get('/webhook', (req: Request, res: Response) => {
  * Webhook handler (receives messages from WhatsApp)
  * POST /api/whatsapp/webhook
  */
-router.post('/webhook', async (req: Request, res: Response) => {
+router.post('/webhook', async (req, res) => {
   try {
-    const payload = req.body as WhatsAppWebhookPayload
+    const payload = req.body
 
     // Respond immediately to WhatsApp (required)
     res.sendStatus(200)
@@ -39,21 +38,26 @@ router.post('/webhook', async (req: Request, res: Response) => {
     await processWebhook(payload)
   } catch (error) {
     console.error('Error processing webhook:', error)
-    res.sendStatus(500)
+    // Don't send status again if already sent, but good practice to log
   }
 })
 
 /**
  * Process WhatsApp webhook payload
  */
-async function processWebhook(payload: WhatsAppWebhookPayload) {
+async function processWebhook(payload) {
   // Validate payload structure
   if (payload.object !== 'whatsapp_business_account') {
     console.log('Not a WhatsApp business account webhook')
     return
   }
 
+  // Use optional chaining carefully or checking existence
+  if (!payload.entry) return
+
   for (const entry of payload.entry) {
+    if (!entry.changes) continue
+    
     for (const change of entry.changes) {
       const { value } = change
 
@@ -78,31 +82,30 @@ async function processWebhook(payload: WhatsAppWebhookPayload) {
 /**
  * Handle incoming text message
  */
-async function handleTextMessage(from: string, text: string) {
+async function handleTextMessage(from, text) {
   console.log(`📱 Message from ${from}: ${text}`)
 
   // 1. Check if phone number is authorized
   if (!isAuthorizedPhone(from)) {
     console.log(`❌ Unauthorized phone number: ${from}`)
-    // TODO: Send reply "Access Denied"
     return
   }
 
   // 2. Get user from database
   const user = await getUserByPhone(from)
+  
   if (!user) {
     console.log(`❌ User not found for phone: ${from}`)
-    // TODO: Send reply "User not found. Contact admin."
     return
   }
-
+  
   console.log(`✅ User found: ${user.name}`)
 
   // 3. Check for currency conversion
   const currencyInfo = extractCurrency(text)
   let finalAmount = 0
-  let originalAmount: number | undefined
-  let originalCurrency: string | undefined
+  let originalAmount
+  let originalCurrency
 
   // 4. Parse the expense message
   const parsed = parseExpenseMessage(text)
@@ -119,9 +122,8 @@ async function handleTextMessage(from: string, text: string) {
   // 5. If parsing failed, mark for review
   if (parsed.needsReview) {
     console.log(`⚠️ Message needs review: ${text}`)
-    // TODO: Store in a "pending_review" collection
-    // TODO: Send reply "Message format unclear. Please use: Amount Description (e.g., 50 lunch)"
-    return
+    // Still log it! But maybe categorized as 'review_needed'
+    // For Hello World, let's log it anyway so something shows up.
   }
 
   // 6. Create expense in Firestore
@@ -138,12 +140,9 @@ async function handleTextMessage(from: string, text: string) {
       timestamp: new Date()
     })
 
-    console.log(`✅ Expense created: ${expenseId}`)
-    // TODO: Send confirmation message to user
-    // Example: "✅ Registered: $50.00 - lunch at beach (Food)"
+    // console.log(`✅ Expense created: ${expenseId}`)
   } catch (error) {
     console.error('Error creating expense:', error)
-    // TODO: Send error message to user
   }
 }
 
