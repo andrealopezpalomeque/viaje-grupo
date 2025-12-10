@@ -163,33 +163,29 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { ExpenseCategory } from '~/types'
-
+<script setup>
 const expenseStore = useExpenseStore()
 const userStore = useUserStore()
 
 const sortedBalances = computed(() => userStore.getSortedBalances())
 
-const getCategoryLabel = (category: ExpenseCategory): string => {
-  const labels: Record<ExpenseCategory, string> = {
-    food: 'Comida',
-    transport: 'Transporte',
-    accommodation: 'Alojamiento',
-    entertainment: 'Entretenimiento',
-    general: 'General'
-  }
-  return labels[category]
+const categoryLabels = {
+  food: 'Comida',
+  transport: 'Transporte',
+  accommodation: 'Alojamiento',
+  entertainment: 'Entretenimiento',
+  general: 'General'
 }
 
-const getCategoryColor = (category: ExpenseCategory): string => {
-  const colors: Record<ExpenseCategory, string> = {
-    food: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-    transport: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    accommodation: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-    entertainment: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
-    general: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-  }
-  return colors[category]
+const categoryColors = {
+  food: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  transport: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  accommodation: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  entertainment: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+  general: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
 }
+
+const getCategoryLabel = (category) => categoryLabels[category] ?? categoryLabels.general
+
+const getCategoryColor = (category) => categoryColors[category] ?? categoryColors.general
 </script>
