@@ -23,14 +23,17 @@ export const useUserStore = defineStore('user', {
   getters: {
     getUserById: (state) => (userId: string) => state.users.find((u) => u.id === userId),
     getUserByPhone: (state) => (phoneNumber: string) => state.users.find((u) => u.phoneNumber === phoneNumber),
-    getUserInitials: (state) => (userId: string) => {
+    getUserInitials: (state) => (userId: string, fallbackName?: string): string => {
       const user = state.users.find((u) => u.id === userId)
-      if (!user) return '??'
-      const names = user.name.split(' ').filter(n => n.length > 0)
+      const name = user ? user.name : fallbackName
+
+      if (!name) return '??'
+
+      const names = name.split(' ').filter(n => n.length > 0)
       if (names.length >= 2 && names[0] && names[1]) {
         return `${names[0][0]}${names[1][0]}`.toUpperCase()
       }
-      return user.name.substring(0, 2).toUpperCase()
+      return name.substring(0, 2).toUpperCase()
     }
   },
 

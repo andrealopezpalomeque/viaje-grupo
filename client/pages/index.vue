@@ -25,7 +25,7 @@
       <!-- Dashboard -->
       <div v-else>
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <!-- Total Spent -->
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -46,15 +46,6 @@
             </p>
           </div>
 
-          <!-- Average per Person -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Promedio por Persona
-            </h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2 font-mono tabular-nums">
-              {{ formatCurrency(expenseStore.totalSpent / 11) }}
-            </p>
-          </div>
         </div>
 
         <!-- Recent Expenses -->
@@ -80,7 +71,7 @@
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                       <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ userStore.getUserInitials(expense.userId) }}
+                        {{ userStore.getUserInitials(expense.userId, expense.userName) }}
                       </span>
                     </div>
                     <div>
