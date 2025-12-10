@@ -8,7 +8,9 @@
 // Initialize stores on app mount
 onMounted(() => {
   const expenseStore = useExpenseStore()
+  const userStore = useUserStore()
   expenseStore.initializeListeners()
+  userStore.fetchUsers() // Fetch users on load
 })
 
 // Cleanup on unmount

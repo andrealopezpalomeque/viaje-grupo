@@ -107,6 +107,7 @@ export const useExpenseStore = defineStore('expense', {
                 originalInput: data.originalInput,
                 description: data.description,
                 category: data.category,
+                splitAmong: data.splitAmong || [],
                 timestamp: data.timestamp.toDate()
               } as Expense
             })

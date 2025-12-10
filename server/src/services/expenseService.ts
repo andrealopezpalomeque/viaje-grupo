@@ -16,6 +16,7 @@ export const createExpense = async (expense: Expense): Promise<string> => {
       originalInput: expense.originalInput,
       description: expense.description,
       category: expense.category,
+      splitAmong: expense.splitAmong || [],
       timestamp: FieldValue.serverTimestamp()
     }
 

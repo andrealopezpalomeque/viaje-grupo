@@ -137,6 +137,7 @@ async function handleTextMessage(from, text) {
       originalInput: text,
       description: parsed.description,
       category: parsed.category || 'general',
+      splitAmong: parsed.splitAmong || [],
       timestamp: new Date()
     })
 

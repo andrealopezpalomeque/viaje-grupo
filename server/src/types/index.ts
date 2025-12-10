@@ -9,6 +9,7 @@ export interface Expense {
   originalCurrency?: string
   description: string
   category: ExpenseCategory
+  splitAmong?: string[]
   timestamp: Date
 }
 
@@ -62,5 +63,6 @@ export interface ParsedExpense {
   amount: number
   description: string
   category?: ExpenseCategory
+  splitAmong: string[] // List of names, empty means everyone
   needsReview: boolean
 }

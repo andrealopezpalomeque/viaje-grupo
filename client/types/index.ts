@@ -17,6 +17,7 @@ export interface Expense {
   originalInput: string  // The raw text: "50 beers at beach"
   description: string    // Cleaned text: "beers at beach"
   category: ExpenseCategory
+  splitAmong?: string[] // List of names/IDs, empty means everyone
   timestamp: Date        // Firestore Timestamp
 }
 

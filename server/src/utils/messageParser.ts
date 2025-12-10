@@ -7,16 +7,26 @@ import type { ParsedExpense, ExpenseCategory } from '../types/index.js'
  */
 export const parseExpenseMessage = (message: string): ParsedExpense => {
   // Trim and normalize
-  const normalized = message.trim().toLowerCase()
+  const normalized = message.trim()
+
+  // Extract mentions
+  const mentions: string[] = []
+  // Regex to match @Name (alphanumeric)
+  const mentionRegex = /@([a-zA-Z0-9_]+)/g
+  const cleanMessage = normalized.replace(mentionRegex, (match, name) => {
+    mentions.push(name)
+    return '' // Remove mention from text
+  }).trim()
 
   // Attempt to match: number followed by description
   // Regex: ^(\d+(?:\.\d+)?)\s+(.+)$
-  const match = normalized.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/)
+  const match = cleanMessage.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/i)
 
   if (!match) {
     return {
       amount: 0,
       description: message,
+      splitAmong: [],
       needsReview: true
     }
   }
@@ -32,6 +42,7 @@ export const parseExpenseMessage = (message: string): ParsedExpense => {
     amount,
     description,
     category,
+    splitAmong: mentions,
     needsReview: false
   }
 }
