@@ -110,7 +110,7 @@ export interface Expense {
   id: string
   userId: string         // Who paid?
   userName: string       // Denormalized name for easier display
-  amount: number         // Always in base currency (e.g., USD)
+  amount: number         // Always in base currency (ARS)
   originalInput: string  // The raw text: "50 beers at beach"
   description: string    // Cleaned text: "beers at beach"
   category: ExpenseCategory
@@ -181,7 +181,7 @@ Send HTTP 200 to WhatsApp (and optional confirmation msg to user)
 - **Currency**: Format all money as `$ 1.234,00` (ES-AR locale) but store as standard Integers/Floats
 
 ### Bot Logic Rules (The "Smart" Part)
-- **Currency Handling**: If user types "50", assume USD (or base currency). If user types "5000 ars", backend must convert to USD base using a static or live rate
+- **Currency Handling**: If user types "50", assume ARS (base currency). If a different currency is provided (e.g., "10 usd" or "100 brl"), convert to ARS using a static or live rate while keeping the entered amount/currency for display
 - **Correction**: If a user makes a mistake, they should be able to delete via UI, not WhatsApp (keep WhatsApp logic simple: Write Only)
 
 ## Scaling Plan

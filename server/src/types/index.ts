@@ -5,6 +5,8 @@ export interface Expense {
   userName: string
   amount: number
   originalInput: string
+  originalAmount?: number
+  originalCurrency?: string
   description: string
   category: ExpenseCategory
   timestamp: Date

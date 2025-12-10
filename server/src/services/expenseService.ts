@@ -9,7 +9,7 @@ export const createExpense = async (expense: Expense): Promise<string> => {
   try {
     const expensesRef = db.collection('expenses')
 
-    const docRef = await expensesRef.add({
+    const payload: Record<string, unknown> = {
       userId: expense.userId,
       userName: expense.userName,
       amount: expense.amount,
@@ -17,7 +17,17 @@ export const createExpense = async (expense: Expense): Promise<string> => {
       description: expense.description,
       category: expense.category,
       timestamp: FieldValue.serverTimestamp()
-    })
+    }
+
+    if (expense.originalAmount !== undefined) {
+      payload.originalAmount = expense.originalAmount
+    }
+
+    if (expense.originalCurrency !== undefined) {
+      payload.originalCurrency = expense.originalCurrency
+    }
+
+    const docRef = await expensesRef.add(payload)
 
     console.log('✅ Expense created:', docRef.id)
     return docRef.id

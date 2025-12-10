@@ -3,12 +3,7 @@
  * Format: $ 1.234,00
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount)
+  return formatCurrencyByCode(amount, 'ARS')
 }
 
 /**
@@ -16,6 +11,18 @@ export const formatCurrency = (amount: number): string => {
  */
 export const formatAmount = (amount: number): string => {
   return new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount)
+}
+
+/**
+ * Format currency with custom ISO code (defaults to ARS)
+ */
+export const formatCurrencyByCode = (amount: number, currencyCode: string = 'ARS'): string => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: currencyCode,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(amount)

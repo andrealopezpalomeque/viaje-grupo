@@ -100,6 +100,12 @@
                   <p class="text-lg font-semibold text-gray-900 dark:text-white font-mono tabular-nums">
                     {{ formatCurrency(expense.amount) }}
                   </p>
+                  <p
+                    v-if="expense.originalCurrency && expense.originalCurrency !== 'ARS'"
+                    class="text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    {{ formatCurrencyByCode(expense.originalAmount ?? 0, expense.originalCurrency) }} ingresados
+                  </p>
                   <span
                     class="inline-block px-2 py-1 text-xs rounded-full mt-1"
                     :class="getCategoryColor(expense.category)"

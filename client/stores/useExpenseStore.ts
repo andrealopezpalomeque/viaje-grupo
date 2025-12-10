@@ -102,6 +102,8 @@ export const useExpenseStore = defineStore('expense', {
                 userId: data.userId,
                 userName: data.userName,
                 amount: data.amount,
+                originalAmount: data.originalAmount,
+                originalCurrency: data.originalCurrency,
                 originalInput: data.originalInput,
                 description: data.description,
                 category: data.category,

@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express'
 import type { WhatsAppWebhookPayload } from '../types/index.js'
 import { getUserByPhone, isAuthorizedPhone } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
-import { parseExpenseMessage, extractCurrency, convertToUSD } from '../utils/messageParser.js'
+import { parseExpenseMessage, extractCurrency, convertToARS } from '../utils/messageParser.js'
 
 const router = Router()
 
@@ -101,13 +101,17 @@ async function handleTextMessage(from: string, text: string) {
   // 3. Check for currency conversion
   const currencyInfo = extractCurrency(text)
   let finalAmount = 0
+  let originalAmount: number | undefined
+  let originalCurrency: string | undefined
 
   // 4. Parse the expense message
   const parsed = parseExpenseMessage(text)
 
   if (currencyInfo) {
-    finalAmount = convertToUSD(currencyInfo.amount, currencyInfo.currency)
-    console.log(`💱 Converted ${currencyInfo.amount} ${currencyInfo.currency} to ${finalAmount} USD`)
+    finalAmount = convertToARS(currencyInfo.amount, currencyInfo.currency)
+    originalAmount = currencyInfo.amount
+    originalCurrency = currencyInfo.currency
+    console.log(`💱 Converted ${currencyInfo.amount} ${currencyInfo.currency} to ${finalAmount} ARS`)
   } else {
     finalAmount = parsed.amount
   }
@@ -126,6 +130,8 @@ async function handleTextMessage(from: string, text: string) {
       userId: user.id,
       userName: user.name,
       amount: finalAmount,
+      originalAmount,
+      originalCurrency,
       originalInput: text,
       description: parsed.description,
       category: parsed.category || 'general',

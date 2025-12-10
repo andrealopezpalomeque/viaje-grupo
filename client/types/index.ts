@@ -11,7 +11,9 @@ export interface Expense {
   id: string
   userId: string         // Who paid?
   userName: string       // Denormalized name for easier display
-  amount: number         // Always in base currency (e.g., USD)
+  amount: number         // Always in base currency (ARS)
+  originalAmount?: number // Amount entered by user (if different currency)
+  originalCurrency?: string // Currency entered by user (e.g., BRL)
   originalInput: string  // The raw text: "50 beers at beach"
   description: string    // Cleaned text: "beers at beach"
   category: ExpenseCategory

@@ -150,9 +150,10 @@ npm run build
 
 Users can send expenses in natural language:
 
-- `50 lunch` → $50.00, "lunch", category: food
-- `120 taxi to airport` → $120.00, "taxi to airport", category: transport
-- `5000 ars dinner` → ~$6.00 USD (converted), "dinner", category: food
+- `50 lunch` → $50,00 ARS, "lunch", category: food
+- `120 taxi to airport` → $120,00 ARS, "taxi to airport", category: transport
+- `10 usd cena` → ~$8.500,00 ARS (converted), "cena", category: food
+- `100 brl almuerzo` → R$100,00 ingresados, ~$17.000,00 ARS (converted), "almuerzo", category: food
 
 ## Balance Calculation
 

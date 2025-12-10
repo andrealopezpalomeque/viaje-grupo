@@ -85,27 +85,40 @@ const categorizeExpense = (description: string): ExpenseCategory => {
  * Example: "5000 ars lunch" -> { amount: 5000, currency: 'ARS' }
  */
 export const extractCurrency = (message: string): { amount: number; currency: string } | null => {
-  const match = message.match(/(\d+(?:[.,]\d+)?)\s*(usd|ars|eur)/i)
+  const match = message.match(/(\d+(?:[.,]\d+)?)\s*(usd|ars|eur|brl|real|reais|reales)/i)
 
   if (match) {
     const amount = parseFloat(match[1].replace(',', '.'))
-    const currency = match[2].toUpperCase()
-    return { amount, currency }
+    const rawCurrency = match[2].toLowerCase()
+
+    const currencyMap: Record<string, string> = {
+      usd: 'USD',
+      ars: 'ARS',
+      eur: 'EUR',
+      brl: 'BRL',
+      real: 'BRL',
+      reais: 'BRL',
+      reales: 'BRL'
+    }
+
+    const currency = currencyMap[rawCurrency] || rawCurrency.toUpperCase()
+    return { amount, currency: currency as 'USD' | 'ARS' | 'EUR' | 'BRL' }
   }
 
   return null
 }
 
 /**
- * Convert ARS to USD (static rate for now)
+ * Convert supported currencies to ARS (static rate for now)
  * TODO: Integrate with live exchange rate API
  */
-export const convertToUSD = (amount: number, currency: string): number => {
-  const rates: Record<string, number> = {
-    USD: 1,
-    ARS: 0.0012, // Approximate rate, should be updated
-    EUR: 1.1
+export const convertToARS = (amount: number, currency: string): number => {
+  const ratesToARS: Record<string, number> = {
+    ARS: 1,
+    USD: 850, // Approximate blue rate, adjust as needed
+    EUR: 925, // Approximate, adjust as needed
+    BRL: 170 // Approximate, adjust as needed
   }
 
-  return amount * (rates[currency] || 1)
+  return amount * (ratesToARS[currency] ?? 1)
 }
