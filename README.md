@@ -107,7 +107,7 @@ npm run dev
 
 This starts:
 - **Client**: `http://localhost:3000`
-- **Server**: `http://localhost:3001`
+- **Server**: `http://localhost:4000`
 
 ### Run individually:
 
