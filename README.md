@@ -116,6 +116,27 @@ npm run dev:client   # Frontend only
 npm run dev:server   # Backend only
 ```
 
+### Expose the backend with ngrok (for WhatsApp webhooks)
+
+If you want Meta/WhatsApp to reach your local Express server, you need a public HTTPS URL that forwards to `localhost:4000`.
+
+1. Install and authenticate ngrok (once) following https://ngrok.com/docs/getting-started/
+2. Start a tunnel to the server:
+
+```bash
+# From the repo root
+npm run ngrok:server
+
+# Or: run server + ngrok together
+npm run dev:server:tunnel
+
+# Pass extra ngrok args after `--` (example: reserved domain)
+npm run ngrok:server -- --domain=your-subdomain.ngrok-free.app
+```
+
+Then configure your WhatsApp webhook URL to:
+- `https://<your-ngrok-host>/api/whatsapp/webhook`
+
 ### Build for production:
 
 ```bash
