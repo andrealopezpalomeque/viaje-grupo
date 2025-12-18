@@ -210,7 +210,14 @@ The app calculates who owes whom using Splitwise-style logic:
 
 ## Documentation
 
-See `PROJECT_INSTRUCTIONS.md` for detailed architecture and development guidelines.
+See `docs/overview.md` for detailed architecture and development guidelines.
+
+Additional documentation:
+- `docs/project-plan.md` - Project roadmap and development phases
+- `docs/deployment.md` - Production deployment guide
+- `docs/firestore-security.md` - Security rules setup
+- `docs/google-auth.md` - Google Authentication setup
+- `docs/splitting-logic.md` - Balance calculation algorithm
 
 ## License
 

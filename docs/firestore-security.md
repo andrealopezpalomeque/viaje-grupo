@@ -232,7 +232,7 @@ Monitor security rule activity:
 1. Deploy the security rules: `firebase deploy --only firestore:rules`
 2. Implement authentication in the Nuxt.js client (see Options above)
 3. Test in development with Firebase emulator
-4. Update PROJECT_PLAN.md to mark "Firestore security rules" as complete ✅
+4. Update docs/project-plan.md to mark "Firestore security rules" as complete ✅
 
 ## Resources
 

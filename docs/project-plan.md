@@ -56,7 +56,7 @@
 ### Phase 2: Production Deployment ⬅️ YOU ARE HERE
 **Target: 1 week**
 
-**📋 See DEPLOYMENT_CHECKLIST.md for complete deployment guide**
+**📋 See docs/deployment.md for complete deployment guide**
 
 - [ ] Deploy backend to Railway/Render/Heroku
 - [ ] Set up production environment variables
@@ -209,7 +209,7 @@ When starting a new Claude Code session, paste this context:
 > - `/server`: Node.js + Express backend with WhatsApp integration
 > - Database: Firebase Firestore
 > - Current phase: [UPDATE THIS based on where you are]
-> - See PROJECT_PLAN.md in the repo root for full context.
+> - See docs/project-plan.md for full context.
 
 ---
 
@@ -227,14 +227,14 @@ When starting a new Claude Code session, paste this context:
   - Created comprehensive rules with validation for users and expenses collections
   - Configured Firebase project with firebase.json and .firebaserc
   - Successfully deployed rules to production
-  - Created FIRESTORE_SECURITY.md with deployment guide and authentication options
+  - Created docs/firestore-security.md with deployment guide and authentication options
 - ✅ Implemented Google Authentication in Nuxt.js client
   - Created useAuth composable for auth state management
   - Added login page with Google Sign-In button
   - Implemented auth middleware for route protection
   - Updated app.vue to initialize auth and manage data loading
   - Added user profile display and logout button in dashboard header
-  - Created GOOGLE_AUTH_SETUP.md with complete setup guide
+  - Created docs/google-auth.md with complete setup guide
   - Fixed cross-origin reactivity error with markRaw()
   - Fixed auth initialization race condition
 - ✅ Cleaned up debug logging across codebase
@@ -250,11 +250,11 @@ When starting a new Claude Code session, paste this context:
   - Improved error messages and logging
   - Added security documentation in code comments
 - 🎉 Phase 1: Security Hardening COMPLETE
-- ✅ Created DEPLOYMENT_CHECKLIST.md
+- ✅ Created docs/deployment.md
   - Complete environment variable configurations for dev and prod
   - Pre-deployment security checklist
   - Step-by-step deployment instructions for backend and frontend
   - Post-deployment verification steps
   - Rollback plan and monitoring setup
   - Critical security reminders
-- 📍 Next: Phase 2 - Production Deployment (see DEPLOYMENT_CHECKLIST.md)
+- 📍 Next: Phase 2 - Production Deployment (see docs/deployment.md)

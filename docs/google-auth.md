@@ -173,7 +173,7 @@ Update `useAuth` to fetch this mapping after login.
 
 **"Missing or insufficient permissions" when reading expenses**
 - Cause: User authenticated but Firestore rules not deployed
-- Solution: Run `firebase deploy --only firestore:rules` (see FIRESTORE_SECURITY.md)
+- Solution: Run `firebase deploy --only firestore:rules` (see docs/firestore-security.md)
 
 **Login button does nothing or throws popup error**
 - Cause: Google provider not enabled
