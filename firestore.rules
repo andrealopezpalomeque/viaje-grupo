@@ -1,0 +1,110 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // Helper Functions
+    // ============================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user matches the userId in the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Validate expense data structure and constraints
+    function isValidExpense() {
+      let data = request.resource.data;
+
+      return data.keys().hasAll(['userId', 'userName', 'amount', 'description', 'category', 'timestamp', 'originalInput'])
+        && data.userId is string
+        && data.userName is string
+        && data.amount is number
+        && data.amount > 0  // Amount must be positive
+        && data.description is string
+        && data.description.size() >= 1
+        && data.description.size() <= 500  // Max 500 characters
+        && data.category in ['food', 'transport', 'accommodation', 'entertainment', 'general']
+        && data.originalInput is string
+        && data.timestamp is timestamp
+        // Optional fields validation
+        && (!data.keys().hasAny(['originalAmount']) || data.originalAmount is number)
+        && (!data.keys().hasAny(['originalCurrency']) || data.originalCurrency is string)
+        && (!data.keys().hasAny(['splitAmong']) || data.splitAmong is list);
+    }
+
+    // Validate user data structure
+    function isValidUser() {
+      let data = request.resource.data;
+
+      return data.keys().hasAll(['name', 'phoneNumber'])
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 100
+        && data.phoneNumber is string
+        && data.phoneNumber.size() >= 10
+        && data.phoneNumber.size() <= 20
+        // Optional avatar field
+        && (!data.keys().hasAny(['avatar']) || data.avatar is string);
+    }
+
+    // ============================================
+    // Users Collection
+    // ============================================
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles (needed for @mentions and display)
+      allow read: if isAuthenticated();
+
+      // Only allow creating/updating own user document
+      // In production, user creation should be handled by backend/Cloud Functions
+      allow create: if isAuthenticated()
+                    && isOwner(userId)
+                    && isValidUser();
+
+      allow update: if isAuthenticated()
+                    && isOwner(userId)
+                    && isValidUser()
+                    // Prevent changing phoneNumber after creation
+                    && request.resource.data.phoneNumber == resource.data.phoneNumber;
+
+      // Users cannot delete their own profile (should be handled by admin)
+      allow delete: if false;
+    }
+
+    // ============================================
+    // Expenses Collection
+    // ============================================
+    match /expenses/{expenseId} {
+      // All authenticated users can read expenses (collaborative tracking)
+      allow read: if isAuthenticated();
+
+      // Users can create expenses, but only for themselves
+      allow create: if isAuthenticated()
+                    && isOwner(request.resource.data.userId)
+                    && isValidExpense();
+
+      // Users can only update their own expenses
+      allow update: if isAuthenticated()
+                    && isOwner(resource.data.userId)
+                    && isValidExpense()
+                    // Prevent changing the owner of an expense
+                    && request.resource.data.userId == resource.data.userId;
+
+      // Users can only delete their own expenses
+      allow delete: if isAuthenticated()
+                    && isOwner(resource.data.userId);
+    }
+
+    // ============================================
+    // Deny all other collections
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

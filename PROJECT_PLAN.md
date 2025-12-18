@@ -49,7 +49,7 @@
 - [x] Rate limiting middleware
 - [x] Input validation
 - [x] Message deduplication
-- [ ] Firestore security rules
+- [x] Firestore security rules
 - [ ] Remove debug logging (clean up verbose logs)
 - [ ] Enable signature verification in production (remove dev bypass)
 
@@ -221,4 +221,16 @@ When starting a new Claude Code session, paste this context:
 - ✅ Fixed Meta webhook subscription (was pointing to wrong app)
 - ✅ Verified full pipeline: WhatsApp → Server → Firestore → Dashboard
 - ✅ Outbound messages working
-- 📍 Next: Firestore security rules, then production deployment
+- ✅ Implemented and deployed Firestore security rules
+  - Created comprehensive rules with validation for users and expenses collections
+  - Configured Firebase project with firebase.json and .firebaserc
+  - Successfully deployed rules to production
+  - Created FIRESTORE_SECURITY.md with deployment guide and authentication options
+- ✅ Implemented Google Authentication in Nuxt.js client
+  - Created useAuth composable for auth state management
+  - Added login page with Google Sign-In button
+  - Implemented auth middleware for route protection
+  - Updated app.vue to initialize auth and manage data loading
+  - Added user profile display and logout button in dashboard header
+  - Created GOOGLE_AUTH_SETUP.md with complete setup guide
+- 📍 Next: Enable Google Auth in Firebase Console, then test auth flow

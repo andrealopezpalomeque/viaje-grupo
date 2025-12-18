@@ -2,13 +2,49 @@
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="container mx-auto px-4 py-8">
       <!-- Header -->
-      <header class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-          ViajeGrupo
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-2">
-          Seguimiento de gastos del viaje
-        </p>
+      <header class="mb-8 flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            ViajeGrupo
+          </h1>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">
+            Seguimiento de gastos del viaje
+          </p>
+        </div>
+
+        <!-- User Profile & Logout -->
+        <div v-if="user" class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <img
+              v-if="user.photoURL"
+              :src="user.photoURL"
+              :alt="user.displayName || 'User'"
+              class="w-10 h-10 rounded-full ring-2 ring-gray-200 dark:ring-gray-700"
+            />
+            <div
+              v-else
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center"
+            >
+              <span class="text-white font-medium text-sm">
+                {{ getUserInitials(user.displayName) }}
+              </span>
+            </div>
+            <div class="hidden md:block">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ user.displayName }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {{ user.email }}
+              </p>
+            </div>
+          </div>
+          <button
+            @click="handleSignOut"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            Salir
+          </button>
+        </div>
       </header>
 
       <!-- Loading State -->
@@ -161,6 +197,13 @@
 </template>
 
 <script setup>
+// Apply auth middleware
+definePageMeta({
+  middleware: ['auth']
+})
+
+const { user, signOut } = useAuth()
+const router = useRouter()
 const expenseStore = useExpenseStore()
 const userStore = useUserStore()
 
@@ -185,4 +228,24 @@ const categoryColors = {
 const getCategoryLabel = (category) => categoryLabels[category] ?? categoryLabels.general
 
 const getCategoryColor = (category) => categoryColors[category] ?? categoryColors.general
+
+// Get user initials from display name
+const getUserInitials = (displayName) => {
+  if (!displayName) return 'U'
+
+  const parts = String(displayName).trim().split(/\s+/).filter(Boolean)
+  const first = parts[0]?.[0] ?? 'U'
+  const second = parts[1]?.[0] ?? ''
+  return `${first}${second}`.toUpperCase()
+}
+
+// Handle sign out
+const handleSignOut = async () => {
+  try {
+    await signOut()
+    router.push('/login')
+  } catch (error) {
+    console.error('Sign out failed:', error)
+  }
+}
 </script>
