@@ -17,6 +17,9 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT
 
+// Trust first proxy (for ngrok, Railway, Heroku, etc.)
+app.set('trust proxy', 1)
+
 // Middleware
 app.use(helmet()) // Security headers
 app.use(cors()) // Enable CORS
