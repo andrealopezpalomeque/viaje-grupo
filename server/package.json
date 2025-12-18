@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.js",
     "ngrok": "node scripts/ngrok.mjs",
     "whatsapp:subscribed-apps": "node scripts/whatsappSubscribedApps.mjs",
-    "build": "tsc && cp -r src/*.js dist/ && cp -r src/routes/*.js dist/routes/",
+    "build": "tsc && mkdir -p dist/routes && cp src/*.js dist/ && cp src/routes/*.js dist/routes/",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
