@@ -51,46 +51,63 @@ const webhookRateLimiter = rateLimit({
 /**
  * Verify WhatsApp webhook signature
  * Meta sends X-Hub-Signature-256 header with HMAC SHA256 signature
+ *
+ * Security: This function ALWAYS runs in production. The bypass ONLY works when:
+ * 1. NODE_ENV is explicitly set to 'development' AND
+ * 2. WHATSAPP_SKIP_SIGNATURE_VERIFICATION is explicitly set to 'true'
  */
 function verifyWebhookSignature(req, res, next) {
-  if (
-    process.env.NODE_ENV === 'development' &&
-    process.env.WHATSAPP_SKIP_SIGNATURE_VERIFICATION === 'true'
-  ) {
-    console.warn('⚠️ Skipping WhatsApp webhook signature verification (development only)')
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const skipFlagEnabled = process.env.WHATSAPP_SKIP_SIGNATURE_VERIFICATION === 'true'
+
+  // CRITICAL: Only allow bypass in development mode with explicit flag
+  if (isDevelopment && skipFlagEnabled) {
+    console.warn('WARNING: Skipping webhook signature verification (development only)')
     return next()
+  }
+
+  // In production or when skip flag is not set, ALWAYS verify
+  // Ensure the bypass is explicitly disabled in production
+  if (!isDevelopment && skipFlagEnabled) {
+    console.error('SECURITY ERROR: WHATSAPP_SKIP_SIGNATURE_VERIFICATION is enabled in production')
+    return res.status(500).json({ error: 'Invalid server configuration' })
   }
 
   const signature = req.headers['x-hub-signature-256']
   const appSecret = process.env.WHATSAPP_APP_SECRET
 
   if (!appSecret) {
-    console.error('❌ WHATSAPP_APP_SECRET not configured')
+    console.error('WHATSAPP_APP_SECRET not configured')
     return res.status(500).json({ error: 'Server configuration error' })
   }
 
   if (!signature) {
-    console.error('❌ Missing X-Hub-Signature-256 header')
+    console.error('Missing X-Hub-Signature-256 header')
     return res.status(401).json({ error: 'Missing signature' })
   }
 
   // Signature format: sha256=<hash>
   const signatureHash = signature.split('=')[1]
 
-  const rawBody = req.rawBody
-  if (!rawBody) {
-    console.warn('⚠️ Missing req.rawBody; signature verification may fail due to JSON re-encoding')
+  if (!signatureHash) {
+    console.error('Invalid signature format')
+    return res.status(401).json({ error: 'Invalid signature format' })
   }
 
-  // Calculate expected signature
+  const rawBody = req.rawBody
+  if (!rawBody) {
+    console.warn('Missing req.rawBody; signature verification may fail')
+  }
+
+  // Calculate expected signature using HMAC SHA256
   const expectedHash = crypto
     .createHmac('sha256', appSecret)
     .update(rawBody || JSON.stringify(req.body))
     .digest('hex')
 
+  // Constant-time comparison to prevent timing attacks
   if (signatureHash !== expectedHash) {
-    console.error('❌ Invalid webhook signature')
-    console.error(`   Received: ${signatureHash?.slice(0, 12)}... Expected: ${expectedHash.slice(0, 12)}...`)
+    console.error('Invalid webhook signature')
     return res.status(401).json({ error: 'Invalid signature' })
   }
 
