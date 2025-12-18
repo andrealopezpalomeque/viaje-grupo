@@ -50,7 +50,7 @@
 - [x] Input validation
 - [x] Message deduplication
 - [x] Firestore security rules
-- [ ] Remove debug logging (clean up verbose logs)
+- [x] Remove debug logging (clean up verbose logs)
 - [ ] Enable signature verification in production (remove dev bypass)
 
 ### Phase 2: Production Deployment
@@ -233,4 +233,12 @@ When starting a new Claude Code session, paste this context:
   - Updated app.vue to initialize auth and manage data loading
   - Added user profile display and logout button in dashboard header
   - Created GOOGLE_AUTH_SETUP.md with complete setup guide
-- 📍 Next: Enable Google Auth in Firebase Console, then test auth flow
+  - Fixed cross-origin reactivity error with markRaw()
+  - Fixed auth initialization race condition
+- ✅ Cleaned up debug logging across codebase
+  - Removed 60+ verbose console.log statements from WhatsApp webhook handlers
+  - Cleaned up decorative separators and emoji-heavy logs
+  - Kept essential error logging for debugging
+  - Removed success message clutter from services
+  - Client-side already had clean error-only logging
+- 📍 Next: Enable signature verification in production

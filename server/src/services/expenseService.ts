@@ -30,7 +30,6 @@ export const createExpense = async (expense: Expense): Promise<string> => {
 
     const docRef = await expensesRef.add(payload)
 
-    console.log('✅ Expense created:', docRef.id)
     return docRef.id
   } catch (error) {
     console.error('Error creating expense:', error)
@@ -65,7 +64,6 @@ export const getExpensesByUser = async (userId: string): Promise<Expense[]> => {
 export const deleteExpense = async (expenseId: string): Promise<void> => {
   try {
     await db.collection('expenses').doc(expenseId).delete()
-    console.log('✅ Expense deleted:', expenseId)
   } catch (error) {
     console.error('Error deleting expense:', error)
     throw error

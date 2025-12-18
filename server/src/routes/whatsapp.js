@@ -103,11 +103,9 @@ function verifyWebhookSignature(req, res, next) {
  * GET /api/whatsapp/test
  */
 router.get('/test', (req, res) => {
-  console.log('🧪 Test endpoint hit')
   res.status(200).json({
     status: 'webhook route reachable',
     timestamp: new Date().toISOString(),
-    headers: req.headers,
   })
 })
 
@@ -116,42 +114,18 @@ router.get('/test', (req, res) => {
  * GET /api/whatsapp/webhook
  */
 router.get('/webhook', (req, res) => {
-  console.log('═══════════════════════════════════════════════════════')
-  console.log('📥 GET /api/whatsapp/webhook - Verification Request')
-  console.log('═══════════════════════════════════════════════════════')
-  console.log('Query Parameters:')
-  console.log('  hub.mode:', req.query['hub.mode'] || '(missing)')
-  console.log('  hub.verify_token:', req.query['hub.verify_token'] ? '***' + req.query['hub.verify_token'].slice(-4) : '(missing)')
-  console.log('  hub.challenge:', req.query['hub.challenge'] || '(missing)')
-  console.log('All Query Params:', JSON.stringify(req.query, null, 2))
-  console.log('Headers:', JSON.stringify(req.headers, null, 2))
-  console.log('Expected verify_token:', process.env.WHATSAPP_VERIFY_TOKEN ? '***' + process.env.WHATSAPP_VERIFY_TOKEN.slice(-4) : '(not configured)')
-  console.log('───────────────────────────────────────────────────────')
-
   const mode = req.query['hub.mode']
   const token = req.query['hub.verify_token']
   const challenge = req.query['hub.challenge']
 
   if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    console.log('✅ Webhook verification SUCCESSFUL')
-    console.log('Responding with challenge:', challenge)
-    console.log('═══════════════════════════════════════════════════════\n')
     res.status(200).send(challenge)
   } else {
-    console.error('❌ Webhook verification FAILED')
-    console.error('Reason:')
-    if (mode !== 'subscribe') {
-      console.error('  - hub.mode is not "subscribe" (received:', mode, ')')
-    }
-    if (token !== process.env.WHATSAPP_VERIFY_TOKEN) {
-      console.error('  - hub.verify_token does not match')
-      console.error('    Received:', token ? '***' + token.slice(-4) : '(missing)')
-      console.error('    Expected:', process.env.WHATSAPP_VERIFY_TOKEN ? '***' + process.env.WHATSAPP_VERIFY_TOKEN.slice(-4) : '(not configured)')
-    }
-    if (!challenge) {
-      console.error('  - hub.challenge is missing')
-    }
-    console.log('═══════════════════════════════════════════════════════\n')
+    console.error('Webhook verification failed:', {
+      mode: mode || 'missing',
+      tokenMatch: token === process.env.WHATSAPP_VERIFY_TOKEN,
+      hasChallenge: !!challenge
+    })
     res.sendStatus(403)
   }
 })
@@ -162,35 +136,17 @@ router.get('/webhook', (req, res) => {
  * - Rate limited to 100 requests/minute per IP
  * - Signature verified against WHATSAPP_APP_SECRET
  */
-router.post('/webhook', (req, res, next) => {
-  // Log BEFORE any middleware runs
-  console.log('═══════════════════════════════════════════════════════')
-  console.log('📨 POST /api/whatsapp/webhook - Message Received')
-  console.log('═══════════════════════════════════════════════════════')
-  console.log('Timestamp:', new Date().toISOString())
-  console.log('IP:', req.ip || req.connection.remoteAddress)
-  console.log('Headers:', JSON.stringify(req.headers, null, 2))
-  console.log('Body (first 500 chars):', JSON.stringify(req.body, null, 2).substring(0, 500))
-  console.log('Raw Body available:', !!req.rawBody)
-  console.log('───────────────────────────────────────────────────────')
-  next()
-}, webhookRateLimiter, verifyWebhookSignature, async (req, res) => {
+router.post('/webhook', webhookRateLimiter, verifyWebhookSignature, async (req, res) => {
   try {
-    console.log('✅ POST webhook passed rate limiting and signature verification')
     const payload = req.body
 
     // Respond immediately to WhatsApp (required)
     res.sendStatus(200)
-    console.log('✅ Sent 200 OK response to WhatsApp')
-    console.log('═══════════════════════════════════════════════════════\n')
 
     // Process the webhook asynchronously
     await processWebhook(payload)
   } catch (error) {
-    console.error('❌ Error processing webhook:', error)
-    console.error('Stack:', error.stack)
-    console.log('═══════════════════════════════════════════════════════\n')
-    // Don't send status again if already sent, but good practice to log
+    console.error('Error processing webhook:', error)
   }
 })
 
@@ -200,11 +156,9 @@ router.post('/webhook', (req, res, next) => {
 async function processWebhook(payload) {
   // Validate payload structure
   if (payload.object !== 'whatsapp_business_account') {
-    console.log('Not a WhatsApp business account webhook')
     return
   }
 
-  // Use optional chaining carefully or checking existence
   if (!payload.entry) return
 
   for (const entry of payload.entry) {
@@ -215,21 +169,12 @@ async function processWebhook(payload) {
 
       // Only process messages
       if (!value.messages || value.messages.length === 0) {
-        if (process.env.DEBUG_WEBHOOK === 'true') {
-          const hasStatuses = Array.isArray(value.statuses) && value.statuses.length > 0
-          console.log(`ℹ️ Webhook received without messages (statuses: ${hasStatuses ? value.statuses.length : 0})`)
-        }
         continue
-      }
-
-      if (process.env.DEBUG_WEBHOOK === 'true') {
-        console.log(`📩 Webhook contains ${value.messages.length} message(s)`)
       }
 
       for (const message of value.messages) {
         // Only handle text messages for now
         if (message.type !== 'text') {
-          console.log(`Unsupported message type: ${message.type}`)
           continue
         }
 
@@ -279,11 +224,8 @@ function validateExpenseInput(amount, description) {
  * Handle incoming text message
  */
 async function handleTextMessage(from, text, messageId) {
-  console.log(`📱 Message from ${from}: ${text} (ID: ${messageId})`)
-
   // 0. Check for duplicate message
   if (processedMessageIds.has(messageId)) {
-    console.log(`⏭️ Skipping duplicate message: ${messageId}`)
     return
   }
 
@@ -292,7 +234,6 @@ async function handleTextMessage(from, text, messageId) {
 
   // 1. Check if phone number is authorized
   if (!isAuthorizedPhone(from)) {
-    console.log(`❌ Unauthorized phone number: ${from}`)
     return
   }
 
@@ -300,11 +241,9 @@ async function handleTextMessage(from, text, messageId) {
   const user = await getUserByPhone(from)
 
   if (!user) {
-    console.log(`❌ User not found for phone: ${from}`)
+    console.error(`User not found for phone: ${from}`)
     return
   }
-
-  console.log(`✅ User found: ${user.name}`)
 
   // 3. Check for currency conversion
   const currencyInfo = extractCurrency(text)
@@ -319,14 +258,12 @@ async function handleTextMessage(from, text, messageId) {
     finalAmount = convertToARS(currencyInfo.amount, currencyInfo.currency)
     originalAmount = currencyInfo.amount
     originalCurrency = currencyInfo.currency
-    console.log(`💱 Converted ${currencyInfo.amount} ${currencyInfo.currency} to ${finalAmount} ARS`)
   } else {
     finalAmount = parsed.amount
   }
 
   // 5. If parsing failed, send error message
   if (parsed.needsReview) {
-    console.log(`⚠️ Message needs review: ${text}`)
     await sendMessage(from, formatParseErrorMessage())
     return
   }
@@ -335,15 +272,13 @@ async function handleTextMessage(from, text, messageId) {
   const validation = validateExpenseInput(finalAmount, parsed.description)
 
   if (!validation.valid) {
-    console.error(`❌ Invalid expense input: ${validation.error}`)
-    console.error(`   Amount: ${finalAmount}, Description: "${parsed.description}"`)
     await sendMessage(from, formatValidationErrorMessage(validation.error))
     return
   }
 
   // 7. Create expense in Firestore
   try {
-    const expenseId = await createExpense({
+    await createExpense({
       userId: user.id,
       userName: user.name,
       amount: finalAmount,
@@ -355,8 +290,6 @@ async function handleTextMessage(from, text, messageId) {
       splitAmong: parsed.splitAmong || [],
       timestamp: new Date()
     })
-
-    console.log(`✅ Expense created: ${expenseId}`)
 
     // 8. Send confirmation message to user
     const confirmationMessage = formatExpenseConfirmation(
