@@ -53,6 +53,14 @@ const webhookRateLimiter = rateLimit({
  * Meta sends X-Hub-Signature-256 header with HMAC SHA256 signature
  */
 function verifyWebhookSignature(req, res, next) {
+  if (
+    process.env.NODE_ENV === 'development' &&
+    process.env.WHATSAPP_SKIP_SIGNATURE_VERIFICATION === 'true'
+  ) {
+    console.warn('⚠️ Skipping WhatsApp webhook signature verification (development only)')
+    return next()
+  }
+
   const signature = req.headers['x-hub-signature-256']
   const appSecret = process.env.WHATSAPP_APP_SECRET
 
@@ -69,14 +77,20 @@ function verifyWebhookSignature(req, res, next) {
   // Signature format: sha256=<hash>
   const signatureHash = signature.split('=')[1]
 
+  const rawBody = req.rawBody
+  if (!rawBody) {
+    console.warn('⚠️ Missing req.rawBody; signature verification may fail due to JSON re-encoding')
+  }
+
   // Calculate expected signature
   const expectedHash = crypto
     .createHmac('sha256', appSecret)
-    .update(JSON.stringify(req.body))
+    .update(rawBody || JSON.stringify(req.body))
     .digest('hex')
 
   if (signatureHash !== expectedHash) {
     console.error('❌ Invalid webhook signature')
+    console.error(`   Received: ${signatureHash?.slice(0, 12)}... Expected: ${expectedHash.slice(0, 12)}...`)
     return res.status(401).json({ error: 'Invalid signature' })
   }
 
@@ -85,19 +99,59 @@ function verifyWebhookSignature(req, res, next) {
 }
 
 /**
+ * Test route to verify endpoint is reachable
+ * GET /api/whatsapp/test
+ */
+router.get('/test', (req, res) => {
+  console.log('🧪 Test endpoint hit')
+  res.status(200).json({
+    status: 'webhook route reachable',
+    timestamp: new Date().toISOString(),
+    headers: req.headers,
+  })
+})
+
+/**
  * Webhook verification (required by Meta/WhatsApp)
  * GET /api/whatsapp/webhook
  */
 router.get('/webhook', (req, res) => {
+  console.log('═══════════════════════════════════════════════════════')
+  console.log('📥 GET /api/whatsapp/webhook - Verification Request')
+  console.log('═══════════════════════════════════════════════════════')
+  console.log('Query Parameters:')
+  console.log('  hub.mode:', req.query['hub.mode'] || '(missing)')
+  console.log('  hub.verify_token:', req.query['hub.verify_token'] ? '***' + req.query['hub.verify_token'].slice(-4) : '(missing)')
+  console.log('  hub.challenge:', req.query['hub.challenge'] || '(missing)')
+  console.log('All Query Params:', JSON.stringify(req.query, null, 2))
+  console.log('Headers:', JSON.stringify(req.headers, null, 2))
+  console.log('Expected verify_token:', process.env.WHATSAPP_VERIFY_TOKEN ? '***' + process.env.WHATSAPP_VERIFY_TOKEN.slice(-4) : '(not configured)')
+  console.log('───────────────────────────────────────────────────────')
+
   const mode = req.query['hub.mode']
   const token = req.query['hub.verify_token']
   const challenge = req.query['hub.challenge']
 
   if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    console.log('✅ Webhook verified')
+    console.log('✅ Webhook verification SUCCESSFUL')
+    console.log('Responding with challenge:', challenge)
+    console.log('═══════════════════════════════════════════════════════\n')
     res.status(200).send(challenge)
   } else {
-    console.error('❌ Webhook verification failed')
+    console.error('❌ Webhook verification FAILED')
+    console.error('Reason:')
+    if (mode !== 'subscribe') {
+      console.error('  - hub.mode is not "subscribe" (received:', mode, ')')
+    }
+    if (token !== process.env.WHATSAPP_VERIFY_TOKEN) {
+      console.error('  - hub.verify_token does not match')
+      console.error('    Received:', token ? '***' + token.slice(-4) : '(missing)')
+      console.error('    Expected:', process.env.WHATSAPP_VERIFY_TOKEN ? '***' + process.env.WHATSAPP_VERIFY_TOKEN.slice(-4) : '(not configured)')
+    }
+    if (!challenge) {
+      console.error('  - hub.challenge is missing')
+    }
+    console.log('═══════════════════════════════════════════════════════\n')
     res.sendStatus(403)
   }
 })
@@ -108,17 +162,34 @@ router.get('/webhook', (req, res) => {
  * - Rate limited to 100 requests/minute per IP
  * - Signature verified against WHATSAPP_APP_SECRET
  */
-router.post('/webhook', webhookRateLimiter, verifyWebhookSignature, async (req, res) => {
+router.post('/webhook', (req, res, next) => {
+  // Log BEFORE any middleware runs
+  console.log('═══════════════════════════════════════════════════════')
+  console.log('📨 POST /api/whatsapp/webhook - Message Received')
+  console.log('═══════════════════════════════════════════════════════')
+  console.log('Timestamp:', new Date().toISOString())
+  console.log('IP:', req.ip || req.connection.remoteAddress)
+  console.log('Headers:', JSON.stringify(req.headers, null, 2))
+  console.log('Body (first 500 chars):', JSON.stringify(req.body, null, 2).substring(0, 500))
+  console.log('Raw Body available:', !!req.rawBody)
+  console.log('───────────────────────────────────────────────────────')
+  next()
+}, webhookRateLimiter, verifyWebhookSignature, async (req, res) => {
   try {
+    console.log('✅ POST webhook passed rate limiting and signature verification')
     const payload = req.body
 
     // Respond immediately to WhatsApp (required)
     res.sendStatus(200)
+    console.log('✅ Sent 200 OK response to WhatsApp')
+    console.log('═══════════════════════════════════════════════════════\n')
 
     // Process the webhook asynchronously
     await processWebhook(payload)
   } catch (error) {
-    console.error('Error processing webhook:', error)
+    console.error('❌ Error processing webhook:', error)
+    console.error('Stack:', error.stack)
+    console.log('═══════════════════════════════════════════════════════\n')
     // Don't send status again if already sent, but good practice to log
   }
 })
@@ -144,7 +215,15 @@ async function processWebhook(payload) {
 
       // Only process messages
       if (!value.messages || value.messages.length === 0) {
+        if (process.env.DEBUG_WEBHOOK === 'true') {
+          const hasStatuses = Array.isArray(value.statuses) && value.statuses.length > 0
+          console.log(`ℹ️ Webhook received without messages (statuses: ${hasStatuses ? value.statuses.length : 0})`)
+        }
         continue
+      }
+
+      if (process.env.DEBUG_WEBHOOK === 'true') {
+        console.log(`📩 Webhook contains ${value.messages.length} message(s)`)
       }
 
       for (const message of value.messages) {

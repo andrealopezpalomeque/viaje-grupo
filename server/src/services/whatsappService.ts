@@ -55,7 +55,7 @@ export async function sendMessage(
       body: JSON.stringify(payload),
     })
 
-    const data = await response.json()
+    const data: any = await response.json()
 
     if (!response.ok) {
       console.error('❌ WhatsApp API error:', data)

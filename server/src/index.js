@@ -21,7 +21,13 @@ const PORT = process.env.PORT
 app.use(helmet()) // Security headers
 app.use(cors()) // Enable CORS
 app.use(morgan('dev')) // HTTP request logging
-app.use(express.json()) // Parse JSON bodies
+// Parse JSON bodies.
+// NOTE: We capture the raw request body so webhook signature verification can hash the exact bytes.
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf
+  }
+}))
 app.use(express.urlencoded({ extended: true })) // Parse URL-encoded bodies
 
 // Routes

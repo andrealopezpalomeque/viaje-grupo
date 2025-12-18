@@ -13,7 +13,7 @@ export const parseExpenseMessage = (message: string): ParsedExpense => {
   const mentions: string[] = []
   // Regex to match @Name (alphanumeric)
   const mentionRegex = /@([a-zA-Z0-9_]+)/g
-  const cleanMessage = normalized.replace(mentionRegex, (match, name) => {
+  const cleanMessage = normalized.replace(mentionRegex, (_match, name) => {
     mentions.push(name)
     return '' // Remove mention from text
   }).trim()

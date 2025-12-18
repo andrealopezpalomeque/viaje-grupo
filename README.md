@@ -137,6 +137,17 @@ npm run ngrok:server -- --domain=your-subdomain.ngrok-free.app
 Then configure your WhatsApp webhook URL to:
 - `https://<your-ngrok-host>/api/whatsapp/webhook`
 
+### WhatsApp IDs: `WHATSAPP_PHONE_NUMBER_ID` vs `WHATSAPP_ACCOUNT_ID` (WABA)
+
+Meta uses different IDs for different Graph API operations:
+- `WHATSAPP_PHONE_NUMBER_ID`: used to send messages (`POST /{phone-number-id}/messages`) and appears in webhook payloads under `metadata.phone_number_id`.
+- `WHATSAPP_ACCOUNT_ID` (WABA ID): used for webhook app subscriptions (`GET /{waba-id}/subscribed_apps`).
+
+To sanity-check your app is subscribed at the WABA level:
+```bash
+npm run whatsapp:subscribed-apps --workspace=server
+```
+
 ### Build for production:
 
 ```bash
