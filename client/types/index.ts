@@ -1,6 +1,7 @@
 // Payment information for settlements
 export interface PaymentInfo {
   cbu: string | null           // CBU (22 digit Argentine bank number)
+  cvu: string | null           // CVU (22 digit virtual account number)
   alias: string | null         // Bank alias (e.g., "juan.perez.mp")
   mercadoPago: string | null   // Mercado Pago alias or link
   bankName: string | null      // Bank name

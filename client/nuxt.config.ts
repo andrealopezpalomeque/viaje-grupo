@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import Icons from 'unplugin-icons/vite'
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
@@ -8,6 +10,15 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt'
   ],
+
+  vite: {
+    plugins: [
+      Icons({
+        autoInstall: true,
+        compiler: 'vue3'
+      })
+    ]
+  },
 
   typescript: {
     strict: true,

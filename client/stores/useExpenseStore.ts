@@ -170,13 +170,15 @@ export const useExpenseStore = defineStore('expense', {
       category: ExpenseCategory,
       originalInput: string,
       groupId?: string,
-      splitAmong?: string[]
+      splitAmong?: string[],
+      originalAmount?: number,
+      originalCurrency?: string
     ) {
       const { db } = useFirebase()
 
       try {
         const expensesRef = collection(db, 'expenses')
-        await addDoc(expensesRef, {
+        const expenseData: any = {
           userId,
           userName,
           amount,
@@ -186,7 +188,15 @@ export const useExpenseStore = defineStore('expense', {
           groupId: groupId || null,
           splitAmong: splitAmong || [],
           timestamp: Timestamp.now()
-        })
+        }
+
+        // Add original currency info if provided
+        if (originalAmount && originalCurrency && originalCurrency !== 'ARS') {
+          expenseData.originalAmount = originalAmount
+          expenseData.originalCurrency = originalCurrency
+        }
+
+        await addDoc(expensesRef, expenseData)
       } catch (error) {
         console.error('Error adding expense:', error)
         throw error

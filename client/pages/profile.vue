@@ -55,7 +55,7 @@
                   {{ firestoreUser.name }}
                 </h3>
                 <p class="text-gray-500 dark:text-gray-400 text-sm">
-                  Miembro del grupo
+                  {{ groupStore.selectedGroup?.name || 'Cargando grupo...' }}
                 </p>
               </div>
             </div>
@@ -105,20 +105,18 @@
             <!-- View Mode -->
             <div v-if="!isEditing" class="space-y-4">
               <div v-if="hasPaymentInfo">
-                <div v-if="paymentForm.cbu" class="mb-4">
-                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">CBU</label>
-                  <p class="text-gray-900 dark:text-white font-mono text-sm">{{ paymentForm.cbu }}</p>
+                <div v-if="paymentForm.accountNumber" class="mb-4">
+                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {{ paymentForm.accountType === 'cbu' ? 'CBU' : 'CVU' }}
+                  </label>
+                  <p class="text-gray-900 dark:text-white font-mono text-sm">{{ paymentForm.accountNumber }}</p>
                 </div>
                 <div v-if="paymentForm.alias" class="mb-4">
-                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Alias bancario</label>
+                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Alias</label>
                   <p class="text-gray-900 dark:text-white">{{ paymentForm.alias }}</p>
                 </div>
-                <div v-if="paymentForm.mercadoPago" class="mb-4">
-                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Mercado Pago</label>
-                  <p class="text-gray-900 dark:text-white">{{ paymentForm.mercadoPago }}</p>
-                </div>
                 <div v-if="paymentForm.bankName">
-                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Banco</label>
+                  <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Banco/Plataforma</label>
                   <p class="text-gray-900 dark:text-white">{{ paymentForm.bankName }}</p>
                 </div>
               </div>
@@ -138,22 +136,42 @@
             <!-- Edit Mode -->
             <form v-else @submit.prevent="savePaymentInfo" class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  CBU (22 dígitos)
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Tipo de cuenta
                 </label>
+                <div class="flex gap-4 mb-3">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      v-model="paymentForm.accountType"
+                      type="radio"
+                      value="cbu"
+                      class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span class="text-gray-700 dark:text-gray-300">CBU</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      v-model="paymentForm.accountType"
+                      type="radio"
+                      value="cvu"
+                      class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span class="text-gray-700 dark:text-gray-300">CVU</span>
+                  </label>
+                </div>
                 <input
-                  v-model="paymentForm.cbu"
+                  v-model="paymentForm.accountNumber"
                   type="text"
                   maxlength="22"
                   pattern="\d{22}"
-                  placeholder="0000000000000000000000"
+                  placeholder="0000000000000000000000 (22 dígitos)"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
                 />
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Alias bancario
+                  Alias
                 </label>
                 <input
                   v-model="paymentForm.alias"
@@ -166,26 +184,13 @@
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mercado Pago (alias o link)
-                </label>
-                <input
-                  v-model="paymentForm.mercadoPago"
-                  type="text"
-                  maxlength="100"
-                  placeholder="mi.mercadopago"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nombre del banco
+                  Banco/Plataforma
                 </label>
                 <input
                   v-model="paymentForm.bankName"
                   type="text"
                   maxlength="50"
-                  placeholder="Banco Galicia"
+                  placeholder="Mercado Pago, Binance, Personal Pay, etc."
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -228,24 +233,33 @@ definePageMeta({
 
 const { user, firestoreUser, loading } = useAuth()
 const userStore = useUserStore()
+const groupStore = useGroupStore()
 
 const isEditing = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 const paymentForm = reactive({
-  cbu: '',
+  accountType: 'cbu', // 'cbu' or 'cvu'
+  accountNumber: '',
   alias: '',
-  mercadoPago: '',
   bankName: ''
 })
 
 // Initialize form from user data
 const initForm = () => {
   const info = firestoreUser.value?.paymentInfo
-  paymentForm.cbu = info?.cbu || ''
+  if (info?.cbu) {
+    paymentForm.accountType = 'cbu'
+    paymentForm.accountNumber = info.cbu
+  } else if (info?.cvu) {
+    paymentForm.accountType = 'cvu'
+    paymentForm.accountNumber = info.cvu
+  } else {
+    paymentForm.accountType = 'cbu'
+    paymentForm.accountNumber = ''
+  }
   paymentForm.alias = info?.alias || ''
-  paymentForm.mercadoPago = info?.mercadoPago || ''
   paymentForm.bankName = info?.bankName || ''
 }
 
@@ -255,7 +269,7 @@ watch(firestoreUser, () => {
 }, { immediate: true })
 
 const hasPaymentInfo = computed(() => {
-  return paymentForm.cbu || paymentForm.alias || paymentForm.mercadoPago || paymentForm.bankName
+  return paymentForm.accountNumber || paymentForm.alias || paymentForm.bankName
 })
 
 const getUserInitials = (name: string) => {
@@ -281,9 +295,10 @@ const cancelEditing = () => {
 const savePaymentInfo = async () => {
   if (!firestoreUser.value) return
 
-  // Validate CBU if provided
-  if (paymentForm.cbu && !/^\d{22}$/.test(paymentForm.cbu)) {
-    saveError.value = 'El CBU debe tener exactamente 22 dígitos'
+  // Validate account number if provided
+  if (paymentForm.accountNumber && !/^\d{22}$/.test(paymentForm.accountNumber)) {
+    const accountTypeLabel = paymentForm.accountType === 'cbu' ? 'CBU' : 'CVU'
+    saveError.value = `El ${accountTypeLabel} debe tener exactamente 22 dígitos`
     return
   }
 
@@ -292,9 +307,10 @@ const savePaymentInfo = async () => {
 
   try {
     await userStore.updateUserPaymentInfo(firestoreUser.value.id, {
-      cbu: paymentForm.cbu || null,
+      cbu: paymentForm.accountType === 'cbu' ? (paymentForm.accountNumber || null) : null,
+      cvu: paymentForm.accountType === 'cvu' ? (paymentForm.accountNumber || null) : null,
       alias: paymentForm.alias || null,
-      mercadoPago: paymentForm.mercadoPago || null,
+      mercadoPago: null, // Keep for backwards compatibility but always null
       bankName: paymentForm.bankName || null
     })
     isEditing.value = false
