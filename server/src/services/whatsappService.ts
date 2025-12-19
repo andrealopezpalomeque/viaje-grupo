@@ -137,6 +137,28 @@ export async function sendMessage(
 }
 
 /**
+ * Format amount in Argentine peso format
+ * Uses period for thousands, comma for decimals: $1.702,46
+ */
+function formatARS(amount: number): string {
+  return amount.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+/**
+ * Format amount in international format (USD, EUR, BRL)
+ * Uses comma for thousands, period for decimals: 1,702.46
+ */
+function formatInternational(amount: number): string {
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+/**
  * Format a success confirmation message for expense creation
  */
 export function formatExpenseConfirmation(
@@ -149,11 +171,11 @@ export function formatExpenseConfirmation(
 ): string {
   let message = '✅ *Gasto registrado*\n\n'
 
-  // Amount line
+  // Amount line - use correct format for each currency
   if (originalCurrency && originalCurrency !== 'ARS') {
-    message += `💰 ${originalCurrency} ${originalAmount?.toFixed(2)} → $${amount.toFixed(2)} ARS\n`
+    message += `💰 ${originalCurrency} ${formatInternational(originalAmount || 0)} → $${formatARS(amount)}\n`
   } else {
-    message += `💰 $${amount.toFixed(2)} ARS\n`
+    message += `💰 $${formatARS(amount)}\n`
   }
 
   message += `📝 ${description}\n`

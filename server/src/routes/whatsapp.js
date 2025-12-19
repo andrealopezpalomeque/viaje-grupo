@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import rateLimit from 'express-rate-limit'
 import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
-import { parseExpenseMessage, extractCurrency } from '../utils/messageParser.js'
+import { parseExpenseMessage, extractCurrency, stripCurrencyFromDescription } from '../utils/messageParser.js'
 import { convertToARS } from '../services/exchangeRateService.js'
 import { resolveMentionsToUserIds } from '../services/mentionService.js'
 import {
@@ -372,15 +372,18 @@ async function handleExpenseMessage(from, text, user, groupId) {
     return
   }
 
-  // 4. Validate input before creating expense
-  const validation = validateExpenseInput(finalAmount, parsed.description)
+  // 4. Clean description - remove currency words (euro, usd, etc.)
+  const cleanDescription = stripCurrencyFromDescription(parsed.description)
+
+  // 5. Validate input before creating expense
+  const validation = validateExpenseInput(finalAmount, cleanDescription)
 
   if (!validation.valid) {
     await sendMessage(from, formatValidationErrorMessage(validation.error))
     return
   }
 
-  // 5. Resolve @mentions to user IDs using fuzzy matching
+  // 6. Resolve @mentions to user IDs using fuzzy matching
   let resolvedSplitAmong = []
 
   if (parsed.splitAmong && parsed.splitAmong.length > 0 && groupId) {
@@ -389,7 +392,7 @@ async function handleExpenseMessage(from, text, user, groupId) {
     resolvedSplitAmong = resolveMentionsToUserIds(parsed.splitAmong, groupMembers)
   }
 
-  // 6. Create expense in Firestore
+  // 7. Create expense in Firestore
   try {
     await createExpense({
       userId: user.id,
@@ -398,19 +401,19 @@ async function handleExpenseMessage(from, text, user, groupId) {
       originalAmount,
       originalCurrency,
       originalInput: text,
-      description: parsed.description,
+      description: cleanDescription,
       category: parsed.category || 'general',
       splitAmong: resolvedSplitAmong,
       groupId: groupId,
       timestamp: new Date()
     })
 
-    // 7. Send confirmation message to user
+    // 8. Send confirmation message to user
     const confirmationMessage = formatExpenseConfirmation(
       finalAmount,
       originalAmount,
       originalCurrency,
-      parsed.description,
+      cleanDescription,
       parsed.category || 'general',
       parsed.splitAmong || [] // Use original mention names for display
     )

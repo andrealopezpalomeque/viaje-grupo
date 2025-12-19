@@ -92,31 +92,79 @@ const categorizeExpense = (description: string): ExpenseCategory => {
 }
 
 /**
+ * Currency words mapping
+ */
+const CURRENCY_WORDS: Record<string, string> = {
+  // USD
+  usd: 'USD',
+  dollar: 'USD',
+  dollars: 'USD',
+  dolar: 'USD',
+  dolares: 'USD',
+  // EUR
+  eur: 'EUR',
+  euro: 'EUR',
+  euros: 'EUR',
+  // BRL
+  brl: 'BRL',
+  real: 'BRL',
+  reais: 'BRL',
+  reales: 'BRL',
+  // ARS (treated as no conversion needed)
+  ars: 'ARS',
+  peso: 'ARS',
+  pesos: 'ARS'
+}
+
+// Regex pattern for all currency words
+const CURRENCY_PATTERN = Object.keys(CURRENCY_WORDS).join('|')
+
+/**
  * Extract currency conversion if mentioned
- * Example: "5000 ars lunch" -> { amount: 5000, currency: 'ARS' }
+ * Supports formats:
+ * - "100 usd lunch" (amount currency description)
+ * - "usd 100 lunch" (currency amount description)
+ * - "100 euro lunch" (amount currencyWord description)
+ * - "euro 100 lunch" (currencyWord amount description)
  */
 export const extractCurrency = (message: string): { amount: number; currency: string } | null => {
-  const match = message.match(/(\d+(?:[.,]\d+)?)\s*(usd|ars|eur|brl|real|reais|reales)/i)
+  // Pattern 1: amount followed by currency word (e.g., "100 usd", "50 euro")
+  const pattern1 = new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(${CURRENCY_PATTERN})\\b`, 'i')
+  // Pattern 2: currency word followed by amount (e.g., "usd 100", "euro 50")
+  const pattern2 = new RegExp(`\\b(${CURRENCY_PATTERN})\\s*(\\d+(?:[.,]\\d+)?)`, 'i')
 
-  if (match) {
-    const amount = parseFloat(match[1].replace(',', '.'))
-    const rawCurrency = match[2].toLowerCase()
+  let amount: number
+  let rawCurrency: string
 
-    const currencyMap: Record<string, string> = {
-      usd: 'USD',
-      ars: 'ARS',
-      eur: 'EUR',
-      brl: 'BRL',
-      real: 'BRL',
-      reais: 'BRL',
-      reales: 'BRL'
-    }
+  const match1 = message.match(pattern1)
+  const match2 = message.match(pattern2)
 
-    const currency = currencyMap[rawCurrency] || rawCurrency.toUpperCase()
-    return { amount, currency: currency as 'USD' | 'ARS' | 'EUR' | 'BRL' }
+  if (match1) {
+    amount = parseFloat(match1[1].replace(',', '.'))
+    rawCurrency = match1[2].toLowerCase()
+  } else if (match2) {
+    rawCurrency = match2[1].toLowerCase()
+    amount = parseFloat(match2[2].replace(',', '.'))
+  } else {
+    return null
   }
 
-  return null
+  const currency = CURRENCY_WORDS[rawCurrency] || rawCurrency.toUpperCase()
+
+  // Don't return for ARS since no conversion needed
+  if (currency === 'ARS') {
+    return null
+  }
+
+  return { amount, currency }
+}
+
+/**
+ * Strip currency words from description
+ */
+export const stripCurrencyFromDescription = (description: string): string => {
+  const pattern = new RegExp(`\\b(${CURRENCY_PATTERN})\\b`, 'gi')
+  return description.replace(pattern, '').replace(/\s+/g, ' ').trim()
 }
 
 /**
