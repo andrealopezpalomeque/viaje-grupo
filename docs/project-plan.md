@@ -94,14 +94,33 @@
 - [ ] Structured logging (Winston/Pino) - Deferred to Phase 5
 - [ ] Error tracking and alerting - Deferred to Phase 5
 
-### Phase 5: Dashboard Enhancements
+### Phase 5: Dashboard Enhancements ✅ COMPLETE
 **Target: 1-2 weeks**
 
-- [ ] Manual expense entry form
-- [ ] Expense editing capability
-- [ ] Settlement recommendations UI ("Juan should pay María $500")
-- [ ] Bot setup/linking page
-- [ ] User profile management
+- [x] **5A: Group Selector** - Users can switch between groups
+  - Created `useGroupStore` Pinia store for group management
+  - Updated expense/user stores to filter by selected group
+  - Added group dropdown in dashboard header
+  - Persists selected group in localStorage
+- [x] **5B: Settlement Recommendations UI**
+  - Added `calculateSettlements()` to user store (greedy algorithm)
+  - New "Para saldar deudas" section showing who pays whom
+  - Color-coded (red → green) with arrows and amounts
+  - Clickable creditors show payment info modal
+- [x] **5C: Manual Expense Entry Form**
+  - "Agregar gasto" button opens modal form
+  - Fields: amount, description, category dropdown
+  - Saves to Firestore with groupId, splitAmong defaults to all
+- [x] **5D: User Profile & Payment Info**
+  - New `/profile` page with user info display
+  - Editable payment info: CBU, bank alias, Mercado Pago, bank name
+  - Payment info viewable from settlements (click on creditor)
+  - Copy-to-clipboard for payment details
+- [x] **5E: Polish & UX**
+  - Profile link in dashboard header (clickable avatar)
+  - Mobile-responsive header with icon-only logout on small screens
+  - Friendly empty state: "No hay gastos todavía. ¡Agregá el primero!"
+  - Improved loading states
 
 ### Phase 6: Advanced Features (Backlog)
 **Target: As needed**
@@ -132,7 +151,10 @@
 | Seed script | `server/scripts/seedUsers.ts` |
 | Balance logic | `client/stores/useUserStore.ts` |
 | Expense store | `client/stores/useExpenseStore.ts` |
+| Group store | `client/stores/useGroupStore.ts` |
 | Auth composable | `client/composables/useAuth.ts` |
+| Profile page | `client/pages/profile.vue` |
+| Dashboard | `client/pages/index.vue` |
 
 ---
 
@@ -331,3 +353,36 @@ When starting a new Claude Code session, paste this context:
 - ✅ Balance calculation ported from client to server (same Splitwise algorithm)
 - 🎉 Phase 4: Bot Commands & UX COMPLETE
 - 📍 Next: Phase 5 - Dashboard Enhancements
+
+### December 19, 2025 (Night Session)
+- ✅ Implemented Phase 5: Dashboard Enhancements
+- **5A: Group Selector**
+  - Created `useGroupStore` Pinia store for group management
+  - Query groups where user is a member (`array-contains`)
+  - Updated `useExpenseStore` to filter by `groupId`
+  - Updated `useUserStore` to fetch only group members
+  - Added group dropdown in dashboard header
+  - Persists selected group in localStorage
+- **5B: Settlement Recommendations UI**
+  - Added `Settlement` interface to types
+  - Implemented `calculateSettlements()` greedy algorithm
+  - Added "Para saldar deudas" section with visual design
+  - Shows debtor → creditor with amounts
+  - Click on creditor to see payment details
+- **5C: Manual Expense Entry Form**
+  - "Agregar gasto" button and modal
+  - Form fields: amount, description, category
+  - Validates inputs and shows error states
+  - Saves to Firestore with groupId
+- **5D: User Profile & Payment Info**
+  - Created `/profile` page
+  - Added `PaymentInfo` interface (cbu, alias, mercadoPago, bankName)
+  - Display user info and editable payment section
+  - Added `updateUserPaymentInfo()` to user store
+  - Payment modal in settlements with copy-to-clipboard
+- **5E: Polish & UX**
+  - Profile link via clickable avatar in header
+  - Mobile-responsive header (icon logout on small screens)
+  - Friendly empty state with call-to-action
+- 🎉 Phase 5: Dashboard Enhancements COMPLETE
+- 📍 Next: Phase 6 (Backlog) or deploy to production

@@ -1,3 +1,11 @@
+// Payment information for settlements
+export interface PaymentInfo {
+  cbu: string | null           // CBU (22 digit Argentine bank number)
+  alias: string | null         // Bank alias (e.g., "juan.perez.mp")
+  mercadoPago: string | null   // Mercado Pago alias or link
+  bankName: string | null      // Bank name
+}
+
 // The 11 Travelers
 export interface User {
   id: string              // unique string (auto-generated)
@@ -5,6 +13,7 @@ export interface User {
   phone: string           // Format: +5493794702813 (Key for WhatsApp identification)
   email: string | null    // Nullable, populated via Google Auth
   aliases: string[]       // For @mention matching (lowercase, e.g., ["pipi"])
+  paymentInfo?: PaymentInfo // Payment details for settlements
   createdAt?: Date
   // Legacy field for backwards compatibility
   phoneNumber?: string
@@ -43,6 +52,13 @@ export interface Balance {
   paid: number   // Total amount this person put into the pot
   share: number  // How much they SHOULD have paid (Total / 11)
   net: number    // paid - share (Positive = owed money, Negative = owes money)
+}
+
+// Settlement recommendation (who pays whom)
+export interface Settlement {
+  fromUserId: string   // Who should pay (debtor)
+  toUserId: string     // Who should receive (creditor)
+  amount: number       // Amount to transfer
 }
 
 // Category breakdown for dashboard

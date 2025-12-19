@@ -3,6 +3,7 @@ import {
   collection,
   query,
   orderBy,
+  where,
   onSnapshot,
   addDoc,
   deleteDoc,
@@ -15,6 +16,7 @@ import type { Expense, ExpenseCategory, CategoryBreakdown } from '~/types'
 
 interface ExpenseState {
   expenses: Expense[]
+  allExpenses: Expense[] // All expenses from Firestore (unfiltered)
   loading: boolean
   error: string | null
   unsubscribe: Unsubscribe | null
@@ -23,6 +25,7 @@ interface ExpenseState {
 export const useExpenseStore = defineStore('expense', {
   state: (): ExpenseState => ({
     expenses: [],
+    allExpenses: [],
     loading: false,
     error: null,
     unsubscribe: null
@@ -81,21 +84,31 @@ export const useExpenseStore = defineStore('expense', {
   actions: {
     /**
      * Initialize Firebase realtime listener for expenses
+     * @param groupId - Optional group ID to filter expenses
      */
-    initializeListeners() {
+    initializeListeners(groupId?: string) {
       const { db } = useFirebase()
       this.loading = true
       this.error = null
 
+      // Stop existing listener before creating new one
+      if (this.unsubscribe) {
+        this.unsubscribe()
+        this.unsubscribe = null
+      }
+
       try {
         const expensesRef = collection(db, 'expenses')
-        const q = query(expensesRef, orderBy('timestamp', 'desc'))
+        // Filter by groupId if provided, otherwise get all expenses
+        const q = groupId
+          ? query(expensesRef, where('groupId', '==', groupId), orderBy('timestamp', 'desc'))
+          : query(expensesRef, orderBy('timestamp', 'desc'))
 
         // Subscribe to realtime updates
         this.unsubscribe = onSnapshot(
           q,
           (snapshot) => {
-            this.expenses = snapshot.docs.map((doc) => {
+            const expenses = snapshot.docs.map((doc) => {
               const data = doc.data()
               return {
                 id: doc.id,
@@ -108,9 +121,12 @@ export const useExpenseStore = defineStore('expense', {
                 description: data.description,
                 category: data.category,
                 splitAmong: data.splitAmong || [],
+                groupId: data.groupId,
                 timestamp: data.timestamp.toDate()
               } as Expense
             })
+            this.expenses = expenses
+            this.allExpenses = expenses
             this.loading = false
           },
           (error) => {
@@ -144,7 +160,7 @@ export const useExpenseStore = defineStore('expense', {
     },
 
     /**
-     * Add a new expense (primarily for testing or admin UI)
+     * Add a new expense
      */
     async addExpense(
       userId: string,
@@ -152,7 +168,9 @@ export const useExpenseStore = defineStore('expense', {
       amount: number,
       description: string,
       category: ExpenseCategory,
-      originalInput: string
+      originalInput: string,
+      groupId?: string,
+      splitAmong?: string[]
     ) {
       const { db } = useFirebase()
 
@@ -165,6 +183,8 @@ export const useExpenseStore = defineStore('expense', {
           description,
           category,
           originalInput,
+          groupId: groupId || null,
+          splitAmong: splitAmong || [],
           timestamp: Timestamp.now()
         })
       } catch (error) {

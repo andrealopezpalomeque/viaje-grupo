@@ -16,26 +16,50 @@
 </template>
 
 <script setup lang="ts">
-const { isAuthenticated, loading: authLoading } = useAuth()
+const { isAuthenticated, firestoreUser, loading: authLoading } = useAuth()
+const expenseStore = useExpenseStore()
+const userStore = useUserStore()
+const groupStore = useGroupStore()
 
-// Watch for auth changes and initialize data when authenticated
-// Auth is already initialized by the plugin
-watch(isAuthenticated, (authenticated) => {
+// Initialize data when authenticated
+const initializeData = async () => {
+  if (!firestoreUser.value) return
+
+  // Fetch groups for the current user
+  await groupStore.fetchGroupsForUser(firestoreUser.value.id)
+
+  // Initialize data for the selected group
+  const groupId = groupStore.selectedGroupId
+  const members = groupStore.selectedGroupMembers
+
+  if (groupId) {
+    expenseStore.initializeListeners(groupId)
+    userStore.fetchUsers(members)
+  }
+}
+
+// Watch for auth changes
+watch(isAuthenticated, async (authenticated) => {
   if (authenticated) {
-    const expenseStore = useExpenseStore()
-    const userStore = useUserStore()
-    expenseStore.initializeListeners()
-    userStore.fetchUsers()
+    await initializeData()
   } else {
-    // Stop listeners when not authenticated
-    const expenseStore = useExpenseStore()
+    // Stop listeners and clear state when not authenticated
     expenseStore.stopListeners()
+    groupStore.clearGroups()
   }
 }, { immediate: true })
 
+// Watch for group changes and reinitialize data
+watch(() => groupStore.selectedGroupId, (newGroupId, oldGroupId) => {
+  if (newGroupId && newGroupId !== oldGroupId && isAuthenticated.value) {
+    const members = groupStore.selectedGroupMembers
+    expenseStore.initializeListeners(newGroupId)
+    userStore.fetchUsers(members)
+  }
+})
+
 // Cleanup on unmount
 onUnmounted(() => {
-  const expenseStore = useExpenseStore()
   expenseStore.stopListeners()
 })
 </script>

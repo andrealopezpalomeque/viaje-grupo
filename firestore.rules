@@ -42,14 +42,18 @@ service cloud.firestore {
     function isValidUser() {
       let data = request.resource.data;
 
-      return data.keys().hasAll(['name', 'phoneNumber'])
+      return data.keys().hasAll(['name', 'phone'])
         && data.name is string
         && data.name.size() >= 1
         && data.name.size() <= 100
-        && data.phoneNumber is string
-        && data.phoneNumber.size() >= 10
-        && data.phoneNumber.size() <= 20
-        // Optional avatar field
+        && data.phone is string
+        && data.phone.size() >= 10
+        && data.phone.size() <= 20
+        // Optional fields
+        && (!data.keys().hasAny(['email']) || data.email is string)
+        && (!data.keys().hasAny(['aliases']) || data.aliases is list)
+        && (!data.keys().hasAny(['paymentInfo']) || data.paymentInfo is map)
+        && (!data.keys().hasAny(['phoneNumber']) || data.phoneNumber is string) // legacy field
         && (!data.keys().hasAny(['avatar']) || data.avatar is string);
     }
 
@@ -68,9 +72,8 @@ service cloud.firestore {
 
       allow update: if isAuthenticated()
                     && isOwner(userId)
-                    && isValidUser()
-                    // Prevent changing phoneNumber after creation
-                    && request.resource.data.phoneNumber == resource.data.phoneNumber;
+                    // Prevent changing phone after creation
+                    && request.resource.data.phone == resource.data.phone;
 
       // Users cannot delete their own profile (should be handled by admin)
       allow delete: if false;
@@ -98,6 +101,28 @@ service cloud.firestore {
       // Users can only delete their own expenses
       allow delete: if isAuthenticated()
                     && isOwner(resource.data.userId);
+    }
+
+    // ============================================
+    // Groups Collection
+    // ============================================
+    match /groups/{groupId} {
+      // All authenticated users can read groups (collaborative app)
+      // Note: Firebase Auth UID differs from Firestore user ID, so we can't check membership directly
+      allow read: if isAuthenticated();
+
+      // Only allow group creation/updates by admin (should be backend/Cloud Functions)
+      // For now, allowing authenticated users to create/update groups
+      allow create: if isAuthenticated()
+                    && request.resource.data.keys().hasAll(['name', 'members', 'createdBy'])
+                    && request.resource.data.name is string
+                    && request.resource.data.members is list
+                    && request.resource.data.createdBy is string;
+
+      allow update: if isAuthenticated()
+                    && request.resource.data.keys().hasAll(['name', 'members', 'createdBy']);
+
+      allow delete: if false; // Groups should not be deleted casually
     }
 
     // ============================================
