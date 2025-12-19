@@ -5,6 +5,9 @@
   },
   "hosting": {
     "public": "client/.output/public",
+    "predeploy": [
+      "npm run generate --workspace=client"
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
