@@ -318,35 +318,3 @@ export function parseCommand(text: string): { command: string; args: string } | 
 export function isCommand(text: string): boolean {
   return text.trim().startsWith('/')
 }
-
-/**
- * Debug command - shows internal state for troubleshooting
- */
-export async function getDebugMessage(groupId: string | null, userId: string, userName: string): Promise<string> {
-  let message = '🔧 *Debug Info*\n\n'
-
-  message += `Usuario: ${userName}\n`
-  message += `User ID: ${userId}\n`
-  message += `Group ID: ${groupId || '(ninguno)'}\n\n`
-
-  if (!groupId) {
-    message += '⚠️ No estás asignado a ningún grupo.'
-    return message
-  }
-
-  try {
-    const expenses = await getExpensesByGroup(groupId, 5)
-    message += `Gastos encontrados: ${expenses.length}\n`
-
-    if (expenses.length > 0) {
-      message += '\nÚltimos gastos:\n'
-      expenses.forEach((e, i) => {
-        message += `${i + 1}. $${e.amount} ${e.description}\n`
-      })
-    }
-  } catch (error) {
-    message += `\n❌ Error: ${error instanceof Error ? error.message : 'Unknown'}`
-  }
-
-  return message
-}
