@@ -20,6 +20,7 @@ import {
   getExpenseListMessage,
   deleteExpenseCommand,
   getUnknownCommandMessage,
+  getDebugMessage,
 } from '../services/commandService.js'
 
 const router = Router()
@@ -337,6 +338,11 @@ async function handleCommand(from, text, user, groupId) {
       }
       const deleteResult = await deleteExpenseCommand(args.trim(), user.id, groupId)
       await sendMessage(from, deleteResult.message)
+      break
+
+    case '/debug':
+      const debugMessage = await getDebugMessage(groupId, user.id, user.name)
+      await sendMessage(from, debugMessage)
       break
 
     default:
