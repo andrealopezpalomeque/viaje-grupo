@@ -696,10 +696,10 @@ const hasAnyPaymentInfo = (info) => {
   return info.cbu || info.cvu || info.alias || info.bankName
 }
 
-const copiedField = ref<string | null>(null)
+const copiedField = ref(null)
 const toast = useToast()
 
-const copyToClipboard = async (text: string, fieldName: string) => {
+const copyToClipboard = async (text, fieldName) => {
   try {
     await navigator.clipboard.writeText(text)
     copiedField.value = fieldName
