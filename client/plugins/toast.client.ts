@@ -3,7 +3,7 @@ import 'vue-toastification/dist/index.css'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const options: PluginOptions = {
-    position: POSITION.BOTTOM_RIGHT,
+    position: POSITION.TOP_RIGHT,
     timeout: 3000,
     closeOnClick: true,
     pauseOnFocusLoss: true,
