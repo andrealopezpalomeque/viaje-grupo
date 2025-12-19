@@ -12,6 +12,15 @@ import {
   formatParseErrorMessage,
   formatValidationErrorMessage,
 } from '../services/whatsappService.js'
+import {
+  isCommand,
+  parseCommand,
+  getHelpMessage,
+  getBalanceMessage,
+  getExpenseListMessage,
+  deleteExpenseCommand,
+  getUnknownCommandMessage,
+} from '../services/commandService.js'
 
 const router = Router()
 
@@ -214,7 +223,7 @@ async function processWebhook(payload) {
 function validateExpenseInput(amount, description) {
   // Amount must be a positive number
   if (typeof amount !== 'number' || isNaN(amount)) {
-    return { valid: false, error: 'El monto debe ser un número válido' }
+    return { valid: false, error: 'El monto debe ser un número positivo' }
   }
 
   if (amount <= 0) {
@@ -223,17 +232,17 @@ function validateExpenseInput(amount, description) {
 
   // Description must be 1-500 characters
   if (!description || typeof description !== 'string') {
-    return { valid: false, error: 'La descripción es requerida' }
+    return { valid: false, error: 'Falta la descripción del gasto' }
   }
 
   const trimmedDescription = description.trim()
 
   if (trimmedDescription.length < 1) {
-    return { valid: false, error: 'La descripción debe tener al menos 1 carácter' }
+    return { valid: false, error: 'Falta la descripción del gasto' }
   }
 
   if (trimmedDescription.length > 500) {
-    return { valid: false, error: 'La descripción no puede exceder 500 caracteres' }
+    return { valid: false, error: 'La descripción es muy larga (máximo 500 caracteres)' }
   }
 
   return { valid: true }
@@ -268,13 +277,85 @@ async function handleTextMessage(from, text, messageId) {
   const group = await getGroupByUserId(user.id)
   const groupId = group?.id || null
 
-  // 4. Check for currency conversion
+  // 4. Check if this is a command
+  if (isCommand(text)) {
+    await handleCommand(from, text, user, groupId)
+    return
+  }
+
+  // 5. Process as expense
+  await handleExpenseMessage(from, text, user, groupId)
+}
+
+/**
+ * Handle bot commands
+ */
+async function handleCommand(from, text, user, groupId) {
+  const parsed = parseCommand(text)
+
+  if (!parsed) {
+    return
+  }
+
+  const { command, args } = parsed
+
+  switch (command) {
+    case '/ayuda':
+    case '/help':
+      await sendMessage(from, getHelpMessage())
+      break
+
+    case '/balance':
+    case '/saldo':
+      if (!groupId) {
+        await sendMessage(from, '⚠️ No pertenecés a ningún grupo.')
+        return
+      }
+      const balanceMessage = await getBalanceMessage(groupId)
+      await sendMessage(from, balanceMessage)
+      break
+
+    case '/lista':
+    case '/list':
+      if (!groupId) {
+        await sendMessage(from, '⚠️ No pertenecés a ningún grupo.')
+        return
+      }
+      const listMessage = await getExpenseListMessage(groupId)
+      await sendMessage(from, listMessage)
+      break
+
+    case '/borrar':
+    case '/delete':
+      if (!groupId) {
+        await sendMessage(from, '⚠️ No pertenecés a ningún grupo.')
+        return
+      }
+      if (!args.trim()) {
+        await sendMessage(from, '⚠️ Indicá qué gasto querés eliminar.\n\nEjemplo: /borrar 1\n\nUsá /lista para ver los gastos.')
+        return
+      }
+      const deleteResult = await deleteExpenseCommand(args.trim(), user.id, groupId)
+      await sendMessage(from, deleteResult.message)
+      break
+
+    default:
+      await sendMessage(from, getUnknownCommandMessage(command))
+      break
+  }
+}
+
+/**
+ * Handle expense messages
+ */
+async function handleExpenseMessage(from, text, user, groupId) {
+  // 1. Check for currency conversion
   const currencyInfo = extractCurrency(text)
   let finalAmount = 0
   let originalAmount
   let originalCurrency
 
-  // 5. Parse the expense message
+  // 2. Parse the expense message
   const parsed = parseExpenseMessage(text)
 
   if (currencyInfo) {
@@ -285,13 +366,13 @@ async function handleTextMessage(from, text, messageId) {
     finalAmount = parsed.amount
   }
 
-  // 6. If parsing failed, send error message
+  // 3. If parsing failed, send error message
   if (parsed.needsReview) {
     await sendMessage(from, formatParseErrorMessage())
     return
   }
 
-  // 7. Validate input before creating expense
+  // 4. Validate input before creating expense
   const validation = validateExpenseInput(finalAmount, parsed.description)
 
   if (!validation.valid) {
@@ -299,7 +380,7 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 8. Resolve @mentions to user IDs using fuzzy matching
+  // 5. Resolve @mentions to user IDs using fuzzy matching
   let resolvedSplitAmong = []
 
   if (parsed.splitAmong && parsed.splitAmong.length > 0 && groupId) {
@@ -308,7 +389,7 @@ async function handleTextMessage(from, text, messageId) {
     resolvedSplitAmong = resolveMentionsToUserIds(parsed.splitAmong, groupMembers)
   }
 
-  // 9. Create expense in Firestore
+  // 6. Create expense in Firestore
   try {
     await createExpense({
       userId: user.id,
@@ -324,7 +405,7 @@ async function handleTextMessage(from, text, messageId) {
       timestamp: new Date()
     })
 
-    // 10. Send confirmation message to user
+    // 7. Send confirmation message to user
     const confirmationMessage = formatExpenseConfirmation(
       finalAmount,
       originalAmount,
@@ -339,7 +420,7 @@ async function handleTextMessage(from, text, messageId) {
     console.error('Error creating expense:', error)
     await sendMessage(
       from,
-      '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intenta nuevamente.'
+      '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
     )
   }
 }

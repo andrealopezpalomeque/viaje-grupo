@@ -73,3 +73,75 @@ export const deleteExpense = async (expenseId: string): Promise<void> => {
     throw error
   }
 }
+
+/**
+ * Get all expenses for a group
+ */
+export const getExpensesByGroup = async (groupId: string, limit = 10): Promise<Expense[]> => {
+  try {
+    const expensesRef = db.collection('expenses')
+    const snapshot = await expensesRef
+      .where('groupId', '==', groupId)
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get()
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        timestamp: data.timestamp?.toDate?.() || new Date()
+      }
+    }) as Expense[]
+  } catch (error) {
+    console.error('Error getting expenses by group:', error)
+    return []
+  }
+}
+
+/**
+ * Get all expenses for a group (no limit, for balance calculation)
+ */
+export const getAllExpensesByGroup = async (groupId: string): Promise<Expense[]> => {
+  try {
+    const expensesRef = db.collection('expenses')
+    const snapshot = await expensesRef
+      .where('groupId', '==', groupId)
+      .orderBy('timestamp', 'desc')
+      .get()
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        timestamp: data.timestamp?.toDate?.() || new Date()
+      }
+    }) as Expense[]
+  } catch (error) {
+    console.error('Error getting all expenses by group:', error)
+    return []
+  }
+}
+
+/**
+ * Get an expense by ID
+ */
+export const getExpenseById = async (expenseId: string): Promise<Expense | null> => {
+  try {
+    const doc = await db.collection('expenses').doc(expenseId).get()
+    if (!doc.exists) {
+      return null
+    }
+    const data = doc.data()!
+    return {
+      id: doc.id,
+      ...data,
+      timestamp: data.timestamp?.toDate?.() || new Date()
+    } as Expense
+  } catch (error) {
+    console.error('Error getting expense by ID:', error)
+    return null
+  }
+}

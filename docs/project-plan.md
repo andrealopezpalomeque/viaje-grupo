@@ -82,17 +82,17 @@
 - [ ] Structured logging (replace console.log with Winston/Pino) - Deferred to Phase 4
 - [ ] Error tracking and alerting - Deferred to Phase 4
 
-### Phase 4: Bot Commands & UX ⬅️ YOU ARE HERE
+### Phase 4: Bot Commands & UX ✅ COMPLETE
 **Target: 1-2 weeks**
 
-- [ ] `/help` - Show usage instructions
-- [ ] `/balance` - Show current balances
-- [ ] `/list` - Show recent expenses
-- [ ] `/delete [id]` - Delete an expense
-- [ ] Better error messages (more helpful Spanish text)
-- [ ] Unknown command handling
-- [ ] Structured logging (Winston/Pino) - Moved from Phase 3
-- [ ] Error tracking and alerting - Moved from Phase 3
+- [x] `/help` or `/ayuda` - Show usage instructions
+- [x] `/balance` or `/saldo` - Show current balances (Splitwise-style)
+- [x] `/list` or `/lista` - Show recent expenses (last 10)
+- [x] `/delete [n]` or `/borrar [n]` - Delete an expense by number
+- [x] Better error messages (more helpful Spanish text)
+- [x] Unknown command handling
+- [ ] Structured logging (Winston/Pino) - Deferred to Phase 5
+- [ ] Error tracking and alerting - Deferred to Phase 5
 
 ### Phase 5: Dashboard Enhancements
 **Target: 1-2 weeks**
@@ -126,6 +126,8 @@
 | User service | `server/src/services/userService.ts` |
 | Mention matching | `server/src/services/mentionService.ts` |
 | Exchange rates | `server/src/services/exchangeRateService.ts` |
+| Bot commands | `server/src/services/commandService.ts` |
+| Expense service | `server/src/services/expenseService.ts` |
 | Firebase config | `server/src/config/firebase.ts` |
 | Seed script | `server/scripts/seedUsers.ts` |
 | Balance logic | `client/stores/useUserStore.ts` |
@@ -183,6 +185,12 @@ Use these to verify the bot works correctly:
 | Invalid amount | `0 nothing` | ❌ Validation error |
 | Negative amount | `-50 refund` | ❌ Validation error |
 | Duplicate message | Send same message twice quickly | Only one expense created |
+| Help command | `/ayuda` or `/help` | 📖 Usage instructions |
+| Balance command | `/balance` or `/saldo` | 💰 Group balances |
+| List command | `/lista` or `/list` | 📋 Last 10 expenses |
+| Delete expense | `/borrar 1` | ✅ Deletes expense #1 (if you created it) |
+| Delete by other | `/borrar 1` (created by someone else) | ⚠️ Error: only creator can delete |
+| Unknown command | `/foo` | ❓ Unknown command message |
 
 ---
 
@@ -309,3 +317,17 @@ When starting a new Claude Code session, paste this context:
 - ✅ Deployed server to Render and client to Firebase Hosting
 - 🎉 Phase 3: Data Quality & Reliability COMPLETE
 - 📍 Next: Phase 4 - Bot Commands & UX
+
+### December 19, 2025 (Evening Session)
+- ✅ Implemented WhatsApp bot commands
+  - `/ayuda` or `/help` - Shows usage instructions in Spanish
+  - `/balance` or `/saldo` - Shows Splitwise-style balances (who owes whom)
+  - `/lista` or `/list` - Shows last 10 expenses with relative dates
+  - `/borrar [n]` or `/delete [n]` - Deletes expense by number (creator only)
+  - Unknown command handling with helpful error message
+- ✅ Created commandService.ts for command logic
+- ✅ Extended expenseService.ts with getExpensesByGroup, getAllExpensesByGroup, getExpenseById
+- ✅ Improved error messages in Spanish with WhatsApp formatting (*bold*, `code`, _italic_)
+- ✅ Balance calculation ported from client to server (same Splitwise algorithm)
+- 🎉 Phase 4: Bot Commands & UX COMPLETE
+- 📍 Next: Phase 5 - Dashboard Enhancements

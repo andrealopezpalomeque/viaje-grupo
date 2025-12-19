@@ -173,23 +173,35 @@ export function formatExpenseConfirmation(
  * Format error message for parsing failures
  */
 export function formatParseErrorMessage(): string {
-  return `❌ *No pude entender el mensaje*\n\n` +
-    `Por favor usa este formato:\n` +
-    `*[monto] [descripción]*\n\n` +
-    `Ejemplos:\n` +
-    `• 50 almuerzo\n` +
-    `• 1500 taxi al aeropuerto\n` +
-    `• USD 20 cena @Juan @María\n` +
-    `• EUR 45 hotel\n\n` +
-    `Monedas soportadas: ARS, USD, EUR, BRL`
+  return `⚠️ *No pude entender el mensaje*\n\n` +
+    `Usá este formato:\n` +
+    `\`[monto] [descripción]\`\n\n` +
+    `*Ejemplos:*\n` +
+    `• \`50 almuerzo\`\n` +
+    `• \`1500 taxi al aeropuerto\`\n` +
+    `• \`USD 20 cena @Juan @María\`\n\n` +
+    `_Escribí /ayuda para más info_`
 }
 
 /**
  * Format error message for validation failures
  */
 export function formatValidationErrorMessage(error: string): string {
-  return `❌ *Error de validación*\n\n${error}\n\n` +
-    `Por favor verifica e intenta nuevamente.`
+  return `⚠️ *${error}*\n\n` +
+    `*Ejemplos válidos:*\n` +
+    `• \`100 taxi\`\n` +
+    `• \`USD 50 cena @Juan\`\n\n` +
+    `_Escribí /ayuda para más info_`
+}
+
+/**
+ * Format error message for unknown @mention
+ */
+export function formatUnknownMentionMessage(mention: string, suggestion?: string): string {
+  if (suggestion) {
+    return `⚠️ No encontré a *@${mention}*. ¿Quisiste decir *@${suggestion}*?`
+  }
+  return `⚠️ No encontré a *@${mention}* en el grupo.`
 }
 
 /**
