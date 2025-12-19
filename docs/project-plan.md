@@ -17,7 +17,7 @@
 
 ## Current Status: Production Deployed ✅
 
-**Last updated:** December 18, 2025
+**Last updated:** December 19, 2025
 
 ### Production URLs
 
@@ -72,17 +72,17 @@
 - [x] Deploy Nuxt.js frontend to Firebase Hosting
 - [ ] Set up monitoring/logging (e.g., Sentry, LogRocket) - Optional for Phase 3
 
-### Phase 3: Data Quality & Reliability ⬅️ YOU ARE HERE
+### Phase 3: Data Quality & Reliability ✅ COMPLETE
 **Target: 1 week**
 
-- [ ] Integrate live exchange rate API (replace `messageParser.ts:124-130`)
-  - Suggested APIs: ExchangeRate-API, Open Exchange Rates, or BCRA for ARS
-- [ ] Improve name matching in splitAmong (fuzzy matching for @mentions)
-- [ ] Add expense validation edge cases
-- [ ] Structured logging (replace console.log with Winston/Pino)
-- [ ] Error tracking and alerting
+- [x] Integrate live exchange rate API (DolarApi.com with 30-min caching)
+- [x] Improve name matching in splitAmong (fuzzy matching for @mentions using fuse.js)
+- [x] Unified user system with groups and aliases
+- [x] Google Auth linked to Firestore users (only pre-registered users can access)
+- [ ] Structured logging (replace console.log with Winston/Pino) - Deferred to Phase 4
+- [ ] Error tracking and alerting - Deferred to Phase 4
 
-### Phase 4: Bot Commands & UX
+### Phase 4: Bot Commands & UX ⬅️ YOU ARE HERE
 **Target: 1-2 weeks**
 
 - [ ] `/help` - Show usage instructions
@@ -91,6 +91,8 @@
 - [ ] `/delete [id]` - Delete an expense
 - [ ] Better error messages (more helpful Spanish text)
 - [ ] Unknown command handling
+- [ ] Structured logging (Winston/Pino) - Moved from Phase 3
+- [ ] Error tracking and alerting - Moved from Phase 3
 
 ### Phase 5: Dashboard Enhancements
 **Target: 1-2 weeks**
@@ -121,9 +123,14 @@
 | Webhook routes | `server/src/routes/whatsapp.js` |
 | Message parser | `server/src/utils/messageParser.ts` |
 | WhatsApp service | `server/src/services/whatsappService.ts` |
+| User service | `server/src/services/userService.ts` |
+| Mention matching | `server/src/services/mentionService.ts` |
+| Exchange rates | `server/src/services/exchangeRateService.ts` |
 | Firebase config | `server/src/config/firebase.ts` |
+| Seed script | `server/scripts/seedUsers.ts` |
 | Balance logic | `client/stores/useUserStore.ts` |
 | Expense store | `client/stores/useExpenseStore.ts` |
+| Auth composable | `client/composables/useAuth.ts` |
 
 ---
 
@@ -138,8 +145,8 @@ WHATSAPP_APP_SECRET=your_app_secret
 WHATSAPP_API_TOKEN=your_api_token
 WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
 
-# Authorization
-ALLOWED_PHONE_NUMBERS=+5493794702813,+5493794702875
+# Authorization (all 11 travelers)
+ALLOWED_PHONE_NUMBERS=+5493794702813,+5493794702875,+5493794029833,+5493794887005,+5493794583503,+5493794229905,+5493794720969,+5493794770027,+5493794142450,+5493794625698,+5493794824341
 
 # Firebase
 FIREBASE_PROJECT_ID=your_project_id
@@ -278,3 +285,27 @@ When starting a new Claude Code session, paste this context:
 - ✅ Verified end-to-end flow: WhatsApp → Render → Firestore → Dashboard
 - 🎉 Phase 2: Production Deployment COMPLETE
 - 📍 Next: Phase 3 - Data Quality & Reliability
+
+### December 19, 2025
+- ✅ Implemented unified user system with groups
+  - Created `seedUsers.ts` script to migrate 11 users with aliases
+  - New user structure: `id`, `name`, `phone`, `email`, `aliases[]`, `createdAt`
+  - Created `groups` collection with "Brazil Trip 2025" group
+  - All expenses now include `groupId` field
+- ✅ Implemented fuzzy @mention matching with fuse.js
+  - Created `mentionService.ts` for alias-based user matching
+  - Handles typos, missing accents (María → maria), case insensitivity
+  - 40% similarity threshold for confidence matching
+- ✅ Updated WhatsApp handler
+  - Looks up sender by phone in users collection
+  - Finds user's group via `getGroupByUserId`
+  - Resolves @mentions against group members using fuzzy matching
+  - Includes `groupId` when saving expenses
+- ✅ Updated Google Auth to link with Firestore users
+  - Verifies user email exists in Firestore on login
+  - Denies access to non-registered users
+  - Stores both Firebase user and Firestore user in auth state
+- ✅ Ran seed script successfully - 11 users and 1 group created
+- ✅ Deployed server to Render and client to Firebase Hosting
+- 🎉 Phase 3: Data Quality & Reliability COMPLETE
+- 📍 Next: Phase 4 - Bot Commands & UX
