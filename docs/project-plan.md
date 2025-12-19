@@ -125,6 +125,11 @@
 ### Phase 6: Advanced Features (Backlog)
 **Target: As needed**
 
+- [ ] **Debt Simplification** - Minimize the number of transactions needed to settle all debts
+  - Current algorithm: greedy matching (largest debtor to largest creditor)
+  - Improved: Graph-based simplification that eliminates intermediate transfers
+  - Example: If A owes B $10, B owes C $10 → simplify to A owes C $10 (1 transfer instead of 2)
+  - Also called: "smart settlements", "transaction minimization", "debt consolidation"
 - [ ] Receipt uploads (image support via WhatsApp)
 - [ ] Monthly summary reports (automatic)
 - [ ] Multi-currency tracking (keep original currency)
@@ -385,4 +390,34 @@ When starting a new Claude Code session, paste this context:
   - Mobile-responsive header (icon logout on small screens)
   - Friendly empty state with call-to-action
 - 🎉 Phase 5: Dashboard Enhancements COMPLETE
-- 📍 Next: Phase 6 (Backlog) or deploy to production
+- 📍 Next: Phase 5.5 - Final Polish (Transparency & Details)
+
+### December 19, 2025 (Late Night Session)
+- ✅ Implemented Phase 5.5: Final Polish - Transparency & Details
+- **Task 1: Expandable Balance Breakdown**
+  - Added chevron indicator (▸/▾) to balance items
+  - Click to expand/collapse expense breakdown
+  - Each line shows: category icon, description, who paid, and user's share
+  - Color-coded amounts (positive/negative)
+  - Smooth animation on expand/collapse
+- **Task 2: Expandable Settlement Details**
+  - Expandable rows with breakdown showing which expenses make up the debt
+  - Shows recipient's payment info inline (CBU, CVU, Alias, Bank)
+  - Copy button for payment details
+  - "No agregó datos de pago aún" message if no info
+- **Task 3: Enhanced Activity Feed**
+  - Large category icon on left (🍽️ 🚕 🏨 🎉 🛍️ 📋)
+  - Prominent description and amount
+  - "Pagó: [Name] • hace 2 horas" format
+  - "Dividido entre: [Names]" participant list
+  - Per-person amount badge: "$ 3.000 c/u"
+- **Task 4: Visual Polish**
+  - Consistent card styling with rounded corners and subtle borders
+  - Stats cards with icons and improved layout
+  - Color coding: positive (green), negative (red), neutral (gray)
+  - Mobile-first responsive design
+  - Micro-interactions: hover states, smooth transitions
+  - Replaced all emoji icons with SVG icons (Heroicons style)
+- Added **Debt Simplification** to Phase 6 backlog (transaction minimization algorithm)
+- Phase 5.5: Final Polish COMPLETE
+- Deployed to Firebase Hosting
