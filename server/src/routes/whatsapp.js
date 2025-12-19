@@ -3,7 +3,8 @@ import crypto from 'crypto'
 import rateLimit from 'express-rate-limit'
 import { getUserByPhone, isAuthorizedPhone } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
-import { parseExpenseMessage, extractCurrency, convertToARS } from '../utils/messageParser.js'
+import { parseExpenseMessage, extractCurrency } from '../utils/messageParser.js'
+import { convertToARS } from '../services/exchangeRateService.js'
 import {
   sendMessage,
   formatExpenseConfirmation,
@@ -272,7 +273,7 @@ async function handleTextMessage(from, text, messageId) {
   const parsed = parseExpenseMessage(text)
 
   if (currencyInfo) {
-    finalAmount = convertToARS(currencyInfo.amount, currencyInfo.currency)
+    finalAmount = await convertToARS(currencyInfo.amount, currencyInfo.currency)
     originalAmount = currencyInfo.amount
     originalCurrency = currencyInfo.currency
   } else {

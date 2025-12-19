@@ -120,16 +120,9 @@ export const extractCurrency = (message: string): { amount: number; currency: st
 }
 
 /**
- * Convert supported currencies to ARS (static rate for now)
- * TODO: Integrate with live exchange rate API
+ * Convert supported currencies to ARS
+ * NOTE: This function has been moved to services/exchangeRateService.ts
+ * The new version uses live exchange rates from DolarApi.com with caching
+ *
+ * @deprecated Use convertToARS from services/exchangeRateService.ts instead
  */
-export const convertToARS = (amount: number, currency: string): number => {
-  const ratesToARS: Record<string, number> = {
-    ARS: 1,
-    USD: 850, // Approximate blue rate, adjust as needed
-    EUR: 925, // Approximate, adjust as needed
-    BRL: 170 // Approximate, adjust as needed
-  }
-
-  return amount * (ratesToARS[currency] ?? 1)
-}
