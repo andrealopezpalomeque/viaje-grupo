@@ -75,7 +75,7 @@ export const deleteExpense = async (expenseId: string): Promise<void> => {
 }
 
 /**
- * Get all expenses for a group
+ * Get recent expenses for a group
  */
 export const getExpensesByGroup = async (groupId: string, limit = 10): Promise<Expense[]> => {
   try {
