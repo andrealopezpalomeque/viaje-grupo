@@ -706,7 +706,7 @@ const handleAddExpense = async () => {
     expenseFormError.value = 'La descripción es requerida'
     return
   }
-  if (!firestoreUser.value) {
+  if (!firestoreUser.value || !user.value) {
     expenseFormError.value = 'No estás autenticado'
     return
   }
@@ -730,6 +730,7 @@ const handleAddExpense = async () => {
     await expenseStore.addExpense(
       firestoreUser.value.id,
       firestoreUser.value.name,
+      user.value.uid,
       Math.round(amountInARS),
       expenseForm.description.trim(),
       expenseForm.category,

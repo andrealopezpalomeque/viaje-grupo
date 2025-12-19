@@ -17,13 +17,24 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    // Check if the authenticated user owns the user document (via authUid field)
+    function isUserOwner() {
+      return resource.data.authUid == request.auth.uid;
+    }
+
+    // Check if this is the first time linking (authUid not set yet) or already linked
+    function canLinkAuthUid() {
+      return !('authUid' in resource.data) || resource.data.authUid == request.auth.uid;
+    }
+
     // Validate expense data structure and constraints
     function isValidExpense() {
       let data = request.resource.data;
 
-      return data.keys().hasAll(['userId', 'userName', 'amount', 'description', 'category', 'timestamp', 'originalInput'])
+      return data.keys().hasAll(['userId', 'userName', 'authUid', 'amount', 'description', 'category', 'timestamp', 'originalInput'])
         && data.userId is string
         && data.userName is string
+        && data.authUid is string
         && data.amount is number
         && data.amount > 0  // Amount must be positive
         && data.description is string
@@ -51,6 +62,7 @@ service cloud.firestore {
         && data.phone.size() <= 20
         // Optional fields
         && (!data.keys().hasAny(['email']) || data.email is string)
+        && (!data.keys().hasAny(['authUid']) || data.authUid is string)
         && (!data.keys().hasAny(['aliases']) || data.aliases is list)
         && (!data.keys().hasAny(['paymentInfo']) || data.paymentInfo is map)
         && (!data.keys().hasAny(['phoneNumber']) || data.phoneNumber is string) // legacy field
@@ -70,10 +82,18 @@ service cloud.firestore {
                     && isOwner(userId)
                     && isValidUser();
 
+      // Allow updates if:
+      // 1. User is authenticated
+      // 2. Either first time linking authUid OR authUid matches
+      // 3. Phone number cannot be changed after creation
       allow update: if isAuthenticated()
-                    && isOwner(userId)
-                    // Prevent changing phone after creation
-                    && request.resource.data.phone == resource.data.phone;
+                    && canLinkAuthUid()
+                    && request.resource.data.phone == resource.data.phone
+                    // Once authUid is set, only that user can update
+                    && (
+                      !('authUid' in resource.data)
+                      || resource.data.authUid == request.auth.uid
+                    );
 
       // Users cannot delete their own profile (should be handled by admin)
       allow delete: if false;
@@ -86,21 +106,22 @@ service cloud.firestore {
       // All authenticated users can read expenses (collaborative tracking)
       allow read: if isAuthenticated();
 
-      // Users can create expenses, but only for themselves
+      // Users can create expenses - authUid must match their Firebase Auth UID
       allow create: if isAuthenticated()
-                    && isOwner(request.resource.data.userId)
+                    && request.resource.data.authUid == request.auth.uid
                     && isValidExpense();
 
-      // Users can only update their own expenses
+      // Users can only update their own expenses (verified via authUid)
       allow update: if isAuthenticated()
-                    && isOwner(resource.data.userId)
+                    && resource.data.authUid == request.auth.uid
                     && isValidExpense()
                     // Prevent changing the owner of an expense
-                    && request.resource.data.userId == resource.data.userId;
+                    && request.resource.data.userId == resource.data.userId
+                    && request.resource.data.authUid == resource.data.authUid;
 
-      // Users can only delete their own expenses
+      // Users can only delete their own expenses (verified via authUid)
       allow delete: if isAuthenticated()
-                    && isOwner(resource.data.userId);
+                    && resource.data.authUid == request.auth.uid;
     }
 
     // ============================================

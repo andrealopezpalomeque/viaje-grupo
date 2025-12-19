@@ -13,6 +13,7 @@ export interface User {
   name: string            // Display name (e.g., "Pipi López Palomeque")
   phone: string           // Format: +5493794702813 (Key for WhatsApp identification)
   email: string | null    // Nullable, populated via Google Auth
+  authUid?: string        // Firebase Auth UID (for security rules)
   aliases: string[]       // For @mention matching (lowercase, e.g., ["pipi"])
   paymentInfo?: PaymentInfo // Payment details for settlements
   createdAt?: Date
@@ -32,7 +33,8 @@ export interface Group {
 // The Expense Record
 export interface Expense {
   id: string
-  userId: string         // Who paid?
+  userId: string         // Who paid? (Firestore user ID)
+  authUid?: string       // Firebase Auth UID (for security rules)
   userName: string       // Denormalized name for easier display
   amount: number         // Always in base currency (ARS)
   originalAmount?: number // Amount entered by user (if different currency)

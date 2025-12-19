@@ -111,7 +111,18 @@ export const useAuth = () => {
     const existingUser = await findUserByEmail(email)
 
     if (existingUser) {
-      // User found by email - already linked
+      // Store/update the authUid if not already set or if it changed
+      if (existingUser.authUid !== firebaseUser.uid) {
+        try {
+          const database = requireDb()
+          const userRef = doc(database, 'users', existingUser.id)
+          await updateDoc(userRef, { authUid: firebaseUser.uid })
+          existingUser.authUid = firebaseUser.uid
+        } catch (err) {
+          console.error('Error updating authUid:', err)
+          // Continue anyway - user can still use the app, just can't update their profile yet
+        }
+      }
       return existingUser
     }
 
