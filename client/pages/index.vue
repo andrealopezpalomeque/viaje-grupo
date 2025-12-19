@@ -515,10 +515,13 @@
                 <div class="flex items-center justify-between mb-1">
                   <label class="text-sm font-medium text-gray-600 dark:text-gray-400">CBU</label>
                   <button
-                    @click="copyToClipboard(paymentModalUser.paymentInfo.cbu)"
-                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs"
+                    @click="copyToClipboard(paymentModalUser.paymentInfo.cbu, 'cbu')"
+                    class="text-xs font-medium transition-colors"
+                    :class="copiedField === 'cbu'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300'"
                   >
-                    Copiar
+                    {{ copiedField === 'cbu' ? 'Copiado ✓' : 'Copiar' }}
                   </button>
                 </div>
                 <p class="text-gray-900 dark:text-white font-mono text-sm break-all">{{ paymentModalUser.paymentInfo.cbu }}</p>
@@ -528,10 +531,13 @@
                 <div class="flex items-center justify-between mb-1">
                   <label class="text-sm font-medium text-gray-600 dark:text-gray-400">CVU</label>
                   <button
-                    @click="copyToClipboard(paymentModalUser.paymentInfo.cvu)"
-                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs"
+                    @click="copyToClipboard(paymentModalUser.paymentInfo.cvu, 'cvu')"
+                    class="text-xs font-medium transition-colors"
+                    :class="copiedField === 'cvu'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300'"
                   >
-                    Copiar
+                    {{ copiedField === 'cvu' ? 'Copiado ✓' : 'Copiar' }}
                   </button>
                 </div>
                 <p class="text-gray-900 dark:text-white font-mono text-sm break-all">{{ paymentModalUser.paymentInfo.cvu }}</p>
@@ -541,10 +547,13 @@
                 <div class="flex items-center justify-between mb-1">
                   <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Alias</label>
                   <button
-                    @click="copyToClipboard(paymentModalUser.paymentInfo.alias)"
-                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs"
+                    @click="copyToClipboard(paymentModalUser.paymentInfo.alias, 'alias')"
+                    class="text-xs font-medium transition-colors"
+                    :class="copiedField === 'alias'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300'"
                   >
-                    Copiar
+                    {{ copiedField === 'alias' ? 'Copiado ✓' : 'Copiar' }}
                   </button>
                 </div>
                 <p class="text-gray-900 dark:text-white">{{ paymentModalUser.paymentInfo.alias }}</p>
@@ -687,12 +696,22 @@ const hasAnyPaymentInfo = (info) => {
   return info.cbu || info.cvu || info.alias || info.bankName
 }
 
-const copyToClipboard = async (text) => {
+const copiedField = ref<string | null>(null)
+const toast = useToast()
+
+const copyToClipboard = async (text: string, fieldName: string) => {
   try {
     await navigator.clipboard.writeText(text)
-    // Could add a toast notification here
+    copiedField.value = fieldName
+    toast.success('Copiado al portapapeles')
+
+    // Reset after 2 seconds
+    setTimeout(() => {
+      copiedField.value = null
+    }, 2000)
   } catch (err) {
     console.error('Failed to copy:', err)
+    toast.error('Error al copiar')
   }
 }
 
