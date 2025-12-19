@@ -270,22 +270,22 @@
                 :key="index"
                 class="px-6 py-4"
               >
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
                   <!-- From user (debtor) -->
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <div class="flex items-center gap-2 min-w-0 flex-shrink">
+                    <div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
                       <span class="text-xs font-medium text-red-700 dark:text-red-400">
                         {{ userStore.getUserInitials(settlement.fromUserId) }}
                       </span>
                     </div>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {{ getFirstName(userStore.getUserById(settlement.fromUserId)?.name) }}
                     </span>
                   </div>
 
                   <!-- Arrow -->
                   <div class="flex-shrink-0 text-gray-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
                   </div>
@@ -293,25 +293,25 @@
                   <!-- To user (creditor) - clickable to show payment info -->
                   <button
                     @click="showPaymentInfo(settlement.toUserId)"
-                    class="flex items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors"
+                    class="flex items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors min-w-0 flex-shrink"
                     :title="'Ver datos de pago de ' + getFirstName(userStore.getUserById(settlement.toUserId)?.name)"
                   >
-                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
                       <span class="text-xs font-medium text-green-700 dark:text-green-400">
                         {{ userStore.getUserInitials(settlement.toUserId) }}
                       </span>
                     </div>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {{ getFirstName(userStore.getUserById(settlement.toUserId)?.name) }}
                     </span>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
 
                   <!-- Amount -->
-                  <div class="ml-auto">
-                    <span class="text-lg font-semibold text-gray-900 dark:text-white font-mono tabular-nums">
+                  <div class="ml-auto flex-shrink-0">
+                    <span class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white font-mono tabular-nums whitespace-nowrap">
                       {{ formatCurrency(settlement.amount) }}
                     </span>
                   </div>
