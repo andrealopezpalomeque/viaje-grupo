@@ -1,9 +1,22 @@
 // The 11 Travelers
 export interface User {
-  id: string          // unique string (can be phone number or uuid)
-  name: string        // Display name (e.g., "Nico")
-  phoneNumber: string // Format: +54911... (Key for WhatsApp identification)
-  avatar?: string     // URL or Initials
+  id: string              // unique string (auto-generated)
+  name: string            // Display name (e.g., "Pipi López Palomeque")
+  phone: string           // Format: +5493794702813 (Key for WhatsApp identification)
+  email: string | null    // Nullable, populated via Google Auth
+  aliases: string[]       // For @mention matching (lowercase, e.g., ["pipi"])
+  createdAt?: Date
+  // Legacy field for backwards compatibility
+  phoneNumber?: string
+}
+
+// Group for organizing expenses
+export interface Group {
+  id: string
+  name: string
+  members: string[]       // Array of user IDs
+  createdBy: string       // User ID of creator
+  createdAt?: Date
 }
 
 // The Expense Record
@@ -17,7 +30,8 @@ export interface Expense {
   originalInput: string  // The raw text: "50 beers at beach"
   description: string    // Cleaned text: "beers at beach"
   category: ExpenseCategory
-  splitAmong?: string[] // List of names/IDs, empty means everyone
+  splitAmong?: string[]  // List of user IDs for splitting, empty means everyone
+  groupId?: string       // ID of the group this expense belongs to
   timestamp: Date        // Firestore Timestamp
 }
 

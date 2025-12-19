@@ -9,7 +9,8 @@ export interface Expense {
   originalCurrency?: string
   description: string
   category: ExpenseCategory
-  splitAmong?: string[]
+  splitAmong?: string[]       // List of user IDs or names for splitting
+  groupId?: string            // ID of the group this expense belongs to
   timestamp: Date
 }
 
@@ -19,8 +20,21 @@ export type ExpenseCategory = 'food' | 'transport' | 'accommodation' | 'entertai
 export interface User {
   id: string
   name: string
-  phoneNumber: string
-  avatar?: string
+  phone: string           // with country code (e.g., +5493794702813)
+  email: string | null    // nullable, populated via Google Auth
+  aliases: string[]       // for @mention matching (lowercase)
+  createdAt?: Date
+  // Legacy field for backwards compatibility during migration
+  phoneNumber?: string
+}
+
+// Group types
+export interface Group {
+  id: string
+  name: string
+  members: string[]       // array of user IDs
+  createdBy: string       // user ID of creator
+  createdAt?: Date
 }
 
 // WhatsApp webhook types

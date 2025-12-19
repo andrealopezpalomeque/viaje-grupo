@@ -28,6 +28,10 @@ export const createExpense = async (expense: Expense): Promise<string> => {
       payload.originalCurrency = expense.originalCurrency
     }
 
+    if (expense.groupId !== undefined) {
+      payload.groupId = expense.groupId
+    }
+
     const docRef = await expensesRef.add(payload)
 
     return docRef.id

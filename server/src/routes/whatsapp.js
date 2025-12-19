@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import crypto from 'crypto'
 import rateLimit from 'express-rate-limit'
-import { getUserByPhone, isAuthorizedPhone } from '../services/userService.js'
+import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
 import { parseExpenseMessage, extractCurrency } from '../utils/messageParser.js'
 import { convertToARS } from '../services/exchangeRateService.js'
+import { resolveMentionsToUserIds } from '../services/mentionService.js'
 import {
   sendMessage,
   formatExpenseConfirmation,
@@ -263,13 +264,17 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 3. Check for currency conversion
+  // 3. Get user's group
+  const group = await getGroupByUserId(user.id)
+  const groupId = group?.id || null
+
+  // 4. Check for currency conversion
   const currencyInfo = extractCurrency(text)
   let finalAmount = 0
   let originalAmount
   let originalCurrency
 
-  // 4. Parse the expense message
+  // 5. Parse the expense message
   const parsed = parseExpenseMessage(text)
 
   if (currencyInfo) {
@@ -280,13 +285,13 @@ async function handleTextMessage(from, text, messageId) {
     finalAmount = parsed.amount
   }
 
-  // 5. If parsing failed, send error message
+  // 6. If parsing failed, send error message
   if (parsed.needsReview) {
     await sendMessage(from, formatParseErrorMessage())
     return
   }
 
-  // 6. Validate input before creating expense
+  // 7. Validate input before creating expense
   const validation = validateExpenseInput(finalAmount, parsed.description)
 
   if (!validation.valid) {
@@ -294,7 +299,16 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 7. Create expense in Firestore
+  // 8. Resolve @mentions to user IDs using fuzzy matching
+  let resolvedSplitAmong = []
+
+  if (parsed.splitAmong && parsed.splitAmong.length > 0 && groupId) {
+    // Get group members for fuzzy matching
+    const groupMembers = await getGroupMembers(groupId)
+    resolvedSplitAmong = resolveMentionsToUserIds(parsed.splitAmong, groupMembers)
+  }
+
+  // 9. Create expense in Firestore
   try {
     await createExpense({
       userId: user.id,
@@ -305,18 +319,19 @@ async function handleTextMessage(from, text, messageId) {
       originalInput: text,
       description: parsed.description,
       category: parsed.category || 'general',
-      splitAmong: parsed.splitAmong || [],
+      splitAmong: resolvedSplitAmong,
+      groupId: groupId,
       timestamp: new Date()
     })
 
-    // 8. Send confirmation message to user
+    // 10. Send confirmation message to user
     const confirmationMessage = formatExpenseConfirmation(
       finalAmount,
       originalAmount,
       originalCurrency,
       parsed.description,
       parsed.category || 'general',
-      parsed.splitAmong || []
+      parsed.splitAmong || [] // Use original mention names for display
     )
 
     await sendMessage(from, confirmationMessage)

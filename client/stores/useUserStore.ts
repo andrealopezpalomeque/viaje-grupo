@@ -22,7 +22,9 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     getUserById: (state) => (userId: string) => state.users.find((u) => u.id === userId),
-    getUserByPhone: (state) => (phoneNumber: string) => state.users.find((u) => u.phoneNumber === phoneNumber),
+    getUserByPhone: (state) => (phoneNumber: string) => state.users.find((u) =>
+      u.phone === phoneNumber || u.phoneNumber === phoneNumber
+    ),
     getUserInitials: (state) => (userId: string, fallbackName?: string): string => {
       const user = state.users.find((u) => u.id === userId)
       const name = user ? user.name : fallbackName
@@ -80,33 +82,21 @@ export const useUserStore = defineStore('user', {
         let splitUserIds: string[] = []
 
         if (expense.splitAmong && expense.splitAmong.length > 0) {
-          // Resolve names to IDs
-          // Normalize names for comparison
-          splitUserIds = expense.splitAmong.map(name => {
-            const cleanName = name.toLowerCase()
-            const user = this.users.find(u => u.name.toLowerCase().includes(cleanName))
-            return user ? user.id : null
-          }).filter((id): id is string => id !== null)
-          
-          // If no mentioned users found (e.g. invalid names), fallback to everyone? 
-          // Or just payer? Let's fallback to everyone for safety, or just the payer if private?
-          // For now: if mentions exist but none match, fallback to everyone (simplest)
+          // splitAmong now contains user IDs directly (from fuzzy matching)
+          // Filter to only include valid user IDs that exist in our users list
+          splitUserIds = expense.splitAmong.filter(id =>
+            this.users.some(u => u.id === id)
+          )
+
+          // If no valid users found, fallback to everyone
           if (splitUserIds.length === 0) {
-             splitUserIds = this.users.map(u => u.id)
+            splitUserIds = this.users.map(u => u.id)
           } else {
-             // Add payer to split if they aren't explicitly excluded? 
-             // Usually sender says "Lunch @Nico", implies Pipi AND Nico.
-             // If Pipi says "Gift for @Nico", Pipi pays, Nico owes? 
-             // Standard Splitwise: "Paid by Pipi, split by Pipi and Nico"
-             // But if I say "@Nico @Juan", maybe I mean ONLY them?
-             // Let's assume: If mentions exist, SPLIT ONLY AMONG MENTIONS.
-             // But usually the payer is included. 
-             // Let's check if payer is in the mentioned list. If not, add them?
-             // "200 Taxi @Nico" -> Pipi paid. Split Pipi & Nico? Or just Nico?
-             // Interpretation: "Taxi with Nico". I pay, we both split.
-             if (!splitUserIds.includes(expense.userId)) {
-               splitUserIds.push(expense.userId)
-             }
+            // Add payer to split if they aren't explicitly included
+            // "200 Taxi @Nico" -> Pipi paid. Split between Pipi & Nico.
+            if (!splitUserIds.includes(expense.userId)) {
+              splitUserIds.push(expense.userId)
+            }
           }
         } else {
           // Default: Everyone
