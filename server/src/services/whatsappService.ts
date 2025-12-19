@@ -173,9 +173,9 @@ export function formatExpenseConfirmation(
 
   // Amount line - use correct format for each currency
   if (originalCurrency && originalCurrency !== 'ARS') {
-    message += `💰 ${originalCurrency} ${formatInternational(originalAmount || 0)} → $${formatARS(amount)}\n`
+    message += `💰 ${originalCurrency} ${formatInternational(originalAmount || 0)} → $${formatARS(amount)} ARS\n`
   } else {
-    message += `💰 $${formatARS(amount)}\n`
+    message += `💰 $${formatARS(amount)} ARS\n`
   }
 
   message += `📝 ${description}\n`
