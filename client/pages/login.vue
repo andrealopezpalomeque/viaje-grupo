@@ -35,7 +35,7 @@
         <!-- Google Sign In Button -->
         <button
           @click="handleGoogleSignIn"
-          :disabled="isButtonDisabled"
+          :disabled="isSigningIn"
           class="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           <svg
@@ -88,19 +88,15 @@
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: ['auth'],
-  ssr: false  // Disable SSR for login page to avoid hydration mismatch
+  middleware: ['auth']
 })
 
-const { signInWithGoogle, loading: authLoading, error: authError } = useAuth()
+const { signInWithGoogle, error: authError } = useAuth()
 const router = useRouter()
 
-// Track if we're actively signing in (separate from initial auth loading)
+// Track if we're actively signing in (completely separate from auth loading)
+// This ensures the button is never disabled during initial page load
 const isSigningIn = ref(false)
-
-// Button should only be disabled during active sign-in, not during initial auth load
-// This prevents the button from appearing disabled on page load
-const isButtonDisabled = computed(() => isSigningIn.value)
 
 const handleGoogleSignIn = async () => {
   isSigningIn.value = true
