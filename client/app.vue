@@ -2,16 +2,18 @@
   <div>
     <NuxtPage />
 
-    <!-- Global loading overlay while auth initializes -->
-    <div
-      v-if="authLoading"
-      class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center"
-    >
-      <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
-        <p class="text-gray-600 dark:text-gray-400">Cargando...</p>
+    <!-- Global loading overlay while auth initializes - ClientOnly to prevent SSR hydration issues -->
+    <ClientOnly>
+      <div
+        v-if="authLoading"
+        class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center"
+      >
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
+          <p class="text-gray-600 dark:text-gray-400">Cargando...</p>
+        </div>
       </div>
-    </div>
+    </ClientOnly>
   </div>
 </template>
 
