@@ -35,11 +35,11 @@
         <!-- Google Sign In Button -->
         <button
           @click="handleGoogleSignIn"
-          :disabled="authLoading"
+          :disabled="isButtonDisabled"
           class="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           <svg
-            v-if="!authLoading"
+            v-if="!isSigningIn"
             class="w-5 h-5"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
@@ -63,12 +63,12 @@
           </svg>
 
           <div
-            v-if="authLoading"
+            v-if="isSigningIn"
             class="w-5 h-5 border-2 border-gray-300 dark:border-gray-500 border-t-gray-600 dark:border-t-gray-200 rounded-full animate-spin"
           ></div>
 
           <span>
-            {{ authLoading ? 'Iniciando sesión...' : 'Continuar con Google' }}
+            {{ isSigningIn ? 'Iniciando sesión...' : 'Continuar con Google' }}
           </span>
         </button>
 
@@ -87,16 +87,31 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: ['auth'],
+  ssr: false  // Disable SSR for login page to avoid hydration mismatch
+})
+
 const { signInWithGoogle, loading: authLoading, error: authError } = useAuth()
 const router = useRouter()
 
+// Track if we're actively signing in (separate from initial auth loading)
+const isSigningIn = ref(false)
+
+// Button should only be disabled during active sign-in, not during initial auth load
+// This prevents the button from appearing disabled on page load
+const isButtonDisabled = computed(() => isSigningIn.value)
+
 const handleGoogleSignIn = async () => {
+  isSigningIn.value = true
   try {
     await signInWithGoogle()
     // Redirect to home page after successful login
     router.push('/')
   } catch (error) {
     console.error('Login failed:', error)
+  } finally {
+    isSigningIn.value = false
   }
 }
 </script>

@@ -455,3 +455,61 @@ When starting a new Claude Code session, paste this context:
   - **Decision:** Chose intuitive settlements over transaction minimization
   - **Future:** Add user-configurable option in Phase 6 (see backlog)
 - 📍 Status: Phase 5 fully complete with production bug fixes applied
+
+### December 20, 2025 (Phase 5B: UX/UI Enhancement)
+- ✅ **Major UX/UI Overhaul - Mobile-First Redesign**
+- **Component Architecture (22 new components created):**
+  - UI Primitives: AmountDisplay, CategoryIcon, UserAvatar, ConfirmDialog
+  - Navigation: BottomNav, AppHeader
+  - Balance: BalanceSummary, DebtSection, CreditSection, BalanceList, BalanceItem
+  - Expense: ExpenseItem, ExpenseList, ExpenseModal, ExpenseFilters, ExpenseFilterChips
+  - Group: GroupStats
+  - Settlement: SettlementList, SettlementItem, PaymentInfoRow
+  - Profile: LogoutButton, PaymentInfoModal
+- **New Composables:**
+  - `useNavigationState.ts` - Tab state and expense modal management
+  - `useExpenseFilters.ts` - Filter state for Grupo tab
+- **Task 1: Bottom Navigation Bar**
+  - Fixed bottom nav on mobile with 4 tabs: Inicio, Grupo, + (add expense), Perfil
+  - Elevated center button for adding expenses
+  - Hidden on desktop (md:hidden)
+  - iPhone safe area support (env(safe-area-inset-bottom))
+- **Task 2: "Inicio" Tab - Personal Summary**
+  - Big balance number with color coding (green=positive, red=negative)
+  - "Tenes que pagar" section showing only people I owe
+  - "Te deben" section showing only people who owe me
+  - "Tus Gastos Recientes" filtered to expenses involving current user
+  - Each expense shows user's share prominently
+- **Task 3: "Grupo" Tab - Group Overview**
+  - Group stats cards (members, expenses, total spent)
+  - Full balance list with current user marked "(vos)"
+  - All group activity with expense filters
+  - Settlement recommendations with expandable details
+- **Task 4: Filters Implementation**
+  - Filter by person dropdown
+  - Filter by payer: "Todos", "Pague yo", "Pagaron otros"
+  - Active filter chips with clear button
+  - Filters persist during session (useState)
+- **Task 5: Numbers Never Truncated**
+  - AmountDisplay component with flex-shrink-0 and whitespace-nowrap
+  - Descriptions truncate with ellipsis, numbers always fully visible
+  - Responsive font sizing for large amounts
+- **Task 6: Profile Page Improvements**
+  - Logout button moved from header to profile page
+  - Confirmation dialog before logout ("Seguro que queres cerrar sesion?")
+  - Bottom navigation visible on profile page
+- **Task 7: Visual Design System**
+  - Tailwind config extended with safe-area utilities (pb-safe, mb-safe)
+  - Positive colors: green-600/400, Negative colors: red-600/400
+  - Consistent card styling with rounded-xl and subtle borders
+  - viewport-fit=cover meta tag for iPhone notch support
+- **Task 8: Add Expense Modal Enhancement**
+  - Bottom sheet design on mobile (slides up from bottom)
+  - Centered modal on desktop
+  - Large number input with currency selector
+  - Participants multi-select
+- **Code Reduction:**
+  - index.vue reduced from ~1240 lines to ~200 lines
+  - Logic extracted into reusable components
+  - components/ directory now has 22 organized components
+- 📍 Status: Phase 5B UX/UI Enhancement COMPLETE

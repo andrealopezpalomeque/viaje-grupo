@@ -11,6 +11,13 @@ export default defineNuxtConfig({
     '@vueuse/nuxt'
   ],
 
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false
+    }
+  ],
+
   vite: {
     plugins: [
       Icons({
@@ -32,11 +39,13 @@ export default defineNuxtConfig({
       title: 'ViajeGrupo - Expense Tracker',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         {
           name: 'description',
           content: 'Collaborative expense tracking platform for group vacations'
-        }
+        },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }
       ]
     }
   },

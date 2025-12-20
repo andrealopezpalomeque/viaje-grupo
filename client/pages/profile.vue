@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <div class="container mx-auto px-4 py-8 max-w-2xl">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0">
+    <div class="container mx-auto px-4 py-6 max-w-2xl">
       <!-- Header -->
-      <header class="mb-8">
-        <div class="flex items-center gap-4 mb-4">
+      <header class="mb-6">
+        <div class="flex items-center gap-4">
           <NuxtLink
             to="/"
             class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -241,9 +241,17 @@
             </form>
           </div>
         </div>
+
+        <!-- Logout Section -->
+        <div class="mt-6">
+          <LogoutButton />
+        </div>
         </div>
       </ClientOnly>
     </div>
+
+    <!-- Bottom Navigation -->
+    <BottomNav />
   </div>
 </template>
 
