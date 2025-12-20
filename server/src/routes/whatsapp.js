@@ -385,11 +385,23 @@ async function handleExpenseMessage(from, text, user, groupId) {
 
   // 6. Resolve @mentions to user IDs using fuzzy matching
   let resolvedSplitAmong = []
+  let displayNames = [] // Names to show in confirmation message
 
   if (parsed.splitAmong && parsed.splitAmong.length > 0 && groupId) {
     // Get group members for fuzzy matching
     const groupMembers = await getGroupMembers(groupId)
     resolvedSplitAmong = resolveMentionsToUserIds(parsed.splitAmong, groupMembers)
+
+    // Always include the sender in splitAmong (the person who pays always participates)
+    if (!resolvedSplitAmong.includes(user.id)) {
+      resolvedSplitAmong.unshift(user.id) // Add sender at the beginning
+    }
+
+    // Build display names: sender first, then other mentioned names (avoid duplicates if sender tagged themselves)
+    const otherMentions = parsed.splitAmong.filter(
+      name => name.toLowerCase() !== user.name.toLowerCase()
+    )
+    displayNames = [user.name, ...otherMentions]
   }
 
   // 7. Create expense in Firestore
@@ -415,7 +427,7 @@ async function handleExpenseMessage(from, text, user, groupId) {
       originalCurrency,
       cleanDescription,
       parsed.category || 'general',
-      parsed.splitAmong || [] // Use original mention names for display
+      displayNames // Show sender + mentioned names
     )
 
     await sendMessage(from, confirmationMessage)
