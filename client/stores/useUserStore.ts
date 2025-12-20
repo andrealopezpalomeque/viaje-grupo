@@ -180,54 +180,97 @@ export const useUserStore = defineStore('user', {
 
     /**
      * Calculate settlement recommendations (who should pay whom)
-     * Uses a simple greedy algorithm: match largest debtor with largest creditor
+     * Uses direct-only algorithm: only creates settlements between people who shared expenses
      */
     calculateSettlements(): Settlement[] {
-      const balances = this.calculateBalances()
+      const expenseStore = useExpenseStore()
       const settlements: Settlement[] = []
 
-      // Create working copies of debtors and creditors
-      const debtors = balances
-        .filter(b => b.net < -0.01) // owes money (negative net)
-        .map(b => ({ userId: b.userId, amount: Math.abs(b.net) }))
-        .sort((a, b) => b.amount - a.amount) // largest debt first
+      // Build a debt graph: track how much each person owes each other person
+      // debtGraph[debtor][creditor] = amount debtor owes creditor
+      const debtGraph = new Map<string, Map<string, number>>()
 
-      const creditors = balances
-        .filter(b => b.net > 0.01) // owed money (positive net)
-        .map(b => ({ userId: b.userId, amount: b.net }))
-        .sort((a, b) => b.amount - a.amount) // largest credit first
+      // Initialize debt graph
+      this.users.forEach(user => {
+        debtGraph.set(user.id, new Map<string, number>())
+      })
 
-      // Simple settlement: match debtors with creditors
-      let i = 0 // debtor index
-      let j = 0 // creditor index
+      // Process each expense to build direct debt relationships
+      expenseStore.expenses.forEach(expense => {
+        const payerId = expense.userId
 
-      while (i < debtors.length && j < creditors.length) {
-        const debtor = debtors[i]
-        const creditor = creditors[j]
+        // Determine who splits this expense
+        let splitUserIds: string[] = []
 
-        if (!debtor || !creditor) break
+        if (expense.splitAmong && expense.splitAmong.length > 0) {
+          splitUserIds = expense.splitAmong.filter(id =>
+            this.users.some(u => u.id === id)
+          )
 
-        // Amount to settle is the minimum of what debtor owes and creditor is owed
-        const settleAmount = Math.min(debtor.amount, creditor.amount)
-
-        if (settleAmount > 0.01) { // Only create settlement if meaningful amount
-          settlements.push({
-            fromUserId: debtor.userId,
-            toUserId: creditor.userId,
-            amount: Math.round(settleAmount) // Round to nearest peso
-          })
+          if (splitUserIds.length === 0) {
+            splitUserIds = this.users.map(u => u.id)
+          } else if (!splitUserIds.includes(payerId)) {
+            splitUserIds.push(payerId)
+          }
+        } else {
+          splitUserIds = this.users.map(u => u.id)
         }
 
-        // Reduce balances
-        debtor.amount -= settleAmount
-        creditor.amount -= settleAmount
+        // Calculate share per person
+        const shareAmount = expense.amount / splitUserIds.length
 
-        // Move to next debtor/creditor if settled
-        if (debtor.amount < 0.01) i++
-        if (creditor.amount < 0.01) j++
-      }
+        // Each participant (except payer) owes the payer their share
+        splitUserIds.forEach(participantId => {
+          if (participantId !== payerId) {
+            const debtorDebts = debtGraph.get(participantId)
+            if (debtorDebts) {
+              const currentDebt = debtorDebts.get(payerId) || 0
+              debtorDebts.set(payerId, currentDebt + shareAmount)
+            }
+          }
+        })
+      })
 
-      return settlements
+      // Now simplify the debt graph by netting out mutual debts
+      // If A owes B $100 and B owes A $60, simplify to A owes B $40
+      this.users.forEach(userA => {
+        this.users.forEach(userB => {
+          if (userA.id >= userB.id) return // Only process each pair once
+
+          const aOwesB = debtGraph.get(userA.id)?.get(userB.id) || 0
+          const bOwesA = debtGraph.get(userB.id)?.get(userA.id) || 0
+
+          if (aOwesB > bOwesA) {
+            // A owes B the net amount
+            debtGraph.get(userA.id)?.set(userB.id, aOwesB - bOwesA)
+            debtGraph.get(userB.id)?.set(userA.id, 0)
+          } else if (bOwesA > aOwesB) {
+            // B owes A the net amount
+            debtGraph.get(userB.id)?.set(userA.id, bOwesA - aOwesB)
+            debtGraph.get(userA.id)?.set(userB.id, 0)
+          } else {
+            // They're even
+            debtGraph.get(userA.id)?.set(userB.id, 0)
+            debtGraph.get(userB.id)?.set(userA.id, 0)
+          }
+        })
+      })
+
+      // Convert debt graph to settlement list
+      debtGraph.forEach((creditors, debtorId) => {
+        creditors.forEach((amount, creditorId) => {
+          if (amount > 0.01) { // Only meaningful debts
+            settlements.push({
+              fromUserId: debtorId,
+              toUserId: creditorId,
+              amount: Math.round(amount)
+            })
+          }
+        })
+      })
+
+      // Sort settlements for consistent display (largest amounts first)
+      return settlements.sort((a, b) => b.amount - a.amount)
     },
 
     /**
