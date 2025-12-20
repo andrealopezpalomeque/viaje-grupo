@@ -106,7 +106,8 @@
 import type { User, Settlement } from '~/types'
 
 definePageMeta({
-  middleware: ['auth']
+  middleware: ['auth'],
+  ssr: false  // Disable SSR - Firebase auth only works on client
 })
 
 const { firestoreUser } = useAuth()

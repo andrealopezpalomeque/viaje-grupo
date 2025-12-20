@@ -257,7 +257,8 @@
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: ['auth']
+  middleware: ['auth'],
+  ssr: false  // Disable SSR - Firebase auth only works on client
 })
 
 const { user, firestoreUser, loading } = useAuth()

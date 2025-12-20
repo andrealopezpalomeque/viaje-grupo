@@ -1,16 +1,8 @@
 export default defineNuxtRouteMiddleware((to) => {
-  // On server side, we can't check Firebase auth state
-  // So we redirect unauthenticated routes to login by default during SSR
-  // The client will then handle the actual auth check
+  // Skip middleware on server - Firebase auth only works on client
+  // Protected pages use ssr: false to avoid hydration mismatches
   if (process.server) {
-    // During SSR, always render login page for /login route
-    // For other routes, let them render - client will redirect if needed
-    if (to.path === '/login') {
-      return // Allow login page to render
-    }
-    // For protected routes during SSR, redirect to login
-    // This ensures SSR output matches what client will show for unauthenticated users
-    return navigateTo('/login')
+    return
   }
 
   // Client-side auth check
