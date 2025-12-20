@@ -125,11 +125,23 @@
 ### Phase 6: Advanced Features (Backlog)
 **Target: As needed**
 
-- [ ] **Debt Simplification** - Minimize the number of transactions needed to settle all debts
-  - Current algorithm: greedy matching (largest debtor to largest creditor)
-  - Improved: Graph-based simplification that eliminates intermediate transfers
-  - Example: If A owes B $10, B owes C $10 → simplify to A owes C $10 (1 transfer instead of 2)
-  - Also called: "smart settlements", "transaction minimization", "debt consolidation"
+- [ ] **User-Configurable Settlement Algorithm** - Let groups choose between settlement approaches
+  - **Current:** Direct-only settlements (changed Dec 19, 2025)
+    - Only creates settlements between people who actually shared expenses
+    - More intuitive: every payment makes logical sense
+    - More transactions: may require extra transfers
+    - Example: If Valentina only shared expenses with Pipi, she only pays Pipi (never Sofía)
+  - **Future Option:** Full debt simplification (greedy/graph-based)
+    - Minimizes total number of transactions across the group
+    - Less intuitive: may create payments between people who never shared expenses
+    - Fewer transactions: optimizes for minimal transfers
+    - Example: Valentina could pay Sofía to save Pipi from being a middleman
+  - **Implementation Plan:**
+    - Add group setting: "Settlement Algorithm" with radio buttons
+    - Store preference in Firestore `groups` collection
+    - Update `calculateSettlements()` to check group preference
+    - Add UI explanation for each option with examples
+  - **Files to modify:** `client/stores/useUserStore.ts` (settlement logic), group settings UI
 - [ ] Receipt uploads (image support via WhatsApp)
 - [ ] Monthly summary reports (automatic)
 - [ ] Multi-currency tracking (keep original currency)
@@ -421,3 +433,25 @@ When starting a new Claude Code session, paste this context:
 - Added **Debt Simplification** to Phase 6 backlog (transaction minimization algorithm)
 - Phase 5.5: Final Polish COMPLETE
 - Deployed to Firebase Hosting
+
+### December 19, 2025 (Post-Phase 5 Bug Fixes & Algorithm Change)
+- ✅ **Fixed SSR Hydration Mismatch Issues**
+  - Problem: Loading states causing DOM merging on slow network (spinner + content appearing together)
+  - Fixed in `client/pages/profile.vue`: Wrapped auth-dependent content in `<ClientOnly>` with fallback
+  - Fixed in `client/app.vue`: Wrapped global auth loading overlay in `<ClientOnly>`
+  - Fixed in `client/pages/index.vue`: Wrapped dashboard content in `<ClientOnly>` with fallback
+  - Root cause: Server-rendered HTML differed from client state during hydration
+  - Impact: Eliminated confusing UI bug where entire content blocks would spin on page reload
+- ✅ **Changed Settlement Algorithm from Greedy to Direct-Only**
+  - **Previous:** Greedy matching (largest debtor → largest creditor)
+    - Created unintuitive settlements (e.g., Valentina → Sofía when they never shared expenses)
+    - Minimized transactions but confused users
+  - **New:** Direct-only settlements (client/stores/useUserStore.ts:185-274)
+    - Builds debt graph tracking who actually owes whom per expense
+    - Nets out mutual debts (if A owes B $100 and B owes A $60 → A owes B $40)
+    - Only creates settlements between people who shared at least one expense
+    - More intuitive but may create more total transactions
+  - **User Feedback:** "I don't understand why Valentina pays Sofía when they never shared expenses"
+  - **Decision:** Chose intuitive settlements over transaction minimization
+  - **Future:** Add user-configurable option in Phase 6 (see backlog)
+- 📍 Status: Phase 5 fully complete with production bug fixes applied
