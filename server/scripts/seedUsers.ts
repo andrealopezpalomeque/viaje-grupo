@@ -1,5 +1,5 @@
 /**
- * Seed script for ViajeGrupo unified user system
+ * Seed script for Text the Check unified user system
  *
  * This script:
  * 1. Deletes all existing documents in 'users' collection
@@ -212,7 +212,7 @@ async function updateExpenses(db: FirebaseFirestore.Firestore): Promise<number> 
 }
 
 async function main() {
-  console.log('\n=== ViajeGrupo Seed Script ===\n')
+  console.log('\n=== Text the Check Seed Script ===\n')
 
   const db = initializeFirebase()
 

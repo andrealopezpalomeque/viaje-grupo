@@ -4,7 +4,7 @@
       <!-- Logo/Title Card -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          ViajeGrupo
+          Text the Check
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
           Seguimiento colaborativo de gastos
@@ -80,7 +80,7 @@
 
       <!-- Footer -->
       <p class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-        ViajeGrupo • Gestión colaborativa de gastos
+        Text the Check
       </p>
     </div>
   </div>

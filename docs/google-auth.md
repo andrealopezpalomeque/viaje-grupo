@@ -2,7 +2,7 @@
 
 ## Overview
 
-Google Authentication has been implemented in the ViajeGrupo Nuxt.js client. This guide walks through enabling and configuring it.
+Google Authentication has been implemented in the Text the Check Nuxt.js client. This guide walks through enabling and configuring it.
 
 ## What Was Implemented
 
@@ -30,11 +30,11 @@ Google Authentication has been implemented in the ViajeGrupo Nuxt.js client. Thi
 ### Step 1: Enable Google Authentication
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project: **viaje-grupo**
+2. Select your project: **viaje-grupo** (Firebase project ID)
 3. Navigate to **Authentication** → **Sign-in method**
 4. Click on **Google** provider
 5. Click **Enable**
-6. Set **Project public-facing name**: ViajeGrupo
+6. Set **Project public-facing name**: Text the Check
 7. Set **Project support email**: Your email
 8. Click **Save**
 
@@ -44,7 +44,7 @@ By default, `localhost` and your Firebase project domains are authorized. To add
 
 1. In **Authentication** → **Settings** → **Authorized domains**
 2. Click **Add domain**
-3. Add your production domain (e.g., `viajegrupo.vercel.app`)
+3. Add your production domain (e.g., `textthecheck.app`)
 
 ### Step 3: Verify Configuration
 

@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-          ViajeGrupo
+          Text the Check
         </h1>
         <!-- Group Selector -->
         <div class="mt-1 flex items-center gap-2">

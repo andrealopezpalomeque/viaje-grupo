@@ -1,6 +1,6 @@
-# Smart Splitting Logic 🧠
+# Smart Splitting Logic
 
-This document explains how ViajeGrupo calculates who owes whom.
+This document explains how Text the Check calculates who owes whom.
 
 ## 1. The Core Variable: `splitAmong`
 Every expense now has a field called `splitAmong`. This is a list of User IDs (or Names) derived from the WhatsApp message.

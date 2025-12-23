@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains the Firestore security rules implemented for ViajeGrupo and how to deploy them.
+This document explains the Firestore security rules implemented for Text the Check and how to deploy them.
 
 ## Security Model
 

@@ -1,4 +1,4 @@
-# ViajeGrupo - Project Plan
+# Text the Check - Project Plan
 
 > Collaborative expense tracking platform with WhatsApp chatbot and Nuxt.js dashboard
 
@@ -23,8 +23,8 @@
 
 | Service | URL |
 |---------|-----|
-| Frontend | https://viaje-grupo.web.app |
-| Backend | https://viaje-grupo-server.onrender.com |
+| Frontend | https://textthecheck.app |
+| Backend | https://viaje-grupo-server.onrender.com (legacy URL, pending update) |
 | Webhook | https://viaje-grupo-server.onrender.com/api/whatsapp/webhook |
 
 ### Completed Features
@@ -265,10 +265,11 @@ curl -X POST "https://graph.facebook.com/v18.0/YOUR_WABA_ID/subscribed_apps" \
 
 When starting a new Claude Code session, paste this context:
 
-> I'm working on ViajeGrupo, a collaborative expense tracking platform.
+> I'm working on Text the Check, a collaborative expense tracking platform.
 > - `/client`: Nuxt.js + Tailwind frontend
 > - `/server`: Node.js + Express backend with WhatsApp integration
 > - Database: Firebase Firestore
+> - Live: https://textthecheck.app
 > - Current phase: [UPDATE THIS based on where you are]
 > - See docs/project-plan.md for full context.
 
@@ -322,12 +323,12 @@ When starting a new Claude Code session, paste this context:
 
 ### December 18, 2025 (Evening Session)
 - ✅ Fixed server build script to copy JS files to dist directory
-- ✅ Deployed Express backend to Render (https://viaje-grupo-server.onrender.com)
+- ✅ Deployed Express backend to Render (https://viaje-grupo-server.onrender.com - legacy URL)
 - ✅ Configured all production environment variables
 - ✅ Updated Meta webhook URL to production domain
 - ✅ Verified webhook signature verification working
 - ✅ Added Firebase Hosting configuration
-- ✅ Deployed Nuxt.js frontend to Firebase Hosting (https://viaje-grupo.web.app)
+- ✅ Deployed Nuxt.js frontend to Firebase Hosting (https://textthecheck.app)
 - ✅ Fixed FIREBASE_PRIVATE_KEY formatting issue on Render
 - ✅ Verified end-to-end flow: WhatsApp → Render → Firestore → Dashboard
 - 🎉 Phase 2: Production Deployment COMPLETE

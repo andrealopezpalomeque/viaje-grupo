@@ -1,6 +1,6 @@
 /**
  * WhatsApp Bot Command Service
- * Handles all slash commands for the ViajeGrupo bot
+ * Handles all slash commands for the Text the Check bot
  */
 
 import { getExpensesByGroup, getAllExpensesByGroup, getExpenseById, deleteExpense } from './expenseService.js'
@@ -28,7 +28,7 @@ const recentExpenseCache = new Map<string, string[]>()
  * Format help message
  */
 export function getHelpMessage(): string {
-  return `📖 *Cómo usar ViajeGrupo*
+  return `📖 *Cómo usar Text the Check*
 
 *Agregar gasto:*
 \`100 taxi\` - Gasto simple

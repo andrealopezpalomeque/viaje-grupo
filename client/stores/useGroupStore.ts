@@ -14,7 +14,7 @@ interface GroupState {
   error: string | null
 }
 
-const STORAGE_KEY = 'viaje-grupo-selected-group'
+const STORAGE_KEY = 'text-the-check-selected-group'
 
 export const useGroupStore = defineStore('group', {
   state: (): GroupState => ({

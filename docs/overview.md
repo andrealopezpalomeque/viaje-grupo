@@ -1,7 +1,7 @@
-# ViajeGrupo - Group Vacation Expense Tracker
+# Text the Check - Group Expense Tracker
 
 ## Overview
-ViajeGrupo is a **collaborative expense tracking platform** designed for a group of 11 friends traveling together.
+Text the Check is a **collaborative expense tracking platform** designed for a group of 11 friends traveling together.
 
 **Primary focus:** Frictionless data entry via WhatsApp and real-time visualization via a Nuxt web dashboard. The system solves the "who owes who" problem by capturing expenses on the go and providing transparency on the trip budget.
 
@@ -27,7 +27,7 @@ ViajeGrupo is a **collaborative expense tracking platform** designed for a group
 ### Package JSON Scripts (Frontend)
 ```json
 {
-  "name": "viaje-grupo-web",
+  "name": "text-the-check-web",
   "private": true,
   "scripts": {
     "build": "nuxt build",
