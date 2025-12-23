@@ -21,16 +21,16 @@ The result: friction kills adoption. People revert to messy spreadsheets, WhatsA
 > Log expenses where you're already coordinating — WhatsApp.
 
 Instead of asking everyone to download an app:
-1. **One person** adds the bot to their contacts
-2. They text expenses naturally: `50 taxi @Juan @Maria`
+1. Group members add the bot to their contacts (one-time setup)
+2. **Whoever pays** texts the expense: `50 taxi @Juan @Maria`
 3. Everyone can view balances on a simple web dashboard
 4. At the end, copy payment details and settle however you want
 
-**Zero app downloads. Zero account creation for participants. Zero friction.**
+**Zero app downloads. Zero forms. Just text what you paid.**
 
 ## How It Works
 
-### For the person logging expenses (WhatsApp)
+### Logging expenses (WhatsApp — anyone in the group)
 ```
 50 lunch                     → Splits among everyone
 USD 20 dinner @Ana @Pedro    → Converts to ARS, splits among 3
@@ -38,7 +38,7 @@ USD 20 dinner @Ana @Pedro    → Converts to ARS, splits among 3
 /lista                       → See recent expenses
 ```
 
-### For everyone else (Web Dashboard)
+### Viewing balances (Web Dashboard — anyone)
 - View real-time expense feed
 - See your personal balance
 - Check settlement recommendations
