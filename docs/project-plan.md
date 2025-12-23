@@ -125,6 +125,12 @@
 ### Phase 6: Advanced Features (Backlog)
 **Target: As needed**
 
+- [ ] **Public View-Only Balance Links** - Shareable links to view group balances without login
+  - Reduces friction for participants who don't want to create accounts
+  - Could increase organic adoption (share link → see value → want to log expenses too)
+  - Security considerations: read-only, no PII exposed, maybe time-limited or revocable
+  - Implementation: generate unique token per group, public route that fetches balances
+
 - [ ] **User-Configurable Settlement Algorithm** - Let groups choose between settlement approaches
   - **Current:** Direct-only settlements (changed Dec 19, 2025)
     - Only creates settlements between people who actually shared expenses

@@ -1,191 +1,173 @@
-# Text the Check - Group Expense Tracker
+# Text the Check - Product Overview
 
-## Overview
-Text the Check is a **collaborative expense tracking platform** designed for a group of 11 friends traveling together.
+## The Problem
 
-**Primary focus:** Frictionless data entry via WhatsApp and real-time visualization via a Nuxt web dashboard. The system solves the "who owes who" problem by capturing expenses on the go and providing transparency on the trip budget.
+Splitting expenses with friends during trips or shared activities is a solved problem — apps like Splitwise, Tricount, and Settle Up exist. But they all share the same friction:
 
-**Target Users:** A closed group of 11 travelers who need to track shared costs (food, transport, accommodation) without logging into complex apps during the trip.
+**Everyone needs to download the app, create an account, and join the group.**
 
-## Core Value Proposition
-- **Zero-Friction Entry**: Users log expenses by texting a WhatsApp bot (e.g., "50 lunch").
-- **Real-Time Transparency**: The web dashboard updates instantly when a message is received (via Firebase).
-- **Automated Logic**: Smart parsing of unstructured text to categorize expenses.
-- **Fair Splitting**: "Splitwise-style" logic to calculate balances (who owes whom).
+In practice, this means:
+- The "accountant friend" downloads Splitwise
+- They try to get 10 people to install it
+- 3 people never do
+- Someone ends up tracking everything in a notes app anyway
 
-## Tech Stack
-- **Frontend**: Nuxt 4 (Vue 3), Tailwind CSS, TypeScript
-- **Backend (API)**: Node.js + Express (Handling WhatsApp Webhooks)
-- **Database & Realtime**: Firebase Firestore
-- **State Management**: Pinia (Frontend data synchronization)
-- **Styling**: Tailwind CSS exclusively
-- **Icons**: Iconify with unplugin-icons
-- **Formatting**: `intl` for currency, `dayjs` for dates
+The result: friction kills adoption. People revert to messy spreadsheets, WhatsApp messages saying "I paid for lunch, you owe me", and awkward end-of-trip settlements.
 
-## Code Architecture
+## The Solution
 
-### Package JSON Scripts (Frontend)
-```json
-{
-  "name": "text-the-check-web",
-  "private": true,
-  "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview"
-  },
-  "dependencies": {
-    "@iconify/vue": "^5.0.0",
-    "@nuxtjs/tailwindcss": "^6.14.0",
-    "@pinia/nuxt": "^0.11.2",
-    "@vueuse/nuxt": "^13.6.0",
-    "chart.js": "^4.4.1",
-    "dayjs": "^1.11.10",
-    "firebase": "^11.0.2",
-    "nuxt": "^4.0.3",
-    "pinia": "^3.0.4",
-    "vue": "^3.5.13",
-    "vue-chartjs": "^5.3.0",
-    "vue3-toastify": "^0.2.8"
-  }
-}
+**Text the Check** takes a different approach:
+
+> Log expenses where you're already coordinating — WhatsApp.
+
+Instead of asking everyone to download an app:
+1. **One person** adds the bot to their contacts
+2. They text expenses naturally: `50 taxi @Juan @Maria`
+3. Everyone can view balances on a simple web dashboard
+4. At the end, copy payment details and settle however you want
+
+**Zero app downloads. Zero account creation for participants. Zero friction.**
+
+## How It Works
+
+### For the person logging expenses (WhatsApp)
+```
+50 lunch                     → Splits among everyone
+USD 20 dinner @Ana @Pedro    → Converts to ARS, splits among 3
+/balance                     → See who owes whom
+/lista                       → See recent expenses
 ```
 
-### Architecture Patterns
+### For everyone else (Web Dashboard)
+- View real-time expense feed
+- See your personal balance
+- Check settlement recommendations
+- Copy payment details (CBU, alias, etc.) to transfer
 
-#### Hybrid Flow
-- **Write Path**: User → WhatsApp → Node.js Webhook → Firebase Admin SDK → Firestore
-- **Read Path**: Firestore (Realtime Listener) → Nuxt Client SDK → Pinia Store → UI
+### Settlement
+The app is **payment-method agnostic**. Users can add their preferred payment info:
+- Bank CBU/CVU
+- Bank alias
+- Mercado Pago
+- Any platform
 
-#### Key Components
-- **Stores**: Pinia manages the "Single Source of Truth" by subscribing to Firestore snapshots
-- **Components**: Mobile-first dashboard widgets (Total Spent, Recent Activity, User Balances)
-- **Utils**: Currency formatters, "Split" algorithms, and Date parsing
+When it's time to settle, the dashboard shows who pays whom, with a copy button for payment details. You settle however you normally transfer money to friends.
 
-### Store Architecture & State Management
+## Target Users
 
-#### Pinia Implementation
-- **useExpenseStore**: Subscribes to expenses collection with detailed getters for "Total Spent" and "Category Breakdown"
-- **useUserStore**: Static list of the 11 travelers (Phone # ↔ Name mapping) and their individual balances
+**Primary:** Friend groups traveling together (5-15 people)
+- Already coordinating via WhatsApp
+- Mixed willingness to install apps
+- Need transparency on shared expenses
+- Will settle via bank transfer / Mercado Pago / cash
 
-#### Store Method Pattern
-```typescript
-// Standard store methods
-initializeListeners()      // Specific method to start Firebase onSnapshot
-getExpensesByUser(userId)  // Filter expenses for specific person
-calculateBalances()        // Algorithm to determine net debt/credit per person
-```
+**Secondary:**
+- Roommates splitting bills
+- Couples with shared expenses
+- Small groups organizing events (asados, parties)
 
-### Component Structure
-```
-/components/
-├── AppHeader.vue           # Navigation and User Toggle (if viewing as specific user)
-├── Dashboard/
-│   ├── TotalCard.vue       # Big number: "Total Trip Spend"
-│   ├── SpenderRanking.vue  # Bar chart: Who spent the most?
-│   └── BalanceGrid.vue     # Grid showing "Mike owes $50", "Sarah gets back $20"
-├── Feed/
-│   ├── ActivityStream.vue  # List of recent expenses (WhatsApp style bubbles)
-│   └── ActivityItem.vue    # Individual expense item
-└── ui/
-    └── StatCard.vue        # Reusable metric card
-```
+## Competitive Landscape
 
-## Data Models (TypeScript Interfaces)
+### Traditional Apps (Splitwise, Tricount, Settle Up)
+- ✅ Full-featured expense tracking
+- ✅ Settlement recommendations
+- ❌ Requires everyone to download and create accounts
+- ❌ Friction kills adoption in casual groups
 
-### Core Entities
+### WhatsApp-First Competitors (Pango, Lanly, Whispend)
+- ✅ WhatsApp native entry
+- ✅ Lower friction
+- ❌ Most are English-first, US-focused
+- ❌ Don't understand LATAM payment culture (CBU, alias, MP)
 
-```typescript
-// The 11 Travelers
-export interface User {
-  id: string          // unique string (can be phone number or uuid)
-  name: string        // Display name (e.g., "Nico")
-  phoneNumber: string // Format: +54911... (Key for WhatsApp identification)
-  avatar?: string     // URL or Initials
-}
+### Text the Check
+- ✅ WhatsApp native entry
+- ✅ Real-time web dashboard
+- ✅ Spanish-first experience
+- ✅ LATAM payment details (CBU, CVU, alias, Mercado Pago)
+- ✅ Multi-currency for travel (USD, EUR, BRL → ARS)
+- ✅ Zero friction for non-logging participants
 
-// The Expense Record
-export interface Expense {
-  id: string
-  userId: string         // Who paid?
-  userName: string       // Denormalized name for easier display
-  amount: number         // Always in base currency (ARS)
-  originalInput: string  // The raw text: "50 beers at beach"
-  description: string    // Cleaned text: "beers at beach"
-  category: ExpenseCategory
-  timestamp: Date        // Firestore Timestamp
-}
+## Why LATAM / Argentina
 
-export type ExpenseCategory = 'food' | 'transport' | 'accommodation' | 'entertainment' | 'general'
+This isn't a limitation — it's a wedge:
 
-// For the UI "Who Owes Who" calculation
-export interface Balance {
-  userId: string
-  paid: number   // Total amount this person put into the pot
-  share: number  // How much they SHOULD have paid (Total / 11)
-  net: number    // paid - share (Positive = owed money, Negative = owes money)
-}
-```
+1. **WhatsApp dominance** — Argentina is one of the highest WhatsApp-usage countries globally
+2. **Payment culture** — People settle via "pasame por MP" or "te transfiero al CBU"
+3. **Travel patterns** — Groups traveling to Brazil, Uruguay, Chile need multi-currency
+4. **Competition gap** — US-based competitors won't prioritize Argentine banking
 
-## Backend (Node.js/Express) Logic
+A US-based team building for Venmo/Zelle users won't invest in CBU/alias support. We already have it.
 
-### Webhook Entry Point (/api/whatsapp)
+## What's Built (Production Ready)
 
-#### 1. Verification
-Validate request comes from Meta/Twilio
+### WhatsApp Bot
+- [x] Natural language expense entry (`50 lunch`)
+- [x] Multi-currency conversion (USD, EUR, BRL → ARS with live rates)
+- [x] @mention splitting with fuzzy name matching
+- [x] Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`
+- [x] Auto-categorization (food, transport, accommodation, etc.)
+- [x] Message deduplication and rate limiting
 
-#### 2. Identification
-Match `req.body.from` (phone number) against Users database:
-- If unknown: Reply "Access Denied"
-- If known: Proceed
+### Web Dashboard
+- [x] Google Authentication (linked to pre-registered users)
+- [x] Real-time expense feed (Firebase Firestore)
+- [x] Personal balance view with breakdown
+- [x] Group balance overview
+- [x] Settlement recommendations (who pays whom)
+- [x] Payment info display with copy-to-clipboard
+- [x] User profiles with editable payment details
+- [x] Mobile-first responsive design
+- [x] Dark mode support
 
-#### 3. Parsing Strategy
-- Attempt Regex: `^(\d+)\s+(.*)$` (Number followed by text)
-- Fallback: Mark as `review_needed`
+### Infrastructure
+- [x] Express.js backend on Render
+- [x] Nuxt.js frontend on Firebase Hosting
+- [x] Firebase Firestore for real-time sync
+- [x] Webhook signature verification
+- [x] Firestore security rules
 
-#### 4. Action
-Write to Firestore `expenses` collection
+## What's Planned (Backlog)
 
-#### 5. Feedback
-Send HTTP 200 to WhatsApp (and optional confirmation msg to user)
+- [ ] Receipt/image upload with OCR parsing
+- [ ] Public view-only balance links (shareable without login)
+- [ ] Export to CSV/PDF
+- [ ] User-configurable settlement algorithms
+- [ ] Weight-based splitting ("this person eats more")
+- [ ] Couples as single entity option
+- [ ] Monthly summary reports
 
-## UI/UX Principles for Trip Dashboard
+## Success Signals to Watch
 
-**TARGET USERS:** Friends on vacation (Mobile usage, patchy internet, quick glances)
+When testing with friend groups, these indicate product-market fit:
 
-**PRIORITY:** Speed, Clarity, Mobile Responsiveness
+1. **Repeat usage** — Do groups keep using it after the first weekend?
+2. **Retention after settlement** — Do they reuse it for another trip?
+3. **Organic invites** — Do users add the bot to new groups without prompting?
 
-### Design Requirements
-- **Mobile First**: All charts and lists must look perfect on a 375px wide screen
-- **Dark Mode**: High priority (users checking app at night/bars)
-- **Visual Feedback**: When a new expense arrives via WebSocket, highlight it (flash yellow) to show the system is "live"
+## Live URLs
 
-### Color Coding
-- **Green**: Money you get back
-- **Red**: Money you owe
-- **Neutral**: General stats
+| Service | URL |
+|---------|-----|
+| Dashboard | https://textthecheck.app |
+| Backend API | https://viaje-grupo-server.onrender.com (legacy URL) |
 
-## CSS & Styling Guidelines
+---
 
-- **MANDATORY**: Tailwind CSS exclusively
-- **Font**: Inter or Roboto (clean sans-serif)
-- **Layout**: CSS Grid for the dashboard, Flexbox for lists
-- **Numbers**: Monospace font for all tabular financial data to ensure alignment
+## Technical Documentation
 
-## Development Guidelines
+For implementation details, see:
+- [Project Plan](./project-plan.md) — Development phases and session log
+- [Deployment Guide](./deployment.md) — Production deployment checklist
+- [Google Auth Setup](./google-auth.md) — Authentication configuration
+- [Firestore Security](./firestore-security.md) — Security rules
+- [Splitting Logic](./splitting-logic.md) — Balance calculation algorithm
+- [Icon Usage](./icons.md) — Frontend icon system
 
-### Language Rules
-- **Code**: English (`calculateTotal`, `isLoading`)
-- **UI Text**: Spanish (Argentina/Latam) ("Gastos Totales", "¿Quién debe?", "Historial")
-- **Currency**: Format all money as `$ 1.234,00` (ES-AR locale) but store as standard Integers/Floats
+## Tech Stack Summary
 
-### Bot Logic Rules (The "Smart" Part)
-- **Currency Handling**: If user types "50", assume ARS (base currency). If a different currency is provided (e.g., "10 usd" or "100 brl"), convert to ARS using a static or live rate while keeping the entered amount/currency for display
-- **Correction**: If a user makes a mistake, they should be able to delete via UI, not WhatsApp (keep WhatsApp logic simple: Write Only)
-
-## Scaling Plan
-
-- **Phase 1 (MVP)**: Text "Amount Description" → Saves to DB → Updates UI
-- **Phase 2 (Images)**: User sends photo of receipt → OCR (OpenAI Vision) reads total → Saves to DB
-- **Phase 3 (Settlement)**: "Checkout" button in UI that tells exactly who needs to pay whom to settle debts
+- **Frontend:** Nuxt 4 (Vue 3) + Tailwind CSS + Pinia
+- **Backend:** Node.js + Express
+- **Database:** Firebase Firestore (real-time sync)
+- **Auth:** Firebase Authentication (Google)
+- **Bot:** WhatsApp Business API
