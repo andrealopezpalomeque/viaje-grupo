@@ -299,7 +299,7 @@ async function handleTextMessage(from, text, messageId) {
   }
 
   // 6. Process as expense
-  await handleExpenseMessage(from, text, user, groupId)
+  await handleExpenseMessage(from, text, user, groupId, group?.name)
 }
 
 /**
@@ -373,7 +373,7 @@ async function handleCommand(from, text, user, groupId) {
 /**
  * Handle expense messages
  */
-async function handleExpenseMessage(from, text, user, groupId) {
+async function handleExpenseMessage(from, text, user, groupId, groupName) {
   // 1. Check for currency conversion
   const currencyInfo = extractCurrency(text)
   let finalAmount = 0
@@ -452,7 +452,8 @@ async function handleExpenseMessage(from, text, user, groupId) {
       originalCurrency,
       cleanDescription,
       parsed.category || 'general',
-      displayNames // Show sender + mentioned names
+      displayNames, // Show sender + mentioned names
+      groupName // Show which group the expense was registered in
     )
 
     await sendMessage(from, confirmationMessage)

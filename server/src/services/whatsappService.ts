@@ -167,9 +167,16 @@ export function formatExpenseConfirmation(
   originalCurrency: string | undefined,
   description: string,
   category: string,
-  splitAmong: string[]
+  splitAmong: string[],
+  groupName?: string
 ): string {
-  let message = '✅ *Gasto registrado*\n\n'
+  let message = '✅ *Gasto registrado*'
+
+  // Show group name if provided
+  if (groupName) {
+    message += ` en *${groupName}*`
+  }
+  message += '\n\n'
 
   // Amount line - use correct format for each currency
   if (originalCurrency && originalCurrency !== 'ARS') {
@@ -187,6 +194,9 @@ export function formatExpenseConfirmation(
   } else {
     message += `👥 Dividido entre todos\n`
   }
+
+  // Dashboard link
+  message += `\n📊 _Ver detalles en textthecheck.app_`
 
   return message
 }

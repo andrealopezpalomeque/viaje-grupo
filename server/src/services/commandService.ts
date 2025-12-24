@@ -460,7 +460,7 @@ export async function handleGroupSelectionResponse(
 
   return {
     success: true,
-    message: `✅ Grupo activo cambiado a: *${selectedGroup.name}*\n\nTus próximos gastos se registrarán en este grupo.`
+    message: `✅ Grupo activo cambiado a: *${selectedGroup.name}*\n\nTus próximos gastos se registrarán en este grupo.\n\n📊 _Ver detalles en textthecheck.app_`
   }
 }
 
