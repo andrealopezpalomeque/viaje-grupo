@@ -4,7 +4,7 @@
  */
 
 import { getExpensesByGroup, getAllExpensesByGroup, getExpenseById, deleteExpense } from './expenseService.js'
-import { getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup, getGroupById } from './userService.js'
+import { getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup } from './userService.js'
 import type { User, Group } from '../types/index.js'
 
 interface CommandResult {
