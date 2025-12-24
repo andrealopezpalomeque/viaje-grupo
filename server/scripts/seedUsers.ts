@@ -1,11 +1,19 @@
 /**
- * Seed script for Text the Check unified user system
+ * ⚠️  DESTRUCTIVE SEED SCRIPT - USE WITH CAUTION ⚠️
+ *
+ * This script DELETES ALL existing users and groups, then recreates them.
+ * It was used for initial project setup and should rarely be run again.
  *
  * This script:
- * 1. Deletes all existing documents in 'users' collection
- * 2. Creates 11 users with proper structure (id, name, phone, email, aliases, createdAt)
- * 3. Creates a 'groups' collection with Brazil Trip 2025
- * 4. Updates existing expenses to add groupId
+ * 1. DELETES all existing documents in 'users' collection
+ * 2. DELETES all existing documents in 'groups' collection
+ * 3. Creates 11 users with proper structure (id, name, phone, email, aliases, createdAt)
+ * 4. Creates Brazil Trip 2025 group
+ * 5. Updates existing expenses to add groupId
+ *
+ * For adding NEW groups, use the idempotent scripts instead:
+ * - seedTestGroup.ts
+ * - seedBrazil2026Group.ts
  *
  * Run with: npx tsx scripts/seedUsers.ts
  */
@@ -14,6 +22,7 @@ import admin from 'firebase-admin'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import * as readline from 'readline'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -123,6 +132,36 @@ const USERS_TO_SEED: SeedUser[] = [
 
 const GROUP_ID = 'brazil-trip-2025'
 
+/**
+ * Prompt user for confirmation before destructive operation
+ */
+async function confirmDestructiveAction(): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  return new Promise((resolve) => {
+    console.log('\n' + '='.repeat(60))
+    console.log('⚠️  WARNING: DESTRUCTIVE OPERATION ⚠️')
+    console.log('='.repeat(60))
+    console.log('\nThis script will:')
+    console.log('  1. DELETE ALL existing users')
+    console.log('  2. DELETE ALL existing groups')
+    console.log('  3. Recreate 11 users for Brazil Trip 2025')
+    console.log('\nThis action cannot be undone!')
+    console.log('\nFor adding NEW groups without deleting existing data, use:')
+    console.log('  - npx tsx scripts/seedTestGroup.ts')
+    console.log('  - npx tsx scripts/seedBrazil2026Group.ts')
+    console.log('')
+
+    rl.question('Type "DELETE ALL" to confirm, or anything else to cancel: ', (answer) => {
+      rl.close()
+      resolve(answer === 'DELETE ALL')
+    })
+  })
+}
+
 async function deleteCollection(db: FirebaseFirestore.Firestore, collectionName: string): Promise<number> {
   const collectionRef = db.collection(collectionName)
   const snapshot = await collectionRef.get()
@@ -213,6 +252,16 @@ async function updateExpenses(db: FirebaseFirestore.Firestore): Promise<number> 
 
 async function main() {
   console.log('\n=== Text the Check Seed Script ===\n')
+
+  // Safety confirmation before destructive operation
+  const confirmed = await confirmDestructiveAction()
+
+  if (!confirmed) {
+    console.log('\n❌ Operation cancelled. No changes were made.\n')
+    process.exit(0)
+  }
+
+  console.log('\n✅ Confirmed. Proceeding with seed...\n')
 
   const db = initializeFirebase()
 
