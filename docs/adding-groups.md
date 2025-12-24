@@ -131,26 +131,60 @@ The email must match what they use to sign in with Google.
 
 ## 5. Multi-Group Users
 
-### Current Limitation
+### How It Works
 
-When a user belongs to multiple groups, WhatsApp messages go to **the first group found** (non-deterministic order). The dashboard handles multi-group correctly via the group selector.
+Users can now belong to multiple groups and select which group receives their WhatsApp expenses.
 
-### Example Scenario
+The `activeGroupId` field on the user document determines which group is currently active:
+- When set: Expenses go to the specified group
+- When null: Expenses go to the first group found (fallback behavior)
 
-Pipi is in both:
-- "Brazil Trip 2025" (`brazil-trip-2025`)
-- "Demo Group" (`demo-group`)
+### Selecting Active Group
 
-When Pipi sends a WhatsApp message, the expense goes to whichever group the database query returns first.
+#### Via WhatsApp: `/grupo` Command
 
-### Future Enhancement
+Users with multiple groups can switch using the `/grupo` command:
 
-Planned features to address this:
-- WhatsApp command: `/grupo` to list and select active group
-- Dashboard setting: "Active group for WhatsApp"
-- Store `activeGroupId` on user document
+```
+User: /grupo
 
-See `server/src/services/userService.ts:getGroupByUserId` for implementation details.
+Bot: 📍 *Tus grupos:*
+
+1. Brazil Trip 2025 ✓
+2. Demo Group
+3. Brazil 2026 Ingleses
+
+Grupo activo: *Brazil Trip 2025*
+
+_Respondé con el número para cambiar de grupo._
+
+User: 3
+
+Bot: ✅ Grupo activo cambiado a: *Brazil 2026 Ingleses*
+
+Tus próximos gastos se registrarán en este grupo.
+```
+
+For users in only one group:
+```
+Bot: 📍 Tu grupo: *Brazil Trip 2025*
+
+_(Solo pertenecés a un grupo)_
+```
+
+#### Via Dashboard
+
+The group selector in the dashboard header syncs with `activeGroupId`:
+- Selecting a group updates `activeGroupId` in Firestore
+- On page load, reads `activeGroupId` to set initial selection
+- Priority order: `activeGroupId` > localStorage > first group
+
+### Implementation Details
+
+Key files:
+- `server/src/services/userService.ts` - `getGroupByUserId()`, `updateUserActiveGroup()`, `getAllGroupsByUserId()`
+- `server/src/services/commandService.ts` - `/grupo` command logic, pending selection state
+- `client/stores/useGroupStore.ts` - Dashboard group sync with Firestore
 
 ---
 
@@ -158,8 +192,9 @@ See `server/src/services/userService.ts:getGroupByUserId` for implementation det
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/seedUsers.ts` | Seeds the original 11 users + Brazil Trip group |
+| `scripts/seedUsers.ts` | Seeds the original 11 users + Brazil Trip 2025 group |
 | `scripts/seedTestGroup.ts` | Seeds Demo Group with test users |
+| `scripts/seedBrazil2026Group.ts` | Seeds Brazil 2026 Ingleses group (5 members) |
 | `scripts/updateUserEmail.ts` | Updates a user's email by phone |
 
 ---
@@ -191,4 +226,4 @@ See `server/src/services/userService.ts:getGroupByUserId` for implementation det
 
 ### Expenses going to wrong group
 
-This happens with multi-group users. Current workaround: ensure the user is only in one group, or accept that expenses go to the first group found.
+This happens with multi-group users. Solution: Use `/grupo` in WhatsApp to select the correct active group, or switch groups in the dashboard (the setting syncs automatically).

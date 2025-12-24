@@ -3,13 +3,16 @@ import {
   collection,
   getDocs,
   query,
-  where
+  where,
+  doc,
+  updateDoc
 } from 'firebase/firestore'
 import type { Group } from '~/types'
 
 interface GroupState {
   groups: Group[]
   selectedGroupId: string | null
+  currentUserId: string | null  // Track current user for Firestore updates
   loading: boolean
   error: string | null
 }
@@ -20,6 +23,7 @@ export const useGroupStore = defineStore('group', {
   state: (): GroupState => ({
     groups: [],
     selectedGroupId: null,
+    currentUserId: null,
     loading: false,
     error: null
   }),
@@ -51,11 +55,14 @@ export const useGroupStore = defineStore('group', {
   actions: {
     /**
      * Fetch groups for the current user
+     * @param userId - The Firestore user ID
+     * @param activeGroupId - The user's activeGroupId from Firestore (optional)
      */
-    async fetchGroupsForUser(userId: string) {
+    async fetchGroupsForUser(userId: string, activeGroupId?: string | null) {
       const { db } = useFirebase()
       this.loading = true
       this.error = null
+      this.currentUserId = userId
 
       try {
         const groupsRef = collection(db, 'groups')
@@ -68,8 +75,8 @@ export const useGroupStore = defineStore('group', {
           ...doc.data()
         })) as Group[]
 
-        // Restore selected group from localStorage or select first group
-        this.restoreOrSelectDefaultGroup()
+        // Select group based on priority: activeGroupId > localStorage > first group
+        this.restoreOrSelectDefaultGroup(activeGroupId)
       } catch (err: any) {
         console.error('Error fetching groups:', err)
         this.error = err.message
@@ -79,15 +86,26 @@ export const useGroupStore = defineStore('group', {
     },
 
     /**
-     * Restore selected group from localStorage or select first available
+     * Restore selected group from activeGroupId, localStorage, or select first available
+     * Priority: activeGroupId (from Firestore) > localStorage > first group
      */
-    restoreOrSelectDefaultGroup() {
+    restoreOrSelectDefaultGroup(activeGroupId?: string | null) {
       if (this.groups.length === 0) {
         this.selectedGroupId = null
         return
       }
 
-      // Try to restore from localStorage
+      // 1. Try to use activeGroupId from Firestore (highest priority)
+      if (activeGroupId && this.groups.some(g => g.id === activeGroupId)) {
+        this.selectedGroupId = activeGroupId
+        // Also update localStorage to keep in sync
+        if (import.meta.client) {
+          localStorage.setItem(STORAGE_KEY, activeGroupId)
+        }
+        return
+      }
+
+      // 2. Try to restore from localStorage
       if (import.meta.client) {
         const savedGroupId = localStorage.getItem(STORAGE_KEY)
         if (savedGroupId && this.groups.some(g => g.id === savedGroupId)) {
@@ -96,14 +114,14 @@ export const useGroupStore = defineStore('group', {
         }
       }
 
-      // Default to first group
+      // 3. Default to first group
       this.selectedGroupId = this.groups[0]?.id || null
     },
 
     /**
-     * Select a group
+     * Select a group and sync to Firestore
      */
-    selectGroup(groupId: string) {
+    async selectGroup(groupId: string) {
       if (!this.groups.some(g => g.id === groupId)) {
         console.warn('Attempted to select non-existent group:', groupId)
         return
@@ -115,6 +133,18 @@ export const useGroupStore = defineStore('group', {
       if (import.meta.client) {
         localStorage.setItem(STORAGE_KEY, groupId)
       }
+
+      // Sync activeGroupId to Firestore
+      if (this.currentUserId) {
+        try {
+          const { db } = useFirebase()
+          const userRef = doc(db, 'users', this.currentUserId)
+          await updateDoc(userRef, { activeGroupId: groupId })
+        } catch (err) {
+          console.error('Error syncing activeGroupId to Firestore:', err)
+          // Don't throw - local state is updated, Firestore sync failed but user can still use app
+        }
+      }
     },
 
     /**
@@ -123,6 +153,7 @@ export const useGroupStore = defineStore('group', {
     clearGroups() {
       this.groups = []
       this.selectedGroupId = null
+      this.currentUserId = null
       if (import.meta.client) {
         localStorage.removeItem(STORAGE_KEY)
       }

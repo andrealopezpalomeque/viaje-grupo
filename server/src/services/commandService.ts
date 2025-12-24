@@ -4,8 +4,8 @@
  */
 
 import { getExpensesByGroup, getAllExpensesByGroup, getExpenseById, deleteExpense } from './expenseService.js'
-import { getGroupMembers } from './userService.js'
-import type { User } from '../types/index.js'
+import { getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup, getGroupById } from './userService.js'
+import type { User, Group } from '../types/index.js'
 
 interface CommandResult {
   success: boolean
@@ -20,9 +20,37 @@ interface Balance {
   net: number
 }
 
+interface PendingGroupSelection {
+  userId: string
+  groups: Group[]
+  expiresAt: number
+}
+
 // Store recent expense list for /borrar command reference
 // Key: groupId, Value: array of expense IDs (most recent first)
 const recentExpenseCache = new Map<string, string[]>()
+
+// Store pending group selections (for /grupo number response)
+// Key: userId, Value: { groups: Group[], expiresAt: timestamp }
+const pendingGroupSelections = new Map<string, PendingGroupSelection>()
+
+// 2 minute timeout for group selection
+const GROUP_SELECTION_TIMEOUT_MS = 2 * 60 * 1000
+
+/**
+ * Clean up expired group selection states
+ */
+function cleanupExpiredGroupSelections() {
+  const now = Date.now()
+  for (const [userId, pending] of pendingGroupSelections.entries()) {
+    if (pending.expiresAt < now) {
+      pendingGroupSelections.delete(userId)
+    }
+  }
+}
+
+// Run cleanup every minute
+setInterval(cleanupExpiredGroupSelections, 60 * 1000)
 
 /**
  * Format help message
@@ -37,6 +65,7 @@ export function getHelpMessage(): string {
 *Monedas:* USD, EUR, BRL (se convierten a ARS)
 
 *Comandos:*
+/grupo - Ver y cambiar grupo activo
 /balance - Ver saldos
 /lista - Ver últimos gastos
 /borrar [n] - Eliminar gasto
@@ -317,4 +346,127 @@ export function parseCommand(text: string): { command: string; args: string } | 
  */
 export function isCommand(text: string): boolean {
   return text.trim().startsWith('/')
+}
+
+/**
+ * Get group command message
+ * Shows user's groups and active group, or message for single group
+ */
+export async function getGroupMessage(userId: string, activeGroupId: string | null): Promise<{ message: string, groups: Group[] }> {
+  const groups = await getAllGroupsByUserId(userId)
+
+  if (groups.length === 0) {
+    return {
+      message: '⚠️ No pertenecés a ningún grupo.',
+      groups: []
+    }
+  }
+
+  if (groups.length === 1) {
+    return {
+      message: `📍 Tu grupo: *${groups[0].name}*\n\n_(Solo pertenecés a un grupo)_`,
+      groups
+    }
+  }
+
+  // Multiple groups - show numbered list with active group marked
+  let message = '📍 *Tus grupos:*\n\n'
+
+  groups.forEach((group, index) => {
+    const isActive = group.id === activeGroupId
+    message += `${index + 1}. ${group.name}${isActive ? ' ✓' : ''}\n`
+  })
+
+  const activeGroup = groups.find(g => g.id === activeGroupId) || groups[0]
+  message += `\nGrupo activo: *${activeGroup.name}*\n\n_Respondé con el número para cambiar de grupo._`
+
+  return { message, groups }
+}
+
+/**
+ * Set up pending group selection for a user
+ */
+export function setPendingGroupSelection(userId: string, groups: Group[]): void {
+  pendingGroupSelections.set(userId, {
+    userId,
+    groups,
+    expiresAt: Date.now() + GROUP_SELECTION_TIMEOUT_MS
+  })
+}
+
+/**
+ * Check if user has a pending group selection
+ */
+export function hasPendingGroupSelection(userId: string): boolean {
+  const pending = pendingGroupSelections.get(userId)
+  if (!pending) return false
+
+  // Check if expired
+  if (pending.expiresAt < Date.now()) {
+    pendingGroupSelections.delete(userId)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Handle number response for group selection
+ * Returns CommandResult if this was a group selection, null if not applicable
+ */
+export async function handleGroupSelectionResponse(
+  userId: string,
+  text: string
+): Promise<CommandResult | null> {
+  const pending = pendingGroupSelections.get(userId)
+
+  if (!pending || pending.expiresAt < Date.now()) {
+    pendingGroupSelections.delete(userId)
+    return null
+  }
+
+  // Check if the message is just a number
+  const trimmed = text.trim()
+  const number = parseInt(trimmed, 10)
+
+  if (isNaN(number) || number < 1 || number > pending.groups.length) {
+    // Not a valid number, treat as normal message (expense)
+    // But only clear pending state if it's definitely not a number attempt
+    if (/^\d+$/.test(trimmed)) {
+      // They entered a number but it's out of range
+      return {
+        success: false,
+        message: `⚠️ Número inválido. Elegí un número entre 1 y ${pending.groups.length}.`
+      }
+    }
+    // Not a number at all, clear pending and let it be processed as expense
+    pendingGroupSelections.delete(userId)
+    return null
+  }
+
+  // Valid selection - update the user's active group
+  const selectedGroup = pending.groups[number - 1]
+  const success = await updateUserActiveGroup(userId, selectedGroup.id)
+
+  // Clear pending state
+  pendingGroupSelections.delete(userId)
+
+  if (!success) {
+    return {
+      success: false,
+      message: '❌ Error al cambiar de grupo. Por favor intentá de nuevo.'
+    }
+  }
+
+  return {
+    success: true,
+    message: `✅ Grupo activo cambiado a: *${selectedGroup.name}*\n\nTus próximos gastos se registrarán en este grupo.`
+  }
+}
+
+/**
+ * Clear pending group selection (for cleanup)
+ */
+export function clearPendingGroupSelection(userId: string): void {
+  pendingGroupSelections.delete(userId)
 }

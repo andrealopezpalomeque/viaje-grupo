@@ -16,6 +16,7 @@ export interface User {
   authUid?: string        // Firebase Auth UID (for security rules)
   aliases: string[]       // For @mention matching (lowercase, e.g., ["pipi"])
   paymentInfo?: PaymentInfo // Payment details for settlements
+  activeGroupId?: string | null  // Currently selected group for WhatsApp expense logging
   createdAt?: Date
   // Legacy field for backwards compatibility
   phoneNumber?: string

@@ -235,6 +235,9 @@ Use these to verify the bot works correctly:
 | List command | `/lista` or `/list` | 📋 Last 10 expenses |
 | Delete expense | `/borrar 1` | ✅ Deletes expense #1 (if you created it) |
 | Delete by other | `/borrar 1` (created by someone else) | ⚠️ Error: only creator can delete |
+| Group command (single) | `/grupo` (user in 1 group) | 📍 Shows single group name |
+| Group command (multi) | `/grupo` (user in 2+ groups) | 📍 Shows numbered list, awaits selection |
+| Group selection | `2` (after /grupo) | ✅ Switches to selected group |
 | Unknown command | `/foo` | ❓ Unknown command message |
 
 ---
@@ -520,3 +523,39 @@ When starting a new Claude Code session, paste this context:
   - Logic extracted into reusable components
   - components/ directory now has 22 organized components
 - 📍 Status: Phase 5B UX/UI Enhancement COMPLETE
+
+### December 24, 2025 (Multi-Group Active Selection)
+- ✅ **Created Brazil 2026 Ingleses group seed script**
+  - `server/scripts/seedBrazil2026Group.ts` - idempotent seed for new group
+  - 5 members: Pipi + 4 new users (Gonzalo, Agustin, Conrado, Chiche)
+  - Run with: `npx tsx scripts/seedBrazil2026Group.ts`
+- ✅ **Added `activeGroupId` to user schema**
+  - New field on User type in both server and client
+  - `activeGroupId: string | null` - determines which group receives WhatsApp expenses
+  - Updated `server/src/types/index.ts` and `client/types/index.ts`
+- ✅ **Implemented `/grupo` command in WhatsApp bot**
+  - Shows user's groups with active group marked (✓)
+  - Single group: "📍 Tu grupo: *Brazil Trip 2025* (Solo pertenecés a un grupo)"
+  - Multiple groups: Numbered list with "Respondé con el número para cambiar de grupo"
+  - Handles number responses to switch groups (2-minute timeout)
+  - Updates `activeGroupId` in Firestore on selection
+- ✅ **Updated expense creation to use `activeGroupId`**
+  - `getGroupByUserId()` now checks `activeGroupId` first
+  - Falls back to first group found if `activeGroupId` is null or invalid
+  - Clears invalid `activeGroupId` if user is no longer in that group
+- ✅ **Updated Dashboard group selector to sync with `activeGroupId`**
+  - `useGroupStore.selectGroup()` now updates Firestore in addition to localStorage
+  - On load, `fetchGroupsForUser()` accepts `activeGroupId` for priority selection
+  - Priority: activeGroupId > localStorage > first group
+  - Bidirectional sync: WhatsApp ↔ Dashboard
+- ✅ **Updated `/ayuda` command to include `/grupo`**
+- ✅ **Updated documentation**
+  - `docs/adding-groups.md` - multi-group selection docs, `/grupo` command examples
+  - Added `seedBrazil2026Group.ts` to scripts table
+  - Updated troubleshooting section with solution
+- 📝 **REMINDER:** Add phone numbers to ALLOWED_PHONE_NUMBERS on Render:
+  - +5493794008427 (Gonzalo)
+  - +5493794335989 (Agustin)
+  - +5493794351114 (Conrado)
+  - +5493794382508 (Chiche)
+- 📍 Status: Multi-Group Active Selection Feature COMPLETE

@@ -23,6 +23,7 @@ export interface User {
   phone: string           // with country code (e.g., +5493794702813)
   email: string | null    // nullable, populated via Google Auth
   aliases: string[]       // for @mention matching (lowercase)
+  activeGroupId?: string | null  // currently selected group for WhatsApp expense logging
   createdAt?: Date
   // Legacy field for backwards compatibility during migration
   phoneNumber?: string

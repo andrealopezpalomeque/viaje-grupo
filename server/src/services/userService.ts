@@ -132,18 +132,89 @@ export const isAuthorizedPhone = (phoneNumber: string): boolean => {
 }
 
 /**
+ * Get group by ID
+ */
+export const getGroupById = async (groupId: string): Promise<Group | null> => {
+  try {
+    const doc = await db.collection('groups').doc(groupId).get()
+
+    if (!doc.exists) {
+      return null
+    }
+
+    return {
+      id: doc.id,
+      ...doc.data()
+    } as Group
+  } catch (error) {
+    console.error('Error getting group by ID:', error)
+    return null
+  }
+}
+
+/**
+ * Get all groups where user is a member
+ */
+export const getAllGroupsByUserId = async (userId: string): Promise<Group[]> => {
+  try {
+    const groupsRef = db.collection('groups')
+    const snapshot = await groupsRef.where('members', 'array-contains', userId).get()
+
+    if (snapshot.empty) {
+      return []
+    }
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Group[]
+  } catch (error) {
+    console.error('Error getting all groups by user ID:', error)
+    return []
+  }
+}
+
+/**
+ * Update user's active group ID
+ */
+export const updateUserActiveGroup = async (userId: string, groupId: string | null): Promise<boolean> => {
+  try {
+    await db.collection('users').doc(userId).update({
+      activeGroupId: groupId
+    })
+    return true
+  } catch (error) {
+    console.error('Error updating user active group:', error)
+    return false
+  }
+}
+
+/**
  * Get group by user ID
- * Returns the first group where the user is a member
+ * Returns the user's active group if set and valid, otherwise the first group found
  *
- * TODO: Multi-group support - Currently users can only interact with ONE group via WhatsApp.
- * When a user belongs to multiple groups, this returns the first one found (non-deterministic).
- * Future enhancement: Allow users to select their active group via:
- *   - WhatsApp command: /grupo <name> or /grupo to list and select
- *   - Dashboard setting: "Active group for WhatsApp"
- *   - Store activeGroupId on user document
+ * Multi-group support: Users can select their active group via:
+ *   - WhatsApp command: /grupo to list and select
+ *   - Dashboard group selector (syncs activeGroupId)
  */
 export const getGroupByUserId = async (userId: string): Promise<Group | null> => {
   try {
+    // First, check if user has an activeGroupId
+    const user = await getUserById(userId)
+
+    if (user?.activeGroupId) {
+      // Verify the user is still a member of this group
+      const activeGroup = await getGroupById(user.activeGroupId)
+
+      if (activeGroup && activeGroup.members.includes(userId)) {
+        return activeGroup
+      }
+
+      // activeGroupId is invalid (user no longer in group), clear it
+      await updateUserActiveGroup(userId, null)
+    }
+
+    // Fall back to first group found
     const groupsRef = db.collection('groups')
     const snapshot = await groupsRef.where('members', 'array-contains', userId).limit(1).get()
 

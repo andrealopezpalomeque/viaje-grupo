@@ -20,6 +20,10 @@ import {
   getExpenseListMessage,
   deleteExpenseCommand,
   getUnknownCommandMessage,
+  getGroupMessage,
+  setPendingGroupSelection,
+  hasPendingGroupSelection,
+  handleGroupSelectionResponse,
 } from '../services/commandService.js'
 
 const router = Router()
@@ -273,17 +277,28 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 3. Get user's group
+  // 3. Check for pending group selection (before processing as expense)
+  if (hasPendingGroupSelection(user.id)) {
+    const result = await handleGroupSelectionResponse(user.id, text)
+    if (result) {
+      // Was handled as group selection
+      await sendMessage(from, result.message)
+      return
+    }
+    // Not a group selection, continue with normal processing
+  }
+
+  // 4. Get user's group (uses activeGroupId if set)
   const group = await getGroupByUserId(user.id)
   const groupId = group?.id || null
 
-  // 4. Check if this is a command
+  // 5. Check if this is a command
   if (isCommand(text)) {
     await handleCommand(from, text, user, groupId)
     return
   }
 
-  // 5. Process as expense
+  // 6. Process as expense
   await handleExpenseMessage(from, text, user, groupId)
 }
 
@@ -303,6 +318,16 @@ async function handleCommand(from, text, user, groupId) {
     case '/ayuda':
     case '/help':
       await sendMessage(from, getHelpMessage())
+      break
+
+    case '/grupo':
+    case '/group':
+      const { message: groupMessage, groups } = await getGroupMessage(user.id, user.activeGroupId || groupId)
+      await sendMessage(from, groupMessage)
+      // If user has multiple groups, set up pending selection
+      if (groups.length > 1) {
+        setPendingGroupSelection(user.id, groups)
+      }
       break
 
     case '/balance':

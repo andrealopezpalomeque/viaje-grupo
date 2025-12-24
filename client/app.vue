@@ -27,8 +27,8 @@ const groupStore = useGroupStore()
 const initializeData = async () => {
   if (!firestoreUser.value) return
 
-  // Fetch groups for the current user
-  await groupStore.fetchGroupsForUser(firestoreUser.value.id)
+  // Fetch groups for the current user, passing activeGroupId for priority selection
+  await groupStore.fetchGroupsForUser(firestoreUser.value.id, firestoreUser.value.activeGroupId)
 
   // Initialize data for the selected group
   const groupId = groupStore.selectedGroupId
