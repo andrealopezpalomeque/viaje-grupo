@@ -134,6 +134,13 @@ export const isAuthorizedPhone = (phoneNumber: string): boolean => {
 /**
  * Get group by user ID
  * Returns the first group where the user is a member
+ *
+ * TODO: Multi-group support - Currently users can only interact with ONE group via WhatsApp.
+ * When a user belongs to multiple groups, this returns the first one found (non-deterministic).
+ * Future enhancement: Allow users to select their active group via:
+ *   - WhatsApp command: /grupo <name> or /grupo to list and select
+ *   - Dashboard setting: "Active group for WhatsApp"
+ *   - Store activeGroupId on user document
  */
 export const getGroupByUserId = async (userId: string): Promise<Group | null> => {
   try {
