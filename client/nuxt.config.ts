@@ -59,5 +59,14 @@ export default defineNuxtConfig({
       firebaseMessagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
       firebaseAppId: process.env.FIREBASE_APP_ID || ''
     }
+  },
+
+  // Route rules for static generation
+  // Don't prerender root "/" - it requires auth check
+  // The SPA fallback (200.html) will handle it client-side
+  routeRules: {
+    '/': { prerender: false },
+    '/login': { prerender: true },
+    '/profile': { prerender: true }
   }
 })

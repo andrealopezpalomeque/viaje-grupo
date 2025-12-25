@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware((to) => {
   // Skip middleware on server - Firebase auth only works on client
   // Protected pages use ssr: false to avoid hydration mismatches
-  if (process.server) {
+  if (import.meta.server) {
     return
   }
 
@@ -15,9 +15,12 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // After auth is loaded, check authentication
   // If not authenticated and trying to access a protected route, redirect to login
-  // Use external: true to force full page navigation, ensuring pre-rendered login page is served
+  // Use direct window.location.href for a true full page reload
+  // This ensures the pre-rendered login page with styles is fetched fresh
   if (!isAuthenticated.value && to.path !== '/login') {
-    return navigateTo('/login', { external: true })
+    window.location.href = '/login'
+    // Abort the current navigation
+    return abortNavigation()
   }
 
   // If authenticated and trying to access login page, redirect to home
