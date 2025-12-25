@@ -118,8 +118,15 @@ const { activeTab, openExpenseModal } = useNavigationState()
 const { filterByPerson, filterByPayer } = useExpenseFilters()
 
 // Show loading until all data is ready
+// Must check selectedGroupId - if null, we haven't fetched groups yet
 const isDataLoading = computed(() => {
-  return groupStore.loading || !expenseStore.initialized || expenseStore.loading
+  // No group selected = still initializing (groups not fetched yet)
+  if (!groupStore.selectedGroupId) return true
+  // Groups are loading
+  if (groupStore.loading) return true
+  // Expenses not initialized or still loading
+  if (!expenseStore.initialized || expenseStore.loading) return true
+  return false
 })
 
 // Current user ID
