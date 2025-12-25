@@ -141,9 +141,34 @@ The `activeGroupId` field on the user document determines which group is current
 
 ### Selecting Active Group
 
+#### Automatic Prompt on First Expense
+
+When a multi-group user sends an expense for the first time (without having set an `activeGroupId`), the bot automatically asks which group:
+
+```
+User: 100 taxi
+
+Bot: 📍 *¿En qué grupo registrar este gasto?*
+
+1. Brazil 2026 Ingleses
+2. Brazil Trip 2025
+3. Demo Group
+
+_Respondé con el número del grupo._
+
+User: 2
+
+Bot: ✅ Gasto registrado en Brazil Trip 2025
+     💰 $100 ARS
+     📝 taxi
+     ...
+```
+
+The selected group is saved as the user's `activeGroupId` for future expenses.
+
 #### Via WhatsApp: `/grupo` Command
 
-Users with multiple groups can switch using the `/grupo` command:
+Users with multiple groups can switch at any time using the `/grupo` command:
 
 ```
 User: /grupo

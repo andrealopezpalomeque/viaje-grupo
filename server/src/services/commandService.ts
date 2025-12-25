@@ -26,6 +26,14 @@ interface PendingGroupSelection {
   expiresAt: number
 }
 
+interface PendingExpense {
+  userId: string
+  phone: string
+  text: string
+  groups: Group[]
+  expiresAt: number
+}
+
 // Store recent expense list for /borrar command reference
 // Key: groupId, Value: array of expense IDs (most recent first)
 const recentExpenseCache = new Map<string, string[]>()
@@ -34,23 +42,32 @@ const recentExpenseCache = new Map<string, string[]>()
 // Key: userId, Value: { groups: Group[], expiresAt: timestamp }
 const pendingGroupSelections = new Map<string, PendingGroupSelection>()
 
+// Store pending expenses (waiting for group selection)
+// Key: userId, Value: { phone, text, groups[], expiresAt }
+const pendingExpenses = new Map<string, PendingExpense>()
+
 // 2 minute timeout for group selection
 const GROUP_SELECTION_TIMEOUT_MS = 2 * 60 * 1000
 
 /**
- * Clean up expired group selection states
+ * Clean up expired group selection states and pending expenses
  */
-function cleanupExpiredGroupSelections() {
+function cleanupExpiredPendingStates() {
   const now = Date.now()
   for (const [userId, pending] of pendingGroupSelections.entries()) {
     if (pending.expiresAt < now) {
       pendingGroupSelections.delete(userId)
     }
   }
+  for (const [userId, pending] of pendingExpenses.entries()) {
+    if (pending.expiresAt < now) {
+      pendingExpenses.delete(userId)
+    }
+  }
 }
 
 // Run cleanup every minute
-setInterval(cleanupExpiredGroupSelections, 60 * 1000)
+setInterval(cleanupExpiredPendingStates, 60 * 1000)
 
 /**
  * Format help message
@@ -469,4 +486,66 @@ export async function handleGroupSelectionResponse(
  */
 export function clearPendingGroupSelection(userId: string): void {
   pendingGroupSelections.delete(userId)
+}
+
+/**
+ * Set up pending expense for a user (waiting for group selection)
+ */
+export function setPendingExpense(userId: string, phone: string, text: string, groups: Group[]): void {
+  pendingExpenses.set(userId, {
+    userId,
+    phone,
+    text,
+    groups,
+    expiresAt: Date.now() + GROUP_SELECTION_TIMEOUT_MS
+  })
+}
+
+/**
+ * Check if user has a pending expense
+ */
+export function hasPendingExpense(userId: string): boolean {
+  const pending = pendingExpenses.get(userId)
+  if (!pending) return false
+
+  if (pending.expiresAt < Date.now()) {
+    pendingExpenses.delete(userId)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Get pending expense for a user
+ */
+export function getPendingExpense(userId: string): PendingExpense | null {
+  const pending = pendingExpenses.get(userId)
+  if (!pending || pending.expiresAt < Date.now()) {
+    pendingExpenses.delete(userId)
+    return null
+  }
+  return pending
+}
+
+/**
+ * Clear pending expense
+ */
+export function clearPendingExpense(userId: string): void {
+  pendingExpenses.delete(userId)
+}
+
+/**
+ * Get prompt message for group selection when sending expense
+ */
+export function getExpenseGroupPromptMessage(groups: Group[]): string {
+  let message = '📍 *¿En qué grupo registrar este gasto?*\n\n'
+
+  groups.forEach((group, index) => {
+    message += `${index + 1}. ${group.name}\n`
+  })
+
+  message += '\n_Respondé con el número del grupo._'
+
+  return message
 }

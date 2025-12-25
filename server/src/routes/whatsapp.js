@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import crypto from 'crypto'
 import rateLimit from 'express-rate-limit'
-import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers } from '../services/userService.js'
+import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
 import { parseExpenseMessage, extractCurrency, stripCurrencyFromDescription } from '../utils/messageParser.js'
 import { convertToARS } from '../services/exchangeRateService.js'
@@ -24,6 +24,11 @@ import {
   setPendingGroupSelection,
   hasPendingGroupSelection,
   handleGroupSelectionResponse,
+  setPendingExpense,
+  hasPendingExpense,
+  getPendingExpense,
+  clearPendingExpense,
+  getExpenseGroupPromptMessage,
 } from '../services/commandService.js'
 
 const router = Router()
@@ -277,7 +282,35 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 3. Check for pending group selection (before processing as expense)
+  // 3. Check for pending expense (user was asked which group for their expense)
+  if (hasPendingExpense(user.id)) {
+    const trimmed = text.trim()
+    const number = parseInt(trimmed, 10)
+    const pending = getPendingExpense(user.id)
+
+    if (pending && /^\d+$/.test(trimmed)) {
+      if (number >= 1 && number <= pending.groups.length) {
+        // Valid selection - process the pending expense
+        const selectedGroup = pending.groups[number - 1]
+        clearPendingExpense(user.id)
+
+        // Also set this as their active group for future expenses
+        await updateUserActiveGroup(user.id, selectedGroup.id)
+
+        // Process the original expense
+        await handleExpenseMessage(from, pending.text, user, selectedGroup.id, selectedGroup.name)
+        return
+      } else {
+        // Out of range number
+        await sendMessage(from, `⚠️ Número inválido. Elegí un número entre 1 y ${pending.groups.length}.`)
+        return
+      }
+    }
+    // Not a number, clear pending expense and continue with normal processing
+    clearPendingExpense(user.id)
+  }
+
+  // 4. Check for pending group selection (from /grupo command)
   if (hasPendingGroupSelection(user.id)) {
     const result = await handleGroupSelectionResponse(user.id, text)
     if (result) {
@@ -288,17 +321,30 @@ async function handleTextMessage(from, text, messageId) {
     // Not a group selection, continue with normal processing
   }
 
-  // 4. Get user's group (uses activeGroupId if set)
-  const group = await getGroupByUserId(user.id)
-  const groupId = group?.id || null
-
-  // 5. Check if this is a command
+  // 5. Check if this is a command (before checking groups)
   if (isCommand(text)) {
+    const group = await getGroupByUserId(user.id)
+    const groupId = group?.id || null
     await handleCommand(from, text, user, groupId)
     return
   }
 
-  // 6. Process as expense
+  // 6. For non-commands (expenses): check if multi-group user without activeGroupId
+  const allGroups = await getAllGroupsByUserId(user.id)
+
+  if (allGroups.length > 1 && !user.activeGroupId) {
+    // User is in multiple groups but hasn't selected one yet
+    // Store the expense and ask which group
+    setPendingExpense(user.id, from, text, allGroups)
+    await sendMessage(from, getExpenseGroupPromptMessage(allGroups))
+    return
+  }
+
+  // 7. Get user's group (uses activeGroupId if set)
+  const group = await getGroupByUserId(user.id)
+  const groupId = group?.id || null
+
+  // 8. Process as expense
   await handleExpenseMessage(from, text, user, groupId, group?.name)
 }
 
