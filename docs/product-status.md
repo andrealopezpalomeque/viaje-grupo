@@ -1,173 +1,399 @@
-# Text the Check - Product Status (Honest Assessment)
+# Text the Check - Product Status
 
-**Last updated:** December 24, 2025
-
-This document explains exactly where the product is, what works, what doesn't, and what's needed for public launch. Written for potential co-founders and collaborators who need the full picture.
-
----
-
-## What We Have: A Working MVP in Closed Beta
-
-The core product works. Real expenses can be tracked via WhatsApp, balances are calculated correctly, and the dashboard shows everything in real-time.
-
-**But:** New users cannot sign up on their own. Every user and group must be manually created by a developer.
+**Last updated:** December 24, 2025  
+**Purpose:** Honest assessment for co-founders, investors, and collaborators
 
 ---
 
-## Current User Flow (Closed Beta)
+## 📍 Where We Are: At a Glance
 
-Developer (me) must:
-
-1. Add user's phone number to environment variable (ALLOWED_PHONE_NUMBERS)
-2. Run a seed script to create user in database
-3. Run a seed script to create group with members
-4. Share the WhatsApp test number with friends
-
-Then users can:
-
-1. Save the bot number in their contacts
-2. Text expenses to the bot
-3. View dashboard at textthecheck.app (if they have Google email registered)
-
-**This is fine for testing with known friend groups. This does not scale.**
+| Aspect | Status |
+|--------|--------|
+| **Core Product** | ✅ Working MVP |
+| **User Access** | ⚠️ Closed Beta (manual setup required) |
+| **Public Launch Ready** | ❌ Not yet |
+| **Timeline to Public** | 4-8 weeks |
 
 ---
 
-## What's Fully Working
+## 🎯 The Problem We're Solving
 
-### WhatsApp Bot
-- Natural language expense entry (`100 taxi`, `USD 50 dinner @Juan @Maria`)
-- Multi-currency conversion (USD, EUR, BRL -> ARS with live rates)
-- @mention splitting with fuzzy name matching
-- Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`, `/grupo`
-- Auto-categorization (food, transport, accommodation, etc.)
-- Multi-group support (users can switch between groups)
-- Security: webhook signature verification, rate limiting
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    THE SPLITWISE PROBLEM                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Trip with 10 friends → Everyone needs to:                      │
+│                                                                 │
+│  ❌ Download an app                                             │
+│  ❌ Create an account                                           │
+│  ❌ Join the group                                              │
+│  ❌ Learn how to use it                                         │
+│                                                                 │
+│  Reality: 3 people never do it → Someone tracks in Notes app   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-### Web Dashboard
-- Google Authentication
-- Real-time expense feed
-- Personal balance view ("Tu Resumen")
-- Group balance overview
-- Settlement recommendations (who pays whom)
-- Payment info with copy-to-clipboard
-- User profiles with editable payment details
-- Group selector (for users in multiple groups)
-- Mobile-first responsive design
+                              ↓
 
-### Infrastructure
-- Backend deployed on Render (Node.js/Express)
-- Frontend deployed on Firebase Hosting (Nuxt.js)
-- Database on Firebase Firestore (real-time sync)
-- Custom domain: textthecheck.app
+┌─────────────────────────────────────────────────────────────────┐
+│                    OUR SOLUTION                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Trip with 10 friends → Only the person who pays needs to:      │
+│                                                                 │
+│  ✅ Text what they paid: "100 taxi @Juan @Maria"                │
+│                                                                 │
+│  Everyone else:                                                 │
+│  ✅ Views balances on web (optional)                            │
+│  ✅ No app download                                             │
+│  ✅ No account creation                                         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## What's NOT Built Yet
+## ✅ What's Fully Working
 
-### Critical for Public Launch
+### WhatsApp Bot Features
 
-| Feature | Why It's Needed |
-|---------|-----------------|
-| Self-registration | Users can't create accounts themselves |
-| Group creation UI | Groups must be created via database scripts |
-| Friend invitation flow | Can't add friends without developer intervention |
-| Remove phone whitelist | Currently only pre-approved phones can use bot |
+| Feature | Example | Status |
+|---------|---------|--------|
+| Simple expense | `100 taxi` | ✅ Working |
+| Multi-currency | `USD 50 dinner` | ✅ Working |
+| Split with mentions | `200 lunch @Juan @Maria` | ✅ Working |
+| View balances | `/balance` | ✅ Working |
+| View expenses | `/lista` | ✅ Working |
+| Delete expense | `/borrar 1` | ✅ Working |
+| Switch groups | `/grupo` | ✅ Working |
+| Help | `/ayuda` | ✅ Working |
 
-### Nice to Have (Not Critical)
+### Web Dashboard Features
 
 | Feature | Status |
 |---------|--------|
-| Receipt/image upload | Not started |
-| Export to CSV/PDF | Not started |
-| Public shareable balance links | Not started |
-| WhatsApp-based onboarding | Not started |
+| Google Authentication | ✅ Working |
+| Real-time expense feed | ✅ Working |
+| Personal balance view | ✅ Working |
+| Group balance overview | ✅ Working |
+| Settlement recommendations | ✅ Working |
+| Payment info (CBU, alias, MP) | ✅ Working |
+| Multi-group selector | ✅ Working |
+| Mobile responsive | ✅ Working |
+
+### Infrastructure
+
+| Component | Platform | Status |
+|-----------|----------|--------|
+| Backend API | Render | ✅ Deployed |
+| Frontend | Firebase Hosting | ✅ Deployed |
+| Database | Firebase Firestore | ✅ Running |
+| Domain | textthecheck.app | ✅ Active |
 
 ---
 
-## WhatsApp Business API Reality
+## ⚠️ Current Limitation: Closed Beta
 
-### Current Setup (Test Mode)
-- Using Meta's test phone number
-- Only works for phone numbers in ALLOWED_PHONE_NUMBERS
-- Fine for testing with known friends
-- Cannot scale to unknown users
+### How Users Get Access TODAY
 
-### For Public Launch (Need to Do)
-- Apply for WhatsApp Business API verification
-- Get a dedicated phone number for the bot
-- Get approved for messaging templates
-- This process can take days to weeks
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CURRENT FLOW (Closed Beta)                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  DEVELOPER must:                                                │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. Add phone to ALLOWED_PHONE_NUMBERS (env variable)    │    │
+│  │ 2. Run seed script to create user in Firestore          │    │
+│  │ 3. Run seed script to create group with members         │    │
+│  │ 4. Share WhatsApp test number with friends              │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                              ↓                                  │
+│  THEN users can:                                                │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. Save bot number in contacts                          │    │
+│  │ 2. Text expenses to bot                                 │    │
+│  │ 3. View dashboard (if email is registered)              │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  ⚠️ This works for testing. This does NOT scale.               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### What This Means
-Random users cannot use the bot today. They would need to:
-1. Contact us
-2. We manually add their phone number
-3. We manually create their account and group
+### Can Friends Test Right Now?
 
-This is the main blocker for public launch.
-
----
-
-## Realistic Path to Public Launch
-
-### Phase 1: Closed Beta Testing (Current)
-- Test with 3 manually-created friend groups
-- Collect feedback on core experience
-- Fix bugs found during real usage
-- No new features, just validation
-
-### Phase 2: Build Self-Service Features
-- Self-registration on website (Google sign-up)
-- Group creation UI (create group, add friends by phone)
-- Friend invitation system
-- Automatic phone number authorization
-
-### Phase 3: WhatsApp Verification (Parallel with Phase 2)
-- Apply for WhatsApp Business verification
-- Get dedicated phone number
-- Set up approved message templates
-- Timeline depends on Meta
-
-### Phase 4: Public Launch
-- Remove phone whitelist
-- Anyone can sign up and create groups
-- Friends receive WhatsApp invitations
-- Marketing can begin
+| Question | Answer |
+|----------|--------|
+| Can my friends use the bot? | ✅ YES, if I add them manually |
+| Can strangers use the bot? | ❌ NO, not until public launch |
+| Do I need WhatsApp verification for testing? | ❌ NO, test mode works |
+| What do I need to do for each friend? | Add phone + run seed script |
 
 ---
 
-## The Friction We're Solving vs. Creating
+## ❌ What's NOT Built Yet
 
-### Original Problem (Splitwise)
-> Everyone must download app + create account + join group
+### Critical for Public Launch
 
-### Our Solution (Public Launch Target)
-> ONE person creates group on website, adds friends by phone number.
-> Friends just save a number and text. No app download. No account creation.
+| Feature | Why It's Needed | Difficulty | Time Estimate |
+|---------|-----------------|------------|---------------|
+| Self-registration | Users can't create accounts | Medium | 1 week |
+| Group creation UI | Groups require seed scripts | Medium | 1 week |
+| Friend invitation flow | Can't add friends easily | Medium | 1 week |
+| Remove phone whitelist | Only approved phones work | Easy | 1 day |
+| WhatsApp verification | Meta approval required | External | 1-4 weeks |
 
-### Current State (Closed Beta)
-> Developer manually sets up everything. Users just text.
-> (Good for testing, doesn't scale)
+### Nice to Have (Post-Launch)
 
----
-
-## Honest Summary
-
-**What we have:** A working product that real people can use to split expenses via WhatsApp.
-
-**What we don't have:** A way for new users to start using it without developer help.
-
-**What we need to build:** Self-service registration and group creation.
-
-**What we need from Meta:** WhatsApp Business verification for public access.
+| Feature | Priority | Status |
+|---------|----------|--------|
+| Receipt/image upload | Low | Not started |
+| Export to CSV/PDF | Low | Not started |
+| Public shareable links | Medium | Not started |
+| WhatsApp-based onboarding | Medium | Not started |
 
 ---
 
-## Questions for Co-founder Discussion
+## 📱 WhatsApp Business API Reality
 
-1. Are we okay testing manually with friend groups for the next month?
-2. Who handles the WhatsApp Business verification process?
-3. What's our launch strategy once self-service is built?
-4. Do we need landing page / marketing site before public launch?
-5. How do we want to handle the first 100 users?
+### Current Setup vs. Public Launch
+
+| Aspect | Current (Test Mode) | Public Launch |
+|--------|---------------------|---------------|
+| Phone number | Meta's test number | Dedicated bot number |
+| Who can message | Only ALLOWED_PHONE_NUMBERS | Anyone |
+| Setup required | Manual per user | Self-service |
+| Meta approval | Not needed | Required |
+
+### What Meta Verification Involves
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              WHATSAPP BUSINESS VERIFICATION PROCESS             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Step 1: Business Verification                                  │
+│  ├── Submit business documents                                  │
+│  ├── Verify business identity                                   │
+│  └── Timeline: 1-5 business days                                │
+│                                                                 │
+│  Step 2: Phone Number Setup                                     │
+│  ├── Get dedicated phone number for bot                         │
+│  ├── Connect to WhatsApp Business API                           │
+│  └── Timeline: 1-2 days                                         │
+│                                                                 │
+│  Step 3: Message Template Approval                              │
+│  ├── Submit templates for outbound messages                     │
+│  ├── Meta reviews for policy compliance                         │
+│  └── Timeline: 1-3 days per template                            │
+│                                                                 │
+│  Total Timeline: 1-4 weeks (depends on Meta)                    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🛤️ Road to Public Launch
+
+### Phase Overview
+
+| Phase | Name | Duration | Status |
+|-------|------|----------|--------|
+| A | Document & Align | 1 day | ✅ Done |
+| B | Closed Beta Testing | 2-4 weeks | 🔄 Current |
+| C | Build Self-Service | 2-3 weeks | ⬜ Next |
+| D | Public Launch | 1 week | ⬜ Future |
+
+### Phase A: Document & Align ✅
+
+| Task | Status |
+|------|--------|
+| Create honest product status doc | ✅ Done |
+| Update overview for co-founder | ✅ Done |
+| Align on current limitations | ✅ Done |
+
+### Phase B: Closed Beta Testing 🔄
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TESTING PLAN                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Group 1: Brazil Trip 2025 (11 people)                          │
+│  └── Status: Created, ready to test                             │
+│                                                                 │
+│  Group 2: Demo Group (4 people)                                 │
+│  └── Status: Created, for marketing co-founder testing          │
+│                                                                 │
+│  Group 3: Brazil 2026 Ingleses (5 people)                       │
+│  └── Status: Created, ready to test                             │
+│                                                                 │
+│  Goals:                                                         │
+│  ├── Validate core expense flow works                           │
+│  ├── Test multi-group switching                                 │
+│  ├── Collect UX feedback                                        │
+│  └── Find and fix bugs                                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Task | Owner | Status |
+|------|-------|--------|
+| Add all phone numbers to Render | Developer | ⬜ To Do |
+| Share bot number with test groups | Developer | ⬜ To Do |
+| Collect feedback from testers | Everyone | ⬜ To Do |
+| Fix bugs found during testing | Developer | ⬜ To Do |
+
+### Phase C: Build Self-Service Features
+
+| Feature | Description | Estimate |
+|---------|-------------|----------|
+| Self-registration | Google signup creates Firestore user | 3 days |
+| Group creation UI | Form to name group, add members | 3 days |
+| Add friends by phone | Input phone numbers, auto-add to group | 2 days |
+| Invitation system | WhatsApp message to invited friends | 3 days |
+| Remove whitelist | Any registered phone can use bot | 1 day |
+
+### Phase D: Public Launch
+
+| Task | Depends On |
+|------|------------|
+| Complete WhatsApp verification | Phase C done |
+| Set up dedicated bot phone number | Verification approved |
+| Create landing/marketing page | Business decision |
+| Announce launch | All above complete |
+
+---
+
+## 🎯 Target User Flow (Public Launch)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    PUBLIC LAUNCH FLOW                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ONE person (trip organizer):                                   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. Goes to textthecheck.app                             │    │
+│  │ 2. Signs up with Google                                 │    │
+│  │ 3. Creates group "Beach Trip 2026"                      │    │
+│  │ 4. Adds friends by phone number                         │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                              ↓                                  │
+│  Friends receive WhatsApp:                                      │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ "Juan te agregó a 'Beach Trip 2026' en Text the Check.  │    │
+│  │  Guardá este número para enviar gastos."                │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                              ↓                                  │
+│  Everyone:                                                      │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ • Texts expenses: "100 taxi @Juan @Maria"               │    │
+│  │ • Views balances at textthecheck.app (optional)         │    │
+│  │ • No app download needed                                │    │
+│  │ • No account creation needed (except organizer)         │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  ✅ This is still MUCH less friction than Splitwise            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Comparison: Us vs. Competition
+
+| Friction Point | Splitwise | Text the Check (Public) | Text the Check (Now) |
+|----------------|-----------|-------------------------|----------------------|
+| App download | Everyone | Nobody | Nobody |
+| Account creation | Everyone | 1 person (organizer) | Developer |
+| Join group | Everyone | Automatic via phone | Developer |
+| Add expense | Open app, fill form | Text message | Text message |
+| View balance | Open app | Web (optional) | Web (optional) |
+
+---
+
+## 💬 Questions for Co-founder Discussion
+
+### Immediate
+
+1. Are we okay testing with friend groups for the next 2-4 weeks?
+2. Who handles WhatsApp Business verification?
+3. What feedback are we specifically looking for in beta?
+
+### Pre-Launch
+
+4. Do we need a landing page before public launch?
+5. What's our pricing model? (Free? Freemium? Per-group?)
+6. How do we handle the first 100 users?
+
+### Strategic
+
+7. What markets do we target first? (Argentina only? LATAM?)
+8. How do we acquire users? (Organic? Paid? Referral?)
+9. What's our competitive moat if this takes off?
+
+---
+
+## 📈 Success Metrics to Watch
+
+During beta testing:
+
+| Signal | Indicates |
+|--------|-----------|
+| Users add 5+ expenses per trip | Core value works |
+| Users return for second trip | Retention/product-market fit |
+| Users invite friends unprompted | Organic growth potential |
+| Low support requests | UX is intuitive |
+
+---
+
+## 🔗 Live URLs
+
+| Service | URL | Status |
+|---------|-----|--------|
+| Dashboard | https://textthecheck.app | ✅ Live |
+| Backend API | https://viaje-grupo-server.onrender.com | ✅ Live |
+| WhatsApp Bot | (Meta test number - ask developer) | ✅ Working |
+
+---
+
+## 📚 Technical Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [Project Plan](./project-plan.md) | Development phases, session log |
+| [Overview](./overview.md) | Product vision, features, tech stack |
+| [Deployment Guide](./deployment.md) | How to deploy to production |
+| [Adding Groups](./adding-groups.md) | How to create test groups |
+
+---
+
+## Summary
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         BOTTOM LINE                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ✅ WHAT WE HAVE                                                │
+│  A working product that real people can use to split            │
+│  expenses via WhatsApp. Core features complete.                 │
+│                                                                 │
+│  ❌ WHAT WE DON'T HAVE                                          │
+│  A way for new users to sign up without developer help.         │
+│                                                                 │
+│  🔨 WHAT WE NEED TO BUILD                                       │
+│  Self-registration + group creation UI (2-3 weeks)              │
+│                                                                 │
+│  📋 WHAT WE NEED FROM META                                      │
+│  WhatsApp Business verification (1-4 weeks)                     │
+│                                                                 │
+│  📅 TIMELINE TO PUBLIC LAUNCH                                   │
+│  4-8 weeks from today                                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
