@@ -15,8 +15,9 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // After auth is loaded, check authentication
   // If not authenticated and trying to access a protected route, redirect to login
+  // Use external: true to force full page navigation, ensuring pre-rendered login page is served
   if (!isAuthenticated.value && to.path !== '/login') {
-    return navigateTo('/login')
+    return navigateTo('/login', { external: true })
   }
 
   // If authenticated and trying to access login page, redirect to home
