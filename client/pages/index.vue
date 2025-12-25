@@ -13,8 +13,8 @@
           </div>
         </template>
 
-        <!-- Loading State -->
-        <div v-if="expenseStore.loading" class="text-center py-12">
+        <!-- Loading State - show until all data is ready -->
+        <div v-if="isDataLoading" class="text-center py-12">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
           <p class="mt-4 text-gray-600 dark:text-gray-400">Cargando gastos...</p>
         </div>
@@ -113,8 +113,14 @@ definePageMeta({
 const { firestoreUser } = useAuth()
 const expenseStore = useExpenseStore()
 const userStore = useUserStore()
+const groupStore = useGroupStore()
 const { activeTab, openExpenseModal } = useNavigationState()
 const { filterByPerson, filterByPayer } = useExpenseFilters()
+
+// Show loading until all data is ready
+const isDataLoading = computed(() => {
+  return groupStore.loading || !expenseStore.initialized || expenseStore.loading
+})
 
 // Current user ID
 const currentUserId = computed(() => firestoreUser.value?.id || '')

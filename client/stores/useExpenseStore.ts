@@ -18,6 +18,7 @@ interface ExpenseState {
   expenses: Expense[]
   allExpenses: Expense[] // All expenses from Firestore (unfiltered)
   loading: boolean
+  initialized: boolean // Whether data has been fetched at least once
   error: string | null
   unsubscribe: Unsubscribe | null
 }
@@ -27,6 +28,7 @@ export const useExpenseStore = defineStore('expense', {
     expenses: [],
     allExpenses: [],
     loading: false,
+    initialized: false,
     error: null,
     unsubscribe: null
   }),
@@ -128,6 +130,7 @@ export const useExpenseStore = defineStore('expense', {
             this.expenses = expenses
             this.allExpenses = expenses
             this.loading = false
+            this.initialized = true
           },
           (error) => {
             console.error('Error listening to expenses:', error)
@@ -150,6 +153,10 @@ export const useExpenseStore = defineStore('expense', {
         this.unsubscribe()
         this.unsubscribe = null
       }
+      // Reset state on logout
+      this.expenses = []
+      this.allExpenses = []
+      this.initialized = false
     },
 
     /**
