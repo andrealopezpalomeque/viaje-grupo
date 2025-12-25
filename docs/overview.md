@@ -1,5 +1,16 @@
 # Text the Check - Product Overview
 
+## ⚠️ Current Status: Closed Beta
+
+The product described below is functional but in **closed beta**. New users cannot sign up on their own yet — each user and group must be manually created.
+
+**For honest technical status, see [Product Status](./product-status.md).**
+
+**What works:** WhatsApp bot, dashboard, multi-group, settlements
+**What's missing:** Self-registration, group creation UI, WhatsApp verification
+
+---
+
 ## The Problem
 
 Splitting expenses with friends during trips or shared activities is a solved problem — apps like Splitwise, Tricount, and Settle Up exist. But they all share the same friction:

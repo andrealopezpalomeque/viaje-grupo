@@ -48,6 +48,20 @@
 
 ---
 
+## Road to Public Launch
+
+The current phases (1-5) cover feature development. For public launch, additional work is needed:
+
+- [ ] Self-registration (users create own accounts)
+- [ ] Group creation UI (users create groups, add friends)
+- [ ] Friend invitation flow (WhatsApp notifications)
+- [ ] WhatsApp Business API verification
+- [ ] Remove ALLOWED_PHONE_NUMBERS whitelist
+
+See [Product Status](./product-status.md) for detailed assessment.
+
+---
+
 ## Development Phases
 
 ### Phase 1: Security Hardening ✅ COMPLETE
