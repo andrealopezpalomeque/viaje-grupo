@@ -1,5 +1,14 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0">
+  <!-- Full-page loading state - show until all data is ready -->
+  <div v-if="isDataLoading" class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
+      <p class="text-gray-600 dark:text-gray-400">Cargando...</p>
+    </div>
+  </div>
+
+  <!-- Main dashboard - only show when data is ready -->
+  <div v-else class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0">
     <div class="container mx-auto px-4 py-6">
       <!-- Header -->
       <AppHeader />
@@ -13,14 +22,8 @@
           </div>
         </template>
 
-        <!-- Loading State - show until all data is ready -->
-        <div v-if="isDataLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
-          <p class="mt-4 text-gray-600 dark:text-gray-400">Cargando gastos...</p>
-        </div>
-
         <!-- Error State -->
-        <div v-else-if="expenseStore.error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div v-if="expenseStore.error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p class="text-red-800 dark:text-red-200">{{ expenseStore.error }}</p>
         </div>
 
