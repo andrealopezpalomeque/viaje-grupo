@@ -39,7 +39,7 @@ const initializeFirebase = () => {
 
 // Group name updates: ID -> New Spanish name
 const GROUP_NAME_UPDATES: Record<string, string> = {
-  'brazil-trip-2025': 'Viaje Brasil 2025',
+  'brazil-trip-2025': 'Brasil 2026 Bombinhas',
   'demo-group': 'Grupo Demo',
   'brazil-2026-ingleses': 'Brasil 2026 Ingleses'
 }
