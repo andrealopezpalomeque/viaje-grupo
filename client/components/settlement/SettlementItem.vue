@@ -13,7 +13,7 @@
       />
 
       <!-- From user (debtor) -->
-      <div class="min-w-0 max-w-[80px]">
+      <div class="min-w-0 max-w-[120px] sm:max-w-none">
         <UserAvatar
           :name="debtorName"
           :photo-url="null"
@@ -30,7 +30,7 @@
       </div>
 
       <!-- To user (creditor) -->
-      <div class="min-w-0 max-w-[80px]">
+      <div class="min-w-0 max-w-[120px] sm:max-w-none">
         <UserAvatar
           :name="creditorName"
           :photo-url="null"
