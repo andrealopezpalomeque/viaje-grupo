@@ -14,14 +14,8 @@
       <AppHeader />
 
       <!-- Dashboard Content -->
+    <!-- Dashboard Content -->
       <ClientOnly>
-        <template #fallback>
-          <div class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
-            <p class="mt-4 text-gray-600 dark:text-gray-400">Cargando gastos...</p>
-          </div>
-        </template>
-
         <!-- Error State -->
         <div v-if="expenseStore.error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p class="text-red-800 dark:text-red-200">{{ expenseStore.error }}</p>
@@ -127,12 +121,16 @@ const isDataReady = ref(false)
 // Watch for when all data is actually ready
 watchEffect(() => {
   const hasGroup = !!groupStore.selectedGroupId
-  const groupsNotLoading = !groupStore.loading
+  const groupsReady = !groupStore.loading
   const expensesReady = expenseStore.initialized && !expenseStore.loading
+  const usersReady = !userStore.loading && userStore.users.length > 0
 
-  if (hasGroup && groupsNotLoading && expensesReady) {
+  // Wait for EVERYTHING to be ready
+  if (hasGroup && groupsReady && expensesReady && usersReady) {
     isDataReady.value = true
   } else {
+    // Optional: Only set back to false if group changes, to avoid flickering on subsequent soft-reloads?
+    // For now, strict strict sync to avoid "empty" states is safer for the user's request.
     isDataReady.value = false
   }
 })

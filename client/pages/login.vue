@@ -11,8 +11,14 @@
         </p>
       </div>
 
-      <!-- Login Card -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+      <!-- Show loading state if authenticated (while redirecting) -->
+      <div v-if="isAuthenticated" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
+        <p class="text-gray-600 dark:text-gray-400">Redirigiendo...</p>
+      </div>
+
+      <!-- Login Card - Only show if NOT authenticated -->
+      <div v-else class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         <div class="text-center mb-6">
           <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
             Iniciar Sesión
@@ -91,7 +97,7 @@ definePageMeta({
   middleware: ['auth']
 })
 
-const { signInWithGoogle, error: authError } = useAuth()
+const { signInWithGoogle, error: authError, isAuthenticated } = useAuth()
 const router = useRouter()
 
 // Track if we're actively signing in (completely separate from auth loading)
