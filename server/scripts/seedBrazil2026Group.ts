@@ -91,7 +91,7 @@ const NEW_USERS: SeedUser[] = [
 
 const PIPI_PHONE = '+5493794702813'
 const GROUP_ID = 'brazil-2026-ingleses'
-const GROUP_NAME = 'Brazil 2026 Ingleses'
+const GROUP_NAME = 'Brasil 2026 Ingleses'
 
 /**
  * Find user by phone number
