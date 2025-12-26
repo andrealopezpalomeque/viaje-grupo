@@ -1,6 +1,6 @@
 <template>
   <!-- Full-page loading state - show until all data is ready -->
-  <div v-if="isDataLoading" class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+  <div v-if="!isDataReady" class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
     <div class="text-center">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
       <p class="text-gray-600 dark:text-gray-400">Cargando...</p>
@@ -120,16 +120,21 @@ const groupStore = useGroupStore()
 const { activeTab, openExpenseModal } = useNavigationState()
 const { filterByPerson, filterByPayer } = useExpenseFilters()
 
-// Show loading until all data is ready
-// Must check selectedGroupId - if null, we haven't fetched groups yet
-const isDataLoading = computed(() => {
-  // No group selected = still initializing (groups not fetched yet)
-  if (!groupStore.selectedGroupId) return true
-  // Groups are loading
-  if (groupStore.loading) return true
-  // Expenses not initialized or still loading
-  if (!expenseStore.initialized || expenseStore.loading) return true
-  return false
+// Start with loading = true, only set to false when we KNOW data is ready
+// This prevents any flash of empty content during hydration
+const isDataReady = ref(false)
+
+// Watch for when all data is actually ready
+watchEffect(() => {
+  const hasGroup = !!groupStore.selectedGroupId
+  const groupsNotLoading = !groupStore.loading
+  const expensesReady = expenseStore.initialized && !expenseStore.loading
+
+  if (hasGroup && groupsNotLoading && expensesReady) {
+    isDataReady.value = true
+  } else {
+    isDataReady.value = false
+  }
 })
 
 // Current user ID
