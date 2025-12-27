@@ -463,16 +463,13 @@ async function handleExpenseMessage(from, text, user, groupId, groupName) {
     const groupMembers = await getGroupMembers(groupId)
     resolvedSplitAmong = resolveMentionsToUserIds(parsed.splitAmong, groupMembers)
 
-    // Always include the sender in splitAmong (the person who pays always participates)
-    if (!resolvedSplitAmong.includes(user.id)) {
-      resolvedSplitAmong.unshift(user.id) // Add sender at the beginning
-    }
+    // Note: We do NOT auto-include the sender anymore.
+    // If someone logs an expense for others (e.g., "@Juan @Maria"),
+    // they must mention themselves to be included in the split.
+    // This allows logging expenses on behalf of others.
 
-    // Build display names: sender first, then other mentioned names (avoid duplicates if sender tagged themselves)
-    const otherMentions = parsed.splitAmong.filter(
-      name => name.toLowerCase() !== user.name.toLowerCase()
-    )
-    displayNames = [user.name, ...otherMentions]
+    // Build display names from resolved mentions
+    displayNames = parsed.splitAmong
   }
 
   // 7. Create expense in Firestore

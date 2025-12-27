@@ -76,8 +76,11 @@ export function getHelpMessage(): string {
   return `📖 *Cómo usar Text the Check*
 
 *Agregar gasto:*
-\`100 taxi\` - Gasto simple
-\`USD 50 cena @Juan @María\` - En dólares, dividido
+\`100 taxi\` - Divide entre todos
+\`50 cena @Juan @María\` - Solo Juan y María
+\`50 cena @Yo @Juan\` - Vos + Juan
+
+*Tip:* Mencioná tu nombre para incluirte
 
 *Monedas:* USD, EUR, BRL (se convierten a ARS)
 
@@ -112,7 +115,9 @@ export async function calculateGroupBalances(groupId: string, members: User[]): 
     let splitUserIds: string[] = []
 
     if (expense.splitAmong && expense.splitAmong.length > 0) {
-      // splitAmong contains user IDs directly
+      // splitAmong contains user IDs directly - use ONLY those specified
+      // The payer is NOT auto-included; they must be explicitly listed
+      // This allows logging expenses on behalf of others
       splitUserIds = expense.splitAmong.filter(id =>
         members.some(u => u.id === id)
       )
@@ -120,14 +125,9 @@ export async function calculateGroupBalances(groupId: string, members: User[]): 
       // If no valid users found, fallback to everyone
       if (splitUserIds.length === 0) {
         splitUserIds = members.map(u => u.id)
-      } else {
-        // Add payer to split if they aren't explicitly included
-        if (!splitUserIds.includes(expense.userId)) {
-          splitUserIds.push(expense.userId)
-        }
       }
     } else {
-      // Default: Everyone
+      // Default: Everyone (when no specific mentions)
       splitUserIds = members.map(u => u.id)
     }
 
@@ -477,7 +477,7 @@ export async function handleGroupSelectionResponse(
 
   return {
     success: true,
-    message: `✅ Grupo activo cambiado a: *${selectedGroup.name}*\n\nTus próximos gastos se registrarán en este grupo.\n\n📊 _Ver detalles en textthecheck.app_`
+    message: `✅ Grupo activo cambiado a: *${selectedGroup.name}*\n\nTus próximos gastos se registrarán en este grupo.\n\n📊 Ver detalles en https://textthecheck.app`
   }
 }
 

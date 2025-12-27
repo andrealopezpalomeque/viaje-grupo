@@ -113,8 +113,9 @@ export const useUserStore = defineStore('user', {
         let splitUserIds: string[] = []
 
         if (expense.splitAmong && expense.splitAmong.length > 0) {
-          // splitAmong now contains user IDs directly (from fuzzy matching)
-          // Filter to only include valid user IDs that exist in our users list
+          // splitAmong contains user IDs directly - use ONLY those specified
+          // The payer is NOT auto-included; they must be explicitly listed
+          // This allows logging expenses on behalf of others
           splitUserIds = expense.splitAmong.filter(id =>
             this.users.some(u => u.id === id)
           )
@@ -122,15 +123,9 @@ export const useUserStore = defineStore('user', {
           // If no valid users found, fallback to everyone
           if (splitUserIds.length === 0) {
             splitUserIds = this.users.map(u => u.id)
-          } else {
-            // Add payer to split if they aren't explicitly included
-            // "200 Taxi @Nico" -> Pipi paid. Split between Pipi & Nico.
-            if (!splitUserIds.includes(expense.userId)) {
-              splitUserIds.push(expense.userId)
-            }
           }
         } else {
-          // Default: Everyone
+          // Default: Everyone (when no specific mentions)
           splitUserIds = this.users.map(u => u.id)
         }
 
@@ -203,14 +198,13 @@ export const useUserStore = defineStore('user', {
         let splitUserIds: string[] = []
 
         if (expense.splitAmong && expense.splitAmong.length > 0) {
+          // Use ONLY the specified users - payer is NOT auto-included
           splitUserIds = expense.splitAmong.filter(id =>
             this.users.some(u => u.id === id)
           )
 
           if (splitUserIds.length === 0) {
             splitUserIds = this.users.map(u => u.id)
-          } else if (!splitUserIds.includes(payerId)) {
-            splitUserIds.push(payerId)
           }
         } else {
           splitUserIds = this.users.map(u => u.id)

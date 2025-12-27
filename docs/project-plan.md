@@ -573,3 +573,32 @@ When starting a new Claude Code session, paste this context:
   - +5493794351114 (Conrado)
   - +5493794382508 (Chiche)
 - 📍 Status: Multi-Group Active Selection Feature COMPLETE
+
+### December 27, 2025 (Splitting Logic Redesign)
+- ✅ **Changed splitting logic - Payer NOT auto-included**
+  - **Previous behavior:** When mentioning users (e.g., `@Juan @Maria`), the sender was ALWAYS auto-added to split
+  - **New behavior:** Only explicitly mentioned users are included in the split
+  - **Use case:** Someone in the group can log expenses on behalf of others (e.g., logging what others paid)
+  - **Example:** `2000 almuerzo @Juan @Maria` → only Juan and Maria split it, sender is NOT included unless they tag themselves
+- ✅ **Updated WhatsApp handler** (`server/src/routes/whatsapp.js`)
+  - Removed auto-include sender logic in `handleExpenseMessage()`
+  - Updated display names to show only mentioned users
+- ✅ **Updated balance calculations** (3 places)
+  - `server/src/services/commandService.ts` - `calculateGroupBalances()`
+  - `client/stores/useUserStore.ts` - `calculateBalances()` and `calculateSettlements()`
+  - No longer auto-adds payer to splitAmong when calculating shares
+- ✅ **Updated ExpenseModal** (`client/components/expense/ExpenseModal.vue`)
+  - Removed pre-selection of current user when modal opens
+  - All checkboxes start unchecked by default
+  - Users must explicitly select participants
+- ✅ **Updated `/ayuda` command** (`server/src/services/commandService.ts`)
+  - Clearer examples showing the new behavior:
+    - `100 taxi` - Divide entre todos
+    - `50 cena @Juan @María` - Solo Juan y María
+    - `50 cena @Yo @Juan` - Vos + Juan
+  - Added tip: "Mencioná tu nombre para incluirte"
+- ✅ **Updated documentation**
+  - `docs/splitting-logic.md` - Complete rewrite with new rules and examples
+  - Added example scenario for "payer NOT included" use case
+  - Updated edge cases section
+- 📍 Status: Splitting Logic Redesign COMPLETE

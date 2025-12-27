@@ -227,12 +227,9 @@ const handleClose = () => {
   closeExpenseModal()
 }
 
-// Pre-select current user when modal opens
-watch(isOpen, (open) => {
-  if (open && firestoreUser.value) {
-    form.participants = [firestoreUser.value.id]
-  }
-})
+// Note: We no longer pre-select anyone when the modal opens.
+// Users must explicitly select participants for the expense.
+// This matches the WhatsApp behavior where mentions are explicit.
 
 const handleSubmit = async () => {
   // Validate

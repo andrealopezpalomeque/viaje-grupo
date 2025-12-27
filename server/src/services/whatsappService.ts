@@ -96,7 +96,7 @@ export async function sendMessage(
     to: normalizedPhone,
     type: 'text',
     text: {
-      preview_url: false,
+      preview_url: true,
       body: text,
     },
   }
@@ -195,8 +195,8 @@ export function formatExpenseConfirmation(
     message += `👥 Dividido entre todos\n`
   }
 
-  // Dashboard link
-  message += `\n📊 _Ver detalles en textthecheck.app_`
+  // Dashboard link (full URL for WhatsApp to make it clickable)
+  message += `\n📊 Ver detalles en https://textthecheck.app`
 
   return message
 }

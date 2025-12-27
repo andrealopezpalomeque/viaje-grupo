@@ -1,6 +1,6 @@
 # Text the Check - Session Handoff Document
 
-**Last updated:** December 25, 2025  
+**Last updated:** December 27, 2025  
 **Purpose:** Context document to start new Claude conversations with full project knowledge
 
 ---
@@ -32,8 +32,9 @@ Paste this at the start of any new Claude conversation:
 ### What It Does
 
 Users split expenses during trips by texting a WhatsApp bot:
-- `100 taxi` → Logs expense, splits among group
-- `USD 50 dinner @Juan @Maria` → Converts currency, splits among mentioned people
+- `100 taxi` → Logs expense, splits among everyone in group
+- `USD 50 dinner @Juan @Maria` → Converts currency, splits ONLY among mentioned people
+- `50 cena @Yo @Juan` → Include yourself by mentioning your name
 - `/balance` → Shows who owes whom
 - `/grupo` → Switch between groups
 
@@ -337,12 +338,13 @@ git push origin main
 
 ---
 
-## 🎯 Next Steps (As of December 25, 2025)
+## 🎯 Next Steps (As of December 27, 2025)
 
-1. **Immediate:** Verify all phone numbers are in ALLOWED_PHONE_NUMBERS on Render
-2. **This week:** Start testing with Brazil 2026 Ingleses group (smallest)
-3. **Parallel:** Research WhatsApp Business verification process
-4. **After testing:** Build self-registration and group creation features
+1. **Done:** Splitting logic redesign - payer not auto-included (see `docs/splitting-logic.md`)
+2. **Deploy:** Push changes to production (server and client)
+3. **Test:** Verify new splitting behavior with test groups
+4. **Parallel:** Research WhatsApp Business verification process
+5. **After testing:** Build self-registration and group creation features
 
 ---
 
