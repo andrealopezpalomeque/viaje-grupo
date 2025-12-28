@@ -83,3 +83,57 @@ The balance calculation iterates through every expense:
 *   **Unknown Names:** If you type `@Unknown`, the system ignores it. If no valid users are found in the mentions, it falls back to **Everyone**.
 *   **Self-Mention:** If you want to be included in a split expense, you must explicitly mention yourself (e.g., `@Pipi`).
 *   **Empty Web Selection:** On the dashboard, you must select at least one participant or the form won't submit.
+
+## 5. Payments (Settling Debts)
+
+Payments represent real money transfers between users to settle debts. Unlike expenses, payments directly reduce what one person owes another.
+
+### Recording Payments
+
+Payments can be recorded via:
+
+**WhatsApp:**
+| Command | Meaning |
+| :--- | :--- |
+| `pagué 5000 @Maria` | I paid 5000 to Maria |
+| `recibí 5000 @Juan` | I received 5000 from Juan |
+
+**Dashboard:**
+- Click the payment button on a settlement recommendation
+- Confirm the payment amount
+
+### How Payments Affect Balances
+
+Payments are factored into balance calculations after expenses are processed:
+
+1. **Calculate expense-based balances** (as described in Section 3)
+2. **Apply payment adjustments:**
+   - Payment **from** A **to** B: A's net balance increases, B's net balance decreases
+   - This reflects that A has partially or fully settled their debt to B
+
+### Example with Payments
+
+*   **Starting State (from expenses):**
+    *   Nico owes Pipi $2000
+
+*   **Action:** Nico pays Pipi $1000 (bank transfer) and records: `pagué 1000 @Pipi`
+
+*   **Result:**
+    *   Nico's debt reduced: Now owes Pipi **$1000** (was $2000)
+    *   Pipi is owed less: Is owed **$1000** (was $2000)
+
+### Who Can Record Payments
+
+Either party involved in a payment can record it:
+- The person who paid (using `pagué`)
+- The person who received (using `recibí`)
+
+When a payment is recorded, the other party receives a WhatsApp notification informing them of the recorded payment.
+
+### Settlement Recommendations
+
+The dashboard shows optimized settlement recommendations that consider:
+1. Current expense-based balances
+2. Payments already made
+
+If Nico originally owed Pipi $2000 and already paid $1000, the settlement recommendation will show: "Nico → Pipi: $1000" (the remaining balance).

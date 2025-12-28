@@ -1,6 +1,6 @@
 # Text the Check - Product Status
 
-**Last updated:** December 24, 2025  
+**Last updated:** December 28, 2025
 **Purpose:** Honest assessment for co-founders, investors, and collaborators
 
 ---
@@ -63,6 +63,8 @@
 | Simple expense | `100 taxi` | ✅ Working |
 | Multi-currency | `USD 50 dinner` | ✅ Working |
 | Split with mentions | `200 lunch @Juan @Maria` | ✅ Working |
+| **Record payment (paid)** | `pagué 5000 @Maria` | ✅ Working |
+| **Record payment (received)** | `recibí 5000 @Juan` | ✅ Working |
 | View balances | `/balance` | ✅ Working |
 | View expenses | `/lista` | ✅ Working |
 | Delete expense | `/borrar 1` | ✅ Working |
@@ -75,9 +77,11 @@
 |---------|--------|
 | Google Authentication | ✅ Working |
 | Real-time expense feed | ✅ Working |
+| **Unified activity feed (expenses + payments)** | ✅ Working |
 | Personal balance view | ✅ Working |
 | Group balance overview | ✅ Working |
 | Settlement recommendations | ✅ Working |
+| **Payment recording button on settlements** | ✅ Working |
 | Payment info (CBU, alias, MP) | ✅ Working |
 | Multi-group selector | ✅ Working |
 | Mobile responsive | ✅ Working |

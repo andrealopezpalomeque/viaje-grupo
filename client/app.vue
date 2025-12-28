@@ -1,6 +1,8 @@
 <template>
   <div>
-    <NuxtPage v-show="!authLoading" />
+    <div v-show="!authLoading">
+      <NuxtPage />
+    </div>
 
     <!-- Global loading overlay while auth initializes - ClientOnly to prevent SSR hydration issues -->
     <ClientOnly>

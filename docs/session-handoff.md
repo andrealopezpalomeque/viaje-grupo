@@ -1,6 +1,6 @@
 # Text the Check - Session Handoff Document
 
-**Last updated:** December 27, 2025  
+**Last updated:** December 28, 2025
 **Purpose:** Context document to start new Claude conversations with full project knowledge
 
 ---
@@ -35,10 +35,12 @@ Users split expenses during trips by texting a WhatsApp bot:
 - `100 taxi` → Logs expense, splits among everyone in group
 - `USD 50 dinner @Juan @Maria` → Converts currency, splits ONLY among mentioned people
 - `50 cena @Yo @Juan` → Include yourself by mentioning your name
+- `pagué 5000 @Maria` → Record payment made to Maria
+- `recibí 5000 @Juan` → Record payment received from Juan
 - `/balance` → Shows who owes whom
 - `/grupo` → Switch between groups
 
-Dashboard at textthecheck.app shows real-time balances, settlements, and payment info.
+Dashboard at textthecheck.app shows real-time balances, settlements, payment recording, and payment info.
 
 ### The Core Insight
 
@@ -81,6 +83,17 @@ expenses/
 │   ├── category: "transport"
 │   ├── splitAmong: [userId1, userId2]
 │   └── createdAt: timestamp
+
+payments/
+├── {paymentId}
+│   ├── groupId: "brazil-2026"
+│   ├── fromUserId: userId (who paid)
+│   ├── toUserId: userId (who received)
+│   ├── amount: 5000 (always in ARS)
+│   ├── recordedBy: userId (who recorded via WhatsApp/dashboard)
+│   ├── authUid: string (Firebase Auth UID for security)
+│   ├── note: string (optional)
+│   └── createdAt: timestamp
 ```
 
 ### Key Services (Server)
@@ -90,10 +103,11 @@ expenses/
 | `routes/whatsapp.js` | Webhook handler, message routing |
 | `services/commandService.ts` | Bot commands (/ayuda, /balance, etc.) |
 | `services/expenseService.ts` | CRUD for expenses |
+| `services/paymentService.ts` | CRUD for payments (settling debts) |
 | `services/userService.ts` | User lookup, group membership |
 | `services/mentionService.ts` | Fuzzy @mention matching (Fuse.js) |
 | `services/exchangeRateService.ts` | DolarApi.com integration |
-| `utils/messageParser.ts` | Parse "100 taxi @Juan" into structured data |
+| `utils/messageParser.ts` | Parse "100 taxi @Juan" and "pagué 5000 @Maria" |
 
 ### Key Components (Client)
 
@@ -101,7 +115,10 @@ expenses/
 |------|---------|
 | `composables/useAuth.ts` | Google Auth + Firestore user linking |
 | `stores/useExpenseStore.ts` | Expense state, real-time sync |
-| `stores/useUserStore.ts` | Balance calculations |
+| `stores/usePaymentStore.ts` | Payment state, real-time sync |
+| `stores/useUserStore.ts` | Balance calculations (includes payments) |
+| `components/expense/PaymentItem.vue` | Display payment in activity feed |
+| `components/settlement/SettlementItem.vue` | Settlement row with payment button |
 | `pages/index.vue` | Main dashboard |
 | `pages/profile.vue` | User profile, payment info |
 
@@ -116,13 +133,17 @@ expenses/
 - [x] Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`, `/grupo`
 - [x] Auto-categorization (food, transport, accommodation, etc.)
 - [x] Multi-group support with `/grupo` switching
+- [x] **Payment recording**: `pagué 5000 @Maria` or `recibí 5000 @Juan`
+- [x] **Payment notifications**: Other party gets notified when payment is recorded
 - [x] Security: webhook signature verification, rate limiting
 
 ### Web Dashboard
 - [x] Google Authentication (linked to Firestore users)
 - [x] Real-time expense feed
+- [x] **Unified activity feed**: Shows both expenses AND payments
 - [x] Personal view ("Tu Resumen") vs Group view
 - [x] Settlement recommendations
+- [x] **Payment recording button**: Click settlement → "Registrar pago realizado"
 - [x] Payment info with copy-to-clipboard
 - [x] Group selector dropdown
 - [x] Bottom navigation (mobile)
@@ -338,13 +359,14 @@ git push origin main
 
 ---
 
-## 🎯 Next Steps (As of December 27, 2025)
+## 🎯 Next Steps (As of December 28, 2025)
 
 1. **Done:** Splitting logic redesign - payer not auto-included (see `docs/splitting-logic.md`)
-2. **Deploy:** Push changes to production (server and client)
-3. **Test:** Verify new splitting behavior with test groups
-4. **Parallel:** Research WhatsApp Business verification process
-5. **After testing:** Build self-registration and group creation features
+2. **Done:** Payment recording feature - WhatsApp commands + dashboard button
+3. **Done:** Activity feed shows both expenses and payments
+4. **Test:** Verify payment feature with test groups
+5. **Parallel:** Research WhatsApp Business verification process
+6. **After testing:** Build self-registration and group creation features
 
 ---
 

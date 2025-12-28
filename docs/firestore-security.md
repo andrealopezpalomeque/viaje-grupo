@@ -24,6 +24,12 @@ This document explains the Firestore security rules implemented for Text the Che
 - **UPDATE**: Users can only update their own expenses
 - **DELETE**: Users can only delete their own expenses
 
+#### Payments Collection (`/payments/{paymentId}`)
+- **READ**: All authenticated users (collaborative tracking)
+- **CREATE**: Users can create payments with their own `authUid`
+- **UPDATE**: Only the person who recorded the payment can update it
+- **DELETE**: Either party involved (fromUserId OR toUserId) can delete the payment
+
 ### Validation Rules
 
 #### Expense Validation
@@ -34,6 +40,16 @@ This document explains the Firestore security rules implemented for Text the Che
 - ✅ `timestamp`: Required
 - ✅ `splitAmong`: Optional array
 - ✅ `originalAmount`, `originalCurrency`: Optional fields
+
+#### Payment Validation
+- ✅ `groupId`: Required string
+- ✅ `fromUserId`: Required string (who paid)
+- ✅ `toUserId`: Required string (who received), must be different from `fromUserId`
+- ✅ `amount`: Must be positive number
+- ✅ `recordedBy`: Required string (who recorded the payment)
+- ✅ `authUid`: Required string (Firebase Auth UID)
+- ✅ `createdAt`: Required timestamp
+- ✅ `note`: Optional string
 
 #### User Validation
 - ✅ `name`: 1-100 characters, required

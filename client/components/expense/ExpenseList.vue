@@ -10,12 +10,12 @@
         v-if="showCount"
         class="text-xs text-gray-500 dark:text-gray-400 ml-auto"
       >
-        {{ expenses.length }} {{ expenses.length === 1 ? 'gasto' : 'gastos' }}
+        {{ items.length }} {{ items.length === 1 ? 'item' : 'items' }}
       </span>
     </div>
 
     <!-- Empty State -->
-    <div v-if="expenses.length === 0" class="p-8 text-center">
+    <div v-if="items.length === 0" class="p-8 text-center">
       <div class="w-14 h-14 mx-auto mb-3 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
         <IconReceipt class="w-7 h-7 text-gray-400" />
       </div>
@@ -31,15 +31,20 @@
       </button>
     </div>
 
-    <!-- Expense List -->
+    <!-- Items List -->
     <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
-      <ExpenseItem
-        v-for="expense in displayedExpenses"
-        :key="expense.id"
-        :expense="expense"
-        :current-user-id="currentUserId"
-        :show-user-share="showUserShare"
-      />
+      <template v-for="item in displayedItems" :key="getKey(item)">
+        <ExpenseItem
+          v-if="isExpense(item)"
+          :expense="item"
+          :current-user-id="currentUserId"
+          :show-user-share="showUserShare"
+        />
+        <PaymentItem
+          v-else
+          :payment="item"
+        />
+      </template>
     </div>
 
     <!-- Show More Button -->
@@ -51,7 +56,7 @@
         @click="showAll = !showAll"
         class="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
       >
-        {{ showAll ? 'Ver menos' : `Ver todos (${expenses.length})` }}
+        {{ showAll ? 'Ver menos' : `Ver todos (${items.length})` }}
       </button>
     </div>
   </div>
@@ -60,11 +65,13 @@
 <script setup lang="ts">
 import IconClipboardList from '~icons/mdi/clipboard-text-clock'
 import IconReceipt from '~icons/mdi/receipt-text-outline'
+import type { Expense, Payment } from '~/types'
 
-import type { Expense } from '~/types'
+// Union type for the list
+type ActivityItem = Expense | Payment
 
 interface Props {
-  expenses: Expense[]
+  items: ActivityItem[]
   title?: string
   currentUserId?: string
   showUserShare?: boolean
@@ -75,12 +82,12 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: 'Gastos',
+  title: 'Actividad',
   currentUserId: '',
   showUserShare: false,
   showCount: false,
   showAddButton: false,
-  emptyMessage: 'No hay gastos',
+  emptyMessage: 'No hay actividad',
   limit: 5
 })
 
@@ -91,13 +98,22 @@ defineEmits<{
 const showAll = ref(false)
 
 const hasMore = computed(() => {
-  return props.expenses.length > props.limit
+  return props.items.length > props.limit
 })
 
-const displayedExpenses = computed(() => {
+const displayedItems = computed(() => {
   if (showAll.value || !hasMore.value) {
-    return props.expenses
+    return props.items
   }
-  return props.expenses.slice(0, props.limit)
+  return props.items.slice(0, props.limit)
 })
+
+// Type guard
+const isExpense = (item: ActivityItem): item is Expense => {
+  return 'category' in item
+}
+
+const getKey = (item: ActivityItem) => {
+  return isExpense(item) ? `exp-${item.id}` : `pay-${item.id}`
+}
 </script>

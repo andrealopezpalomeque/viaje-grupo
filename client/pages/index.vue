@@ -37,14 +37,14 @@
             <!-- Credits Section (people who owe me) -->
             <CreditSection :credits="myCredits" />
 
-            <!-- My Recent Expenses -->
+            <!-- My Recent Activity -->
             <ExpenseList
-              :expenses="myRecentExpenses"
+              :items="myRecentActivity"
               :current-user-id="currentUserId"
-              title="Tus Gastos Recientes"
+              title="Tu Actividad Reciente"
               show-user-share
               show-add-button
-              empty-message="No tenes gastos aun"
+              empty-message="No tenes actividad aun"
               @add-expense="openExpenseModal"
             />
           </div>
@@ -73,7 +73,7 @@
 
             <!-- All Group Activity -->
             <ExpenseList
-              :expenses="filteredExpenses"
+              :items="groupActivity"
               :current-user-id="currentUserId"
               title="Actividad del Grupo"
               show-count
@@ -161,21 +161,43 @@ const myCredits = computed<Settlement[]>(() => {
   return settlements.value.filter(s => s.toUserId === currentUserId.value)
 })
 
-// My recent expenses (expenses that involve me)
-const myRecentExpenses = computed(() => {
-  return expenseStore.expenses
-    .filter(expense => {
-      // I paid for it
-      if (expense.userId === currentUserId.value) return true
+// Unified activity list (expenses + payments)
+const groupActivity = computed(() => {
+  const expenses = filteredExpenses.value
+  const payments = paymentStore.payments
 
-      // I'm in the split
-      if (!expense.splitAmong || expense.splitAmong.length === 0) return true
-      return expense.splitAmong.includes(currentUserId.value)
-    })
-    .slice(0, 10)
+  // Combine and sort by date descending
+  const allItems = [...expenses, ...payments]
+  return allItems.sort((a, b) => {
+    const dateA = 'timestamp' in a ? new Date(a.timestamp) : new Date(a.createdAt)
+    const dateB = 'timestamp' in b ? new Date(b.timestamp) : new Date(b.createdAt)
+    return dateB.getTime() - dateA.getTime()
+  })
 })
 
-// Filtered expenses for Grupo tab
+const myRecentActivity = computed(() => {
+  // Filter expenses involving me
+  const expenses = expenseStore.expenses.filter(expense => {
+    if (expense.userId === currentUserId.value) return true
+    if (!expense.splitAmong || expense.splitAmong.length === 0) return true
+    return expense.splitAmong.includes(currentUserId.value)
+  })
+
+  // Filter payments involving me
+  const payments = paymentStore.payments.filter(payment => {
+    return payment.fromUserId === currentUserId.value || payment.toUserId === currentUserId.value
+  })
+
+  // Combine and sort
+  const allItems = [...expenses, ...payments]
+  return allItems.sort((a, b) => {
+    const dateA = 'timestamp' in a ? new Date(a.timestamp) : new Date(a.createdAt)
+    const dateB = 'timestamp' in b ? new Date(b.timestamp) : new Date(b.createdAt)
+    return dateB.getTime() - dateA.getTime()
+  }).slice(0, 10)
+})
+
+// Filtered expenses for stats (keep as is for stats calculations)
 const filteredExpenses = computed(() => {
   let result = expenseStore.expenses
 
@@ -198,6 +220,7 @@ const filteredExpenses = computed(() => {
 
   return result
 })
+
 
 // Payment info modal
 const showPaymentModal = ref(false)

@@ -17,7 +17,7 @@
 
 ## Current Status: Production Deployed ✅
 
-**Last updated:** December 19, 2025
+**Last updated:** December 28, 2025
 
 ### Production URLs
 
@@ -45,6 +45,8 @@
 - [x] Balance calculations (Splitwise-style)
 - [x] Category badges and relative timestamps
 - [x] Firebase onSnapshot real-time sync
+- [x] Payment recording via WhatsApp (`pagué`/`recibí`) and dashboard
+- [x] Unified activity feed (expenses + payments)
 
 ---
 
@@ -184,10 +186,12 @@ See [Product Status](./product-status.md) for detailed assessment.
 | Exchange rates | `server/src/services/exchangeRateService.ts` |
 | Bot commands | `server/src/services/commandService.ts` |
 | Expense service | `server/src/services/expenseService.ts` |
+| Payment service | `server/src/services/paymentService.ts` |
 | Firebase config | `server/src/config/firebase.ts` |
 | Seed script | `server/scripts/seedUsers.ts` |
 | Balance logic | `client/stores/useUserStore.ts` |
 | Expense store | `client/stores/useExpenseStore.ts` |
+| Payment store | `client/stores/usePaymentStore.ts` |
 | Group store | `client/stores/useGroupStore.ts` |
 | Auth composable | `client/composables/useAuth.ts` |
 | Profile page | `client/pages/profile.vue` |
@@ -253,6 +257,8 @@ Use these to verify the bot works correctly:
 | Group command (multi) | `/grupo` (user in 2+ groups) | 📍 Shows numbered list, awaits selection |
 | Group selection | `2` (after /grupo) | ✅ Switches to selected group |
 | Unknown command | `/foo` | ❓ Unknown command message |
+| Record payment (paid) | `pagué 5000 @Juan` | ✅ Records payment, notifies Juan |
+| Record payment (received) | `recibí 5000 @Maria` | ✅ Records payment, notifies Maria |
 
 ---
 
@@ -602,3 +608,34 @@ When starting a new Claude Code session, paste this context:
   - Added example scenario for "payer NOT included" use case
   - Updated edge cases section
 - 📍 Status: Splitting Logic Redesign COMPLETE
+
+### December 28, 2025 (Payment Recording Feature)
+- ✅ **Implemented payment recording feature**
+  - Users can record when they've paid or received money outside the app
+  - WhatsApp commands: `pagué 5000 @Maria` and `recibí 5000 @Juan`
+  - Dashboard button on settlement recommendations
+- ✅ **Server-side implementation**
+  - Created `server/src/services/paymentService.ts` for payment CRUD
+  - Added `parsePaymentMessage()` and `isPaymentMessage()` to messageParser.ts
+  - Added payment formatting functions to whatsappService.ts
+  - Updated WhatsApp handler to detect and process payment messages
+  - Updated `/balance` command to include payments in calculations
+  - Updated `/ayuda` command with payment examples
+- ✅ **Client-side implementation**
+  - Created `client/stores/usePaymentStore.ts` Pinia store with real-time sync
+  - Updated `client/stores/useUserStore.ts` balance calculations to include payments
+  - Created `PaymentItem.vue` component for activity feed
+  - Updated `ExpenseList.vue` to show both expenses and payments
+  - Added payment recording button to `SettlementItem.vue`
+  - Updated `index.vue` with unified activity feeds (groupActivity, myRecentActivity)
+- ✅ **Firestore**
+  - Added `payments` collection security rules with validation
+  - Added composite index for payments (groupId + createdAt)
+  - Either party (fromUserId or toUserId) can delete payments
+- ✅ **Documentation updates**
+  - Updated session-handoff.md with payment feature details
+  - Updated product-status.md with payment features in working features
+  - Updated firestore-security.md with payments collection rules
+  - Updated splitting-logic.md with section on how payments affect balances
+  - Updated project-plan.md with session log and key files
+- 📍 Status: Payment Recording Feature COMPLETE
