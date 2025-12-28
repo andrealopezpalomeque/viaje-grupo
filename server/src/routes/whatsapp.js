@@ -148,7 +148,7 @@ Soy tu bot para dividir gastos de viaje. Así funciona:
 *Registrar gastos:*
 • \`150 pizza\` → divide entre todos
 • \`USD 50 cena @Juan @Maria\` → divide entre mencionados
-• \`BRL 200 uber\` → convierte de reales
+• \`BRL 200 uber\` → convierte a pesos argentinos (USD, EUR, BRL)
 
 *Comandos útiles:*
 • /balance → ver quién debe a quién
