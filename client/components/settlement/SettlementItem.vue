@@ -64,33 +64,61 @@
         v-if="isExpanded"
         class="px-4 pb-4 overflow-hidden"
       >
-        <div class="ml-5 pl-4 border-l-2 border-gray-200 dark:border-gray-600 space-y-4">
-          <!-- Expense breakdown -->
+        <!-- Constrained width on desktop for better readability -->
+        <div class="ml-5 pl-4 border-l-2 border-gray-200 dark:border-gray-600 space-y-4 md:max-w-md">
+          <!-- Expense breakdown with selection -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-              Desglose
-            </p>
-            <div class="space-y-2">
-              <div
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Selecciona que pagar
+              </p>
+              <!-- Select all toggle -->
+              <button
+                v-if="breakdown.length > 1"
+                @click="toggleAll"
+                class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              >
+                {{ allSelected ? 'Deseleccionar todo' : 'Seleccionar todo' }}
+              </button>
+            </div>
+            <div class="space-y-1">
+              <label
                 v-for="(item, idx) in breakdown"
                 :key="idx"
-                class="flex items-center justify-between text-sm"
+                class="flex items-center gap-2 text-sm py-1.5 px-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                :class="{ 'bg-blue-50 dark:bg-blue-900/20': selectedExpenseIds.has(item.expense.id) }"
               >
-                <div class="flex items-center gap-2 min-w-0">
-                  <CategoryIcon :category="item.expense.category" size="sm" />
-                  <span class="truncate text-gray-700 dark:text-gray-300">
-                    {{ item.expense.description }}
-                  </span>
-                </div>
+                <input
+                  type="checkbox"
+                  :checked="selectedExpenseIds.has(item.expense.id)"
+                  @change="toggleExpenseSelection(item.expense.id)"
+                  class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                />
+                <CategoryIcon :category="item.expense.category" size="sm" />
+                <span class="truncate text-gray-700 dark:text-gray-300 flex-1 min-w-0">
+                  {{ item.expense.description }}
+                </span>
                 <AmountDisplay
                   :amount="item.amount"
                   size="sm"
-                  class="flex-shrink-0 ml-2"
+                  class="flex-shrink-0"
                 />
-              </div>
+              </label>
               <div v-if="breakdown.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
                 Sin desglose disponible
               </div>
+            </div>
+            <!-- Selected total -->
+            <div v-if="breakdown.length > 0" class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+              <span class="text-sm text-gray-600 dark:text-gray-400">
+                Total seleccionado:
+              </span>
+              <AmountDisplay
+                :amount="selectedTotal"
+                size="sm"
+                bold
+                :class="selectedTotal > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'"
+              />
             </div>
           </div>
 
@@ -187,10 +215,22 @@
             <button
               v-else
               @click="startPayment"
-              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              :disabled="selectedTotal <= 0"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-colors"
+              :class="selectedTotal > 0
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-gray-400 cursor-not-allowed'"
             >
               <IconCash class="w-4 h-4" />
-              Registrar pago realizado
+              <span v-if="selectedTotal > 0 && selectedTotal !== settlement.amount">
+                Registrar pago de {{ formatAmount(Math.round(selectedTotal)) }}
+              </span>
+              <span v-else-if="selectedTotal > 0">
+                Registrar pago realizado
+              </span>
+              <span v-else>
+                Selecciona al menos un gasto
+              </span>
             </button>
 
             <!-- Success message -->
@@ -246,6 +286,7 @@ const showPaymentConfirm = ref(false)
 const paymentAmount = ref(0)
 const isSubmitting = ref(false)
 const showSuccess = ref(false)
+const selectedExpenseIds = ref<Set<string>>(new Set())
 
 const debtor = computed(() => userStore.getUserById(props.settlement.fromUserId))
 const creditor = computed(() => userStore.getUserById(props.settlement.toUserId))
@@ -263,6 +304,43 @@ const hasPaymentInfo = computed(() => {
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value
+  // Select all expenses by default when expanding
+  if (isExpanded.value) {
+    selectedExpenseIds.value = new Set(breakdown.value.map(item => item.expense.id))
+  }
+}
+
+// Toggle an individual expense selection
+const toggleExpenseSelection = (expenseId: string) => {
+  const newSet = new Set(selectedExpenseIds.value)
+  if (newSet.has(expenseId)) {
+    newSet.delete(expenseId)
+  } else {
+    newSet.add(expenseId)
+  }
+  selectedExpenseIds.value = newSet
+}
+
+// Calculate total from selected expenses only
+const selectedTotal = computed(() => {
+  return breakdown.value
+    .filter(item => selectedExpenseIds.value.has(item.expense.id))
+    .reduce((sum, item) => sum + item.amount, 0)
+})
+
+// Check if all expenses are selected
+const allSelected = computed(() => {
+  return breakdown.value.length > 0 &&
+    breakdown.value.every(item => selectedExpenseIds.value.has(item.expense.id))
+})
+
+// Toggle all expenses
+const toggleAll = () => {
+  if (allSelected.value) {
+    selectedExpenseIds.value = new Set()
+  } else {
+    selectedExpenseIds.value = new Set(breakdown.value.map(item => item.expense.id))
+  }
 }
 
 const formatAmount = (amount: number) => {
@@ -270,7 +348,8 @@ const formatAmount = (amount: number) => {
 }
 
 const startPayment = () => {
-  paymentAmount.value = props.settlement.amount
+  // Use selected total if there are selected items, otherwise full amount
+  paymentAmount.value = selectedTotal.value > 0 ? Math.round(selectedTotal.value) : props.settlement.amount
   showPaymentConfirm.value = true
 }
 
@@ -332,17 +411,18 @@ const breakdown = computed(() => {
     if (expense.userId !== props.settlement.toUserId) return
 
     // Determine who splits this expense
+    // The payer is NOT auto-included - they must be explicitly listed
     let splitUserIds: string[] = []
     if (expense.splitAmong && expense.splitAmong.length > 0) {
       splitUserIds = expense.splitAmong.filter(id =>
         userStore.users.some(u => u.id === id)
       )
+      // If no valid users found, fallback to everyone
       if (splitUserIds.length === 0) {
         splitUserIds = userStore.users.map(u => u.id)
-      } else if (!splitUserIds.includes(expense.userId)) {
-        splitUserIds.push(expense.userId)
       }
     } else {
+      // Default: Everyone (when no specific mentions)
       splitUserIds = userStore.users.map(u => u.id)
     }
 
