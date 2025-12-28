@@ -157,7 +157,7 @@ Soy tu bot para dividir gastos de viaje. Así funciona:
 • /ayuda → ver todas las opciones
 
 También podés ver todo en el dashboard:
-🌐 textthecheck.app
+🌐 https://textthecheck.app
 
 ¡Empezá a cargar gastos! 🎉`
 }
@@ -313,7 +313,8 @@ async function handleTextMessage(from, text, messageId) {
   if (!user.welcomedAt) {
     await sendMessage(from, getWelcomeMessage(user.name))
     await markUserAsWelcomed(user.id)
-    // Continue processing their message normally after welcome
+    // Don't process first message - let them read the welcome first
+    return
   }
 
   // 4. Check for pending expense (user was asked which group for their expense)
