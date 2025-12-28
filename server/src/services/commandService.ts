@@ -81,6 +81,10 @@ export function getHelpMessage(): string {
 \`50 cena @Juan @María\` - Solo Juan y María
 \`50 cena @Yo @Juan\` - Vos + Juan
 
+*Registrar pago:*
+\`pagué 5000 @María\` - Pagaste a María
+\`recibí 5000 @Juan\` - Recibiste de Juan
+
 *Tip:* Mencioná tu nombre para incluirte
 
 *Monedas:* USD, EUR, BRL (se convierten a ARS)

@@ -109,6 +109,7 @@ definePageMeta({
 
 const { firestoreUser } = useAuth()
 const expenseStore = useExpenseStore()
+const paymentStore = usePaymentStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 const { activeTab, openExpenseModal } = useNavigationState()
@@ -123,10 +124,11 @@ watchEffect(() => {
   const hasGroup = !!groupStore.selectedGroupId
   const groupsReady = !groupStore.loading
   const expensesReady = expenseStore.initialized && !expenseStore.loading
+  const paymentsReady = paymentStore.initialized && !paymentStore.loading
   const usersReady = !userStore.loading && userStore.users.length > 0
 
-  // Wait for EVERYTHING to be ready
-  if (hasGroup && groupsReady && expensesReady && usersReady) {
+  // Wait for EVERYTHING to be ready (including payments for settlement calculations)
+  if (hasGroup && groupsReady && expensesReady && paymentsReady && usersReady) {
     isDataReady.value = true
   } else {
     // Optional: Only set back to false if group changes, to avoid flickering on subsequent soft-reloads?
