@@ -132,6 +132,22 @@ export const isAuthorizedPhone = (phoneNumber: string): boolean => {
 }
 
 /**
+ * Mark user as welcomed (first WhatsApp interaction)
+ * Sets welcomedAt timestamp to track that user received the welcome message
+ */
+export const markUserAsWelcomed = async (userId: string): Promise<boolean> => {
+  try {
+    await db.collection('users').doc(userId).update({
+      welcomedAt: new Date()
+    })
+    return true
+  } catch (error) {
+    console.error('Error marking user as welcomed:', error)
+    return false
+  }
+}
+
+/**
  * Get group by ID
  */
 export const getGroupById = async (groupId: string): Promise<Group | null> => {

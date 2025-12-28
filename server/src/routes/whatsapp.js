@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import crypto from 'crypto'
 import rateLimit from 'express-rate-limit'
-import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup } from '../services/userService.js'
+import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup, markUserAsWelcomed } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
 import { parseExpenseMessage, extractCurrency, stripCurrencyFromDescription } from '../utils/messageParser.js'
 import { convertToARS } from '../services/exchangeRateService.js'
@@ -133,6 +133,33 @@ function verifyWebhookSignature(req, res, next) {
 
   // Signature valid, proceed
   next()
+}
+
+/**
+ * Get welcome message for new users
+ * Sent on first WhatsApp interaction
+ */
+function getWelcomeMessage(userName) {
+  const firstName = userName?.split(' ')[0] || 'Hola'
+  return `¡Hola ${firstName}! 👋 Bienvenido a *Text the Check*
+
+Soy tu bot para dividir gastos de viaje. Así funciona:
+
+*Registrar gastos:*
+• \`150 pizza\` → divide entre todos
+• \`USD 50 cena @Juan @Maria\` → divide entre mencionados
+• \`BRL 200 uber\` → convierte de reales
+
+*Comandos útiles:*
+• /balance → ver quién debe a quién
+• /lista → ver últimos gastos
+• /grupo → cambiar de grupo
+• /ayuda → ver todas las opciones
+
+También podés ver todo en el dashboard:
+🌐 textthecheck.app
+
+¡Empezá a cargar gastos! 🎉`
 }
 
 /**
@@ -282,7 +309,14 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 3. Check for pending expense (user was asked which group for their expense)
+  // 3. Check if this is the user's first interaction (send welcome message)
+  if (!user.welcomedAt) {
+    await sendMessage(from, getWelcomeMessage(user.name))
+    await markUserAsWelcomed(user.id)
+    // Continue processing their message normally after welcome
+  }
+
+  // 4. Check for pending expense (user was asked which group for their expense)
   if (hasPendingExpense(user.id)) {
     const trimmed = text.trim()
     const number = parseInt(trimmed, 10)
@@ -310,7 +344,7 @@ async function handleTextMessage(from, text, messageId) {
     clearPendingExpense(user.id)
   }
 
-  // 4. Check for pending group selection (from /grupo command)
+  // 5. Check for pending group selection (from /grupo command)
   if (hasPendingGroupSelection(user.id)) {
     const result = await handleGroupSelectionResponse(user.id, text)
     if (result) {
@@ -321,7 +355,7 @@ async function handleTextMessage(from, text, messageId) {
     // Not a group selection, continue with normal processing
   }
 
-  // 5. Check if this is a command (before checking groups)
+  // 6. Check if this is a command (before checking groups)
   if (isCommand(text)) {
     const group = await getGroupByUserId(user.id)
     const groupId = group?.id || null
@@ -329,7 +363,7 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 6. For non-commands (expenses): check if multi-group user without activeGroupId
+  // 7. For non-commands (expenses): check if multi-group user without activeGroupId
   const allGroups = await getAllGroupsByUserId(user.id)
 
   if (allGroups.length > 1 && !user.activeGroupId) {
@@ -340,11 +374,11 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
-  // 7. Get user's group (uses activeGroupId if set)
+  // 8. Get user's group (uses activeGroupId if set)
   const group = await getGroupByUserId(user.id)
   const groupId = group?.id || null
 
-  // 8. Process as expense
+  // 9. Process as expense
   await handleExpenseMessage(from, text, user, groupId, group?.name)
 }
 
