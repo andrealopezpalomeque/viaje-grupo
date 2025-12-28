@@ -4,6 +4,7 @@
  */
 
 import { getExpensesByGroup, getAllExpensesByGroup, getExpenseById, deleteExpense } from './expenseService.js'
+import { getPaymentsByGroup } from './paymentService.js'
 import { getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup } from './userService.js'
 import type { User, Group } from '../types/index.js'
 
@@ -94,14 +95,15 @@ export function getHelpMessage(): string {
 
 /**
  * Calculate balances for a group (Splitwise-style)
- * Ported from client/stores/useUserStore.ts
+ * Now includes payments to adjust balances
  */
 export async function calculateGroupBalances(groupId: string, members: User[]): Promise<Balance[]> {
   const expenses = await getAllExpensesByGroup(groupId)
+  const payments = await getPaymentsByGroup(groupId)
 
   // Initialize balances map
-  const balances = new Map<string, { paid: number; share: number }>()
-  members.forEach(u => balances.set(u.id, { paid: 0, share: 0 }))
+  const balances = new Map<string, { paid: number; share: number; paymentAdjustment: number }>()
+  members.forEach(u => balances.set(u.id, { paid: 0, share: 0, paymentAdjustment: 0 }))
 
   // Process each expense
   expenses.forEach(expense => {
@@ -141,15 +143,31 @@ export async function calculateGroupBalances(groupId: string, members: User[]): 
     })
   })
 
+  // Process payments
+  // When A pays B: A's net goes up (they're settling debt), B's net goes down
+  payments.forEach(payment => {
+    const fromUser = balances.get(payment.fromUserId)
+    const toUser = balances.get(payment.toUserId)
+
+    if (fromUser) {
+      // Person who paid has their net balance increase (less debt)
+      fromUser.paymentAdjustment += payment.amount
+    }
+    if (toUser) {
+      // Person who received has their net balance decrease (received settlement)
+      toUser.paymentAdjustment -= payment.amount
+    }
+  })
+
   // Convert map to array with user names
   return members.map(user => {
-    const data = balances.get(user.id) || { paid: 0, share: 0 }
+    const data = balances.get(user.id) || { paid: 0, share: 0, paymentAdjustment: 0 }
     return {
       userId: user.id,
       userName: user.name,
       paid: data.paid,
       share: data.share,
-      net: data.paid - data.share
+      net: data.paid - data.share + data.paymentAdjustment
     }
   }).sort((a, b) => b.net - a.net) // Sort by net (creditors first)
 }

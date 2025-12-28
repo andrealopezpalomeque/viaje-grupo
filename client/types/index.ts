@@ -78,3 +78,15 @@ export interface FirestoreDocument {
   createdAt?: Date
   updatedAt?: Date
 }
+
+// Payment record (for settling debts between users)
+export interface Payment {
+  id: string
+  groupId: string
+  fromUserId: string      // who paid (owes less after this)
+  toUserId: string        // who received (is owed less after this)
+  amount: number          // always in ARS
+  recordedBy: string      // user ID of who recorded the payment
+  note?: string           // optional note
+  createdAt: Date
+}

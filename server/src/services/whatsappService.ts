@@ -250,3 +250,68 @@ function getCategoryEmoji(category: string): string {
 
   return emojiMap[category] || '📌'
 }
+
+/**
+ * Format payment confirmation message for the person who recorded it
+ */
+export function formatPaymentConfirmation(
+  amount: number,
+  otherPersonName: string,
+  groupName: string,
+  direction: 'to' | 'from'
+): string {
+  const formattedAmount = formatARS(amount)
+  const directionLabel = direction === 'to' ? 'Para' : 'De'
+
+  return `✅ *Pago registrado*
+
+Monto: $${formattedAmount}
+${directionLabel}: ${otherPersonName}
+Grupo: ${groupName}
+
+Tu balance con ${otherPersonName.split(' ')[0]} se actualizó.
+
+📊 Ver detalles en https://textthecheck.app`
+}
+
+/**
+ * Format payment notification message for the other party
+ */
+export function formatPaymentNotification(
+  amount: number,
+  recorderName: string,
+  groupName: string,
+  direction: 'paid_to_you' | 'received_from_you'
+): string {
+  const formattedAmount = formatARS(amount)
+  const firstName = recorderName.split(' ')[0]
+
+  let message: string
+  if (direction === 'paid_to_you') {
+    message = `${firstName} registró un pago de $${formattedAmount} hacia vos.`
+  } else {
+    message = `${firstName} registró que recibió $${formattedAmount} de vos.`
+  }
+
+  return `💸 *Pago registrado*
+
+${message}
+Grupo: ${groupName}
+
+Usá /balance para ver tu balance actualizado.`
+}
+
+/**
+ * Format payment error messages
+ */
+export function formatPaymentErrorMessage(errorType: 'no_mention' | 'invalid_mention' | 'multiple_mentions' | 'invalid_amount' | 'self_payment'): string {
+  const messages: Record<string, string> = {
+    no_mention: "⚠️ Indicá a quién le pagaste. Ejemplo: pagué 5000 @Maria",
+    invalid_mention: "⚠️ No encontré a esa persona en este grupo",
+    multiple_mentions: "⚠️ Solo podés registrar un pago a una persona por vez",
+    invalid_amount: "⚠️ El monto debe ser un número positivo",
+    self_payment: "⚠️ No podés registrar un pago a vos mismo"
+  }
+
+  return messages[errorType] || "⚠️ Error al procesar el pago"
+}

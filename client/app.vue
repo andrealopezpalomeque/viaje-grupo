@@ -20,6 +20,7 @@
 <script setup lang="ts">
 const { isAuthenticated, firestoreUser, loading: authLoading } = useAuth()
 const expenseStore = useExpenseStore()
+const paymentStore = usePaymentStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 
@@ -36,6 +37,7 @@ const initializeData = async () => {
 
   if (groupId) {
     expenseStore.initializeListeners(groupId)
+    paymentStore.initializeListeners(groupId)
     userStore.fetchUsers(members)
   }
 }
@@ -47,6 +49,7 @@ watch(isAuthenticated, async (authenticated) => {
   } else {
     // Stop listeners and clear state when not authenticated
     expenseStore.stopListeners()
+    paymentStore.stopListeners()
     groupStore.clearGroups()
   }
 }, { immediate: true })
@@ -56,6 +59,7 @@ watch(() => groupStore.selectedGroupId, (newGroupId, oldGroupId) => {
   if (newGroupId && newGroupId !== oldGroupId && isAuthenticated.value) {
     const members = groupStore.selectedGroupMembers
     expenseStore.initializeListeners(newGroupId)
+    paymentStore.initializeListeners(newGroupId)
     userStore.fetchUsers(members)
   }
 })
@@ -63,5 +67,6 @@ watch(() => groupStore.selectedGroupId, (newGroupId, oldGroupId) => {
 // Cleanup on unmount
 onUnmounted(() => {
   expenseStore.stopListeners()
+  paymentStore.stopListeners()
 })
 </script>

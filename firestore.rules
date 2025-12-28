@@ -49,6 +49,24 @@ service cloud.firestore {
         && (!data.keys().hasAny(['splitAmong']) || data.splitAmong is list);
     }
 
+    // Validate payment data structure and constraints
+    function isValidPayment() {
+      let data = request.resource.data;
+
+      return data.keys().hasAll(['groupId', 'fromUserId', 'toUserId', 'amount', 'recordedBy', 'authUid', 'createdAt'])
+        && data.groupId is string
+        && data.fromUserId is string
+        && data.toUserId is string
+        && data.fromUserId != data.toUserId  // Cannot pay yourself
+        && data.amount is number
+        && data.amount > 0  // Amount must be positive
+        && data.recordedBy is string
+        && data.authUid is string
+        && data.createdAt is timestamp
+        // Optional fields validation
+        && (!data.keys().hasAny(['note']) || data.note is string);
+    }
+
     // Validate user data structure
     function isValidUser() {
       let data = request.resource.data;
@@ -144,6 +162,38 @@ service cloud.firestore {
                     && request.resource.data.keys().hasAll(['name', 'members', 'createdBy']);
 
       allow delete: if false; // Groups should not be deleted casually
+    }
+
+    // ============================================
+    // Payments Collection
+    // ============================================
+    match /payments/{paymentId} {
+      // Helper: Check if current user is one of the parties in the payment
+      function isPaymentParty() {
+        let fromUserAuthUid = get(/databases/$(database)/documents/users/$(resource.data.fromUserId)).data.authUid;
+        let toUserAuthUid = get(/databases/$(database)/documents/users/$(resource.data.toUserId)).data.authUid;
+        return request.auth.uid == fromUserAuthUid || request.auth.uid == toUserAuthUid;
+      }
+
+      // All authenticated users can read payments (collaborative tracking)
+      allow read: if isAuthenticated();
+
+      // Users can create payments - authUid must match their Firebase Auth UID
+      allow create: if isAuthenticated()
+                    && request.resource.data.authUid == request.auth.uid
+                    && isValidPayment();
+
+      // Users can only update their own payments (verified via authUid)
+      // Generally payments shouldn't be updated, but allow for corrections
+      allow update: if isAuthenticated()
+                    && resource.data.authUid == request.auth.uid
+                    && isValidPayment()
+                    // Prevent changing critical fields
+                    && request.resource.data.recordedBy == resource.data.recordedBy
+                    && request.resource.data.authUid == resource.data.authUid;
+
+      // Either party involved in the payment can delete it
+      allow delete: if isAuthenticated() && isPaymentParty();
     }
 
     // ============================================

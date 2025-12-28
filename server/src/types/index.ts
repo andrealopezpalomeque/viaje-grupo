@@ -81,3 +81,22 @@ export interface ParsedExpense {
   splitAmong: string[] // List of names, empty means everyone
   needsReview: boolean
 }
+
+// Payment record (for settling debts between users)
+export interface Payment {
+  id?: string
+  groupId: string
+  fromUserId: string      // who paid (owes less after this)
+  toUserId: string        // who received (is owed less after this)
+  amount: number          // always in ARS
+  recordedBy: string      // user ID of who sent the WhatsApp message
+  note?: string           // optional note
+  createdAt: Date
+}
+
+// Parsed payment from message
+export interface ParsedPayment {
+  type: 'paid' | 'received'
+  amount: number
+  mention: string // The @mention (without @)
+}

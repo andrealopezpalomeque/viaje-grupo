@@ -1,16 +1,20 @@
 import { Router } from 'express'
 import crypto from 'crypto'
 import rateLimit from 'express-rate-limit'
-import { getUserByPhone, isAuthorizedPhone, getGroupByUserId, getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup, markUserAsWelcomed } from '../services/userService.js'
+import { getUserByPhone, getUserById, isAuthorizedPhone, getGroupByUserId, getGroupMembers, getAllGroupsByUserId, updateUserActiveGroup, markUserAsWelcomed } from '../services/userService.js'
 import { createExpense } from '../services/expenseService.js'
-import { parseExpenseMessage, extractCurrency, stripCurrencyFromDescription } from '../utils/messageParser.js'
+import { createPayment } from '../services/paymentService.js'
+import { parseExpenseMessage, extractCurrency, stripCurrencyFromDescription, parsePaymentMessage, isPaymentMessage } from '../utils/messageParser.js'
 import { convertToARS } from '../services/exchangeRateService.js'
-import { resolveMentionsToUserIds } from '../services/mentionService.js'
+import { resolveMentionsToUserIds, matchMention } from '../services/mentionService.js'
 import {
   sendMessage,
   formatExpenseConfirmation,
   formatParseErrorMessage,
   formatValidationErrorMessage,
+  formatPaymentConfirmation,
+  formatPaymentNotification,
+  formatPaymentErrorMessage,
 } from '../services/whatsappService.js'
 import {
   isCommand,
@@ -379,7 +383,13 @@ async function handleTextMessage(from, text, messageId) {
   const group = await getGroupByUserId(user.id)
   const groupId = group?.id || null
 
-  // 9. Process as expense
+  // 9. Check if this is a payment message (before expense processing)
+  if (isPaymentMessage(text)) {
+    await handlePaymentMessage(from, text, user, groupId, group?.name)
+    return
+  }
+
+  // 10. Process as expense
   await handleExpenseMessage(from, text, user, groupId, group?.name)
 }
 
@@ -540,6 +550,105 @@ async function handleExpenseMessage(from, text, user, groupId, groupName) {
     await sendMessage(
       from,
       '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
+    )
+  }
+}
+
+/**
+ * Handle payment messages
+ * Processes "pagué X @Person" or "recibí X @Person" commands
+ */
+async function handlePaymentMessage(from, text, user, groupId, groupName) {
+  // 1. Check if user is in a group
+  if (!groupId) {
+    await sendMessage(from, '⚠️ No pertenecés a ningún grupo.')
+    return
+  }
+
+  // 2. Parse the payment message
+  const parsed = parsePaymentMessage(text)
+
+  if (!parsed) {
+    await sendMessage(from, formatPaymentErrorMessage('invalid_amount'))
+    return
+  }
+
+  // 3. Validate amount
+  if (parsed.amount <= 0) {
+    await sendMessage(from, formatPaymentErrorMessage('invalid_amount'))
+    return
+  }
+
+  // 4. Get group members to resolve the mention
+  const groupMembers = await getGroupMembers(groupId)
+
+  // 5. Resolve the @mention to a user
+  const mentionedUser = matchMention(parsed.mention, groupMembers)
+
+  if (!mentionedUser) {
+    await sendMessage(from, formatPaymentErrorMessage('invalid_mention'))
+    return
+  }
+
+  // 6. Check for self-payment
+  if (mentionedUser.id === user.id) {
+    await sendMessage(from, formatPaymentErrorMessage('self_payment'))
+    return
+  }
+
+  // 7. Determine fromUserId and toUserId based on payment type
+  let fromUserId, toUserId
+  let confirmationDirection, notificationDirection
+
+  if (parsed.type === 'paid') {
+    // User paid the mentioned person -> money goes FROM user TO mentioned
+    fromUserId = user.id
+    toUserId = mentionedUser.id
+    confirmationDirection = 'to'
+    notificationDirection = 'paid_to_you'
+  } else {
+    // User received from mentioned person -> money goes FROM mentioned TO user
+    fromUserId = mentionedUser.id
+    toUserId = user.id
+    confirmationDirection = 'from'
+    notificationDirection = 'received_from_you'
+  }
+
+  // 8. Create the payment record
+  try {
+    await createPayment({
+      groupId,
+      fromUserId,
+      toUserId,
+      amount: parsed.amount,
+      recordedBy: user.id
+    })
+
+    // 9. Send confirmation to the person who recorded
+    const confirmationMessage = formatPaymentConfirmation(
+      parsed.amount,
+      mentionedUser.name,
+      groupName,
+      confirmationDirection
+    )
+    await sendMessage(from, confirmationMessage)
+
+    // 10. Send notification to the other party
+    const otherUser = await getUserById(mentionedUser.id)
+    if (otherUser?.phone) {
+      const notificationMessage = formatPaymentNotification(
+        parsed.amount,
+        user.name,
+        groupName,
+        notificationDirection
+      )
+      await sendMessage(otherUser.phone, notificationMessage)
+    }
+  } catch (error) {
+    console.error('Error creating payment:', error)
+    await sendMessage(
+      from,
+      '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
     )
   }
 }

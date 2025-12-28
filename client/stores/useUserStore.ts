@@ -94,12 +94,13 @@ export const useUserStore = defineStore('user', {
 
     calculateBalances(): Balance[] {
       const expenseStore = useExpenseStore()
+      const paymentStore = usePaymentStore()
       // Guard: if no users (or still loading), return empty
       if (this.users.length === 0) return []
 
       // Initialize balances map
-      const balances = new Map<string, { paid: number; share: number }>()
-      this.users.forEach(u => balances.set(u.id, { paid: 0, share: 0 }))
+      const balances = new Map<string, { paid: number; share: number; paymentAdjustment: number }>()
+      this.users.forEach(u => balances.set(u.id, { paid: 0, share: 0, paymentAdjustment: 0 }))
 
       // Process each expense
       expenseStore.expenses.forEach(expense => {
@@ -139,14 +140,30 @@ export const useUserStore = defineStore('user', {
         })
       })
 
+      // Process payments
+      // When A pays B: A's net goes up (they're settling debt), B's net goes down
+      paymentStore.payments.forEach(payment => {
+        const fromUser = balances.get(payment.fromUserId)
+        const toUser = balances.get(payment.toUserId)
+
+        if (fromUser) {
+          // Person who paid has their net balance increase (less debt)
+          fromUser.paymentAdjustment += payment.amount
+        }
+        if (toUser) {
+          // Person who received has their net balance decrease (received settlement)
+          toUser.paymentAdjustment -= payment.amount
+        }
+      })
+
       // Convert map to array
       return this.users.map(user => {
-        const data = balances.get(user.id) || { paid: 0, share: 0 }
+        const data = balances.get(user.id) || { paid: 0, share: 0, paymentAdjustment: 0 }
         return {
           userId: user.id,
           paid: data.paid,
           share: data.share,
-          net: data.paid - data.share
+          net: data.paid - data.share + data.paymentAdjustment
         }
       })
     },
@@ -176,9 +193,11 @@ export const useUserStore = defineStore('user', {
     /**
      * Calculate settlement recommendations (who should pay whom)
      * Uses direct-only algorithm: only creates settlements between people who shared expenses
+     * Now includes payments to reduce outstanding debts
      */
     calculateSettlements(): Settlement[] {
       const expenseStore = useExpenseStore()
+      const paymentStore = usePaymentStore()
       const settlements: Settlement[] = []
 
       // Build a debt graph: track how much each person owes each other person
@@ -223,6 +242,30 @@ export const useUserStore = defineStore('user', {
             }
           }
         })
+      })
+
+      // Process payments: reduce debts when payments are made
+      // If A pays B, A's debt to B decreases (or B's debt to A increases)
+      paymentStore.payments.forEach(payment => {
+        const fromId = payment.fromUserId
+        const toId = payment.toUserId
+
+        // Get current debts in both directions
+        const fromOwesTo = debtGraph.get(fromId)?.get(toId) || 0
+        const toOwesFrom = debtGraph.get(toId)?.get(fromId) || 0
+
+        // Payment from A to B reduces A's debt to B
+        if (fromOwesTo >= payment.amount) {
+          // Simple case: A owes enough to B, just reduce the debt
+          debtGraph.get(fromId)?.set(toId, fromOwesTo - payment.amount)
+        } else {
+          // A paid more than they owed, or they were settling a debt in the other direction
+          // First, clear A's debt to B
+          debtGraph.get(fromId)?.set(toId, 0)
+          // Then increase B's debt to A by the excess
+          const excess = payment.amount - fromOwesTo
+          debtGraph.get(toId)?.set(fromId, toOwesFrom + excess)
+        }
       })
 
       // Now simplify the debt graph by netting out mutual debts

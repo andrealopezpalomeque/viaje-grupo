@@ -1,4 +1,4 @@
-import type { ParsedExpense, ExpenseCategory } from '../types/index.js'
+import type { ParsedExpense, ExpenseCategory, ParsedPayment } from '../types/index.js'
 
 /**
  * Parse expense from WhatsApp message
@@ -174,3 +174,88 @@ export const stripCurrencyFromDescription = (description: string): string => {
  *
  * @deprecated Use convertToARS from services/exchangeRateService.ts instead
  */
+
+/**
+ * Parse payment message from WhatsApp
+ * Supports patterns like:
+ * - "pagué 5000 @Maria" / "pague 5000 @Maria" (I paid Maria)
+ * - "recibí 5000 @Juan" / "recibi 5000 @Juan" (I received from Juan)
+ *
+ * @returns ParsedPayment if the message is a payment, null otherwise
+ */
+export const parsePaymentMessage = (message: string): ParsedPayment | null => {
+  const normalized = message.trim().toLowerCase()
+
+  // Payment keywords (with and without accents)
+  const paidKeywords = ['pagué', 'pague', 'le pagué', 'le pague']
+  const receivedKeywords = ['recibí', 'recibi', 'me pagó', 'me pago']
+
+  // Extract mentions first
+  const mentionRegex = /@([a-zA-Z0-9_]+)/g
+  const mentions: string[] = []
+  let match
+  while ((match = mentionRegex.exec(message)) !== null) {
+    mentions.push(match[1])
+  }
+
+  // Check if it's a payment message
+  let paymentType: 'paid' | 'received' | null = null
+
+  for (const keyword of paidKeywords) {
+    if (normalized.startsWith(keyword)) {
+      paymentType = 'paid'
+      break
+    }
+  }
+
+  if (!paymentType) {
+    for (const keyword of receivedKeywords) {
+      if (normalized.startsWith(keyword)) {
+        paymentType = 'received'
+        break
+      }
+    }
+  }
+
+  // Not a payment message
+  if (!paymentType) {
+    return null
+  }
+
+  // Extract amount (number in the message)
+  const amountMatch = message.match(/(\d+(?:[.,]\d+)?)/g)
+  if (!amountMatch || amountMatch.length === 0) {
+    return null
+  }
+
+  const amountStr = amountMatch[0].replace(',', '.')
+  const amount = parseFloat(amountStr)
+
+  if (isNaN(amount) || amount <= 0) {
+    return null
+  }
+
+  // Must have exactly one mention
+  if (mentions.length !== 1) {
+    return null
+  }
+
+  return {
+    type: paymentType,
+    amount,
+    mention: mentions[0]
+  }
+}
+
+/**
+ * Check if a message is a payment command (quick check before full parsing)
+ */
+export const isPaymentMessage = (message: string): boolean => {
+  const normalized = message.trim().toLowerCase()
+  const paymentKeywords = [
+    'pagué', 'pague', 'le pagué', 'le pague',
+    'recibí', 'recibi', 'me pagó', 'me pago'
+  ]
+
+  return paymentKeywords.some(keyword => normalized.startsWith(keyword))
+}

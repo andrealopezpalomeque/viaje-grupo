@@ -142,6 +142,75 @@
               <span>{{ creditorFirstName }} no agrego datos de pago aun</span>
             </div>
           </div>
+
+          <!-- Record Payment Section -->
+          <div class="pt-3 border-t border-gray-200 dark:border-gray-600">
+            <!-- Confirmation state -->
+            <div v-if="showPaymentConfirm" class="space-y-3">
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                Registrar pago de <span class="font-semibold">{{ formatAmount(paymentAmount) }}</span>
+                de {{ debtorFirstName }} a {{ creditorFirstName }}?
+              </p>
+
+              <!-- Amount input -->
+              <div class="flex items-center gap-2">
+                <label class="text-xs text-gray-500 dark:text-gray-400">Monto:</label>
+                <input
+                  v-model.number="paymentAmount"
+                  type="number"
+                  min="1"
+                  class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  @click="confirmPayment"
+                  :disabled="isSubmitting || paymentAmount <= 0"
+                  class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-positive-600 hover:bg-positive-700 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <IconCheck v-if="!isSubmitting" class="w-4 h-4" />
+                  <IconLoading v-else class="w-4 h-4 animate-spin" />
+                  {{ isSubmitting ? 'Guardando...' : 'Confirmar' }}
+                </button>
+                <button
+                  @click="cancelPayment"
+                  :disabled="isSubmitting"
+                  class="px-3 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+
+            <!-- Record payment button -->
+            <button
+              v-else
+              @click="startPayment"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <IconCash class="w-4 h-4" />
+              Registrar pago realizado
+            </button>
+
+            <!-- Success message -->
+            <Transition
+              enter-active-class="transition-all duration-200 ease-out"
+              enter-from-class="opacity-0 translate-y-1"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-all duration-150 ease-in"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 translate-y-1"
+            >
+              <div
+                v-if="showSuccess"
+                class="mt-3 flex items-center gap-2 text-sm text-positive-600 dark:text-positive-400 bg-positive-50 dark:bg-positive-900/20 rounded-lg px-3 py-2"
+              >
+                <IconCheck class="w-4 h-4 flex-shrink-0" />
+                <span>Pago registrado correctamente</span>
+              </div>
+            </Transition>
+          </div>
         </div>
       </div>
     </Transition>
@@ -153,6 +222,9 @@ import IconChevronRight from '~icons/mdi/chevron-right'
 import IconArrowRight from '~icons/mdi/arrow-right'
 import IconCreditCard from '~icons/mdi/credit-card'
 import IconInformation from '~icons/mdi/information-outline'
+import IconCash from '~icons/mdi/cash'
+import IconCheck from '~icons/mdi/check'
+import IconLoading from '~icons/mdi/loading'
 
 import type { Settlement, Expense } from '~/types'
 
@@ -165,13 +237,22 @@ const props = defineProps<Props>()
 
 const userStore = useUserStore()
 const expenseStore = useExpenseStore()
+const paymentStore = usePaymentStore()
+const { firestoreUser, user: firebaseUser } = useAuth()
+const groupStore = useGroupStore()
+
 const isExpanded = ref(false)
+const showPaymentConfirm = ref(false)
+const paymentAmount = ref(0)
+const isSubmitting = ref(false)
+const showSuccess = ref(false)
 
 const debtor = computed(() => userStore.getUserById(props.settlement.fromUserId))
 const creditor = computed(() => userStore.getUserById(props.settlement.toUserId))
 
 const debtorName = computed(() => debtor.value?.name || 'Usuario')
 const creditorName = computed(() => creditor.value?.name || 'Usuario')
+const debtorFirstName = computed(() => debtorName.value.split(' ')[0])
 const creditorFirstName = computed(() => creditorName.value.split(' ')[0])
 
 const hasPaymentInfo = computed(() => {
@@ -182,6 +263,64 @@ const hasPaymentInfo = computed(() => {
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value
+}
+
+const formatAmount = (amount: number) => {
+  return `$${amount.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+}
+
+const startPayment = () => {
+  paymentAmount.value = props.settlement.amount
+  showPaymentConfirm.value = true
+}
+
+const cancelPayment = () => {
+  showPaymentConfirm.value = false
+  paymentAmount.value = 0
+}
+
+const confirmPayment = async () => {
+  if (isSubmitting.value || paymentAmount.value <= 0) return
+
+  isSubmitting.value = true
+
+  try {
+    const groupId = groupStore.selectedGroupId
+    if (!groupId) {
+      console.error('No group selected')
+      return
+    }
+
+    // Get the current user's ID (the one recording the payment)
+    const recordedBy = firestoreUser.value?.id
+    const authUid = firebaseUser.value?.uid
+    if (!recordedBy || !authUid) {
+      console.error('No linked user found')
+      return
+    }
+
+    await paymentStore.addPayment(
+      groupId,
+      props.settlement.fromUserId,
+      props.settlement.toUserId,
+      paymentAmount.value,
+      recordedBy,
+      authUid
+    )
+
+    // Show success message
+    showPaymentConfirm.value = false
+    showSuccess.value = true
+
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 3000)
+  } catch (error) {
+    console.error('Error recording payment:', error)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 // Calculate expense breakdown for a settlement
