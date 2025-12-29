@@ -34,6 +34,11 @@ import {
   clearPendingExpense,
   getExpenseGroupPromptMessage,
 } from '../services/commandService.js'
+import {
+  isAIEnabled,
+  parseMessageWithAI,
+  getConfidenceThreshold
+} from '../services/aiService.js'
 
 const router = Router()
 
@@ -383,13 +388,42 @@ async function handleTextMessage(from, text, messageId) {
   const group = await getGroupByUserId(user.id)
   const groupId = group?.id || null
 
-  // 9. Check if this is a payment message (before expense processing)
+  // 9. Try AI parsing first (if enabled)
+  if (isAIEnabled() && groupId) {
+    try {
+      const groupMembers = await getGroupMembers(groupId)
+      const memberNames = groupMembers.map(m => m.name)
+      const aiResult = await parseMessageWithAI(text, memberNames)
+
+      const confidenceThreshold = getConfidenceThreshold()
+
+      // Handle based on AI result
+      if (aiResult.type === 'expense' && aiResult.confidence >= confidenceThreshold) {
+        await handleAIExpense(from, aiResult, user, groupId, group?.name, text)
+        return
+      } else if (aiResult.type === 'payment' && aiResult.confidence >= confidenceThreshold) {
+        await handleAIPayment(from, aiResult, user, groupId, group?.name)
+        return
+      } else if (aiResult.type === 'unknown' && aiResult.suggestion && aiResult.confidence < 0.5) {
+        // AI couldn't understand - send helpful suggestion
+        await sendMessage(from, `🤔 ${aiResult.suggestion}`)
+        return
+      }
+      // If confidence is low or AI returned unknown, fall through to regex parsing
+      console.log('[AI] Low confidence or unknown, falling back to regex parser')
+    } catch (error) {
+      console.error('[AI] Parsing failed, falling back to regex:', error)
+      // Fall through to regex parsing
+    }
+  }
+
+  // 10. Check if this is a payment message (before expense processing) - regex fallback
   if (isPaymentMessage(text)) {
     await handlePaymentMessage(from, text, user, groupId, group?.name)
     return
   }
 
-  // 10. Process as expense
+  // 11. Process as expense - regex fallback
   await handleExpenseMessage(from, text, user, groupId, group?.name)
 }
 
@@ -651,6 +685,219 @@ async function handlePaymentMessage(from, text, user, groupId, groupName) {
       '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
     )
   }
+}
+
+/**
+ * Handle AI-parsed expense
+ * Processes expense data extracted by AI from natural language
+ */
+async function handleAIExpense(from, aiResult, user, groupId, groupName, originalText) {
+  // 1. Convert currency if needed
+  let finalAmount = aiResult.amount
+  let originalAmount
+  let originalCurrency
+
+  if (aiResult.currency !== 'ARS') {
+    finalAmount = await convertToARS(aiResult.amount, aiResult.currency)
+    originalAmount = aiResult.amount
+    originalCurrency = aiResult.currency
+  }
+
+  // 2. Validate input
+  const validation = validateExpenseInput(finalAmount, aiResult.description)
+
+  if (!validation.valid) {
+    await sendMessage(from, formatValidationErrorMessage(validation.error))
+    return
+  }
+
+  // 3. Resolve mentions to user IDs using fuzzy matching
+  let resolvedSplitAmong = []
+  let displayNames = []
+
+  if (aiResult.splitAmong && aiResult.splitAmong.length > 0 && groupId) {
+    const groupMembers = await getGroupMembers(groupId)
+    resolvedSplitAmong = resolveMentionsToUserIds(aiResult.splitAmong, groupMembers)
+    displayNames = aiResult.splitAmong
+  }
+
+  // 4. Auto-categorize based on description
+  const category = categorizeFromDescription(aiResult.description)
+
+  // 5. Create expense in Firestore
+  try {
+    await createExpense({
+      userId: user.id,
+      userName: user.name,
+      amount: finalAmount,
+      originalAmount,
+      originalCurrency,
+      originalInput: originalText,
+      description: aiResult.description,
+      category,
+      splitAmong: resolvedSplitAmong,
+      groupId: groupId,
+      timestamp: new Date()
+    })
+
+    // 6. Send confirmation message
+    const confirmationMessage = formatExpenseConfirmation(
+      finalAmount,
+      originalAmount,
+      originalCurrency,
+      aiResult.description,
+      category,
+      displayNames,
+      groupName
+    )
+
+    await sendMessage(from, confirmationMessage)
+  } catch (error) {
+    console.error('Error creating AI expense:', error)
+    await sendMessage(
+      from,
+      '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
+    )
+  }
+}
+
+/**
+ * Handle AI-parsed payment
+ * Processes payment data extracted by AI from natural language
+ */
+async function handleAIPayment(from, aiResult, user, groupId, groupName) {
+  // 1. Check if user is in a group
+  if (!groupId) {
+    await sendMessage(from, '⚠️ No pertenecés a ningún grupo.')
+    return
+  }
+
+  // 2. Validate amount
+  if (aiResult.amount <= 0) {
+    await sendMessage(from, formatPaymentErrorMessage('invalid_amount'))
+    return
+  }
+
+  // 3. Get group members to resolve the mention
+  const groupMembers = await getGroupMembers(groupId)
+
+  // 4. Resolve the person name to a user
+  const mentionedUser = matchMention(aiResult.person, groupMembers)
+
+  if (!mentionedUser) {
+    await sendMessage(from, formatPaymentErrorMessage('invalid_mention'))
+    return
+  }
+
+  // 5. Check for self-payment
+  if (mentionedUser.id === user.id) {
+    await sendMessage(from, formatPaymentErrorMessage('self_payment'))
+    return
+  }
+
+  // 6. Convert currency if needed
+  let amount = aiResult.amount
+  if (aiResult.currency !== 'ARS') {
+    amount = await convertToARS(aiResult.amount, aiResult.currency)
+  }
+
+  // 7. Determine fromUserId and toUserId based on direction
+  let fromUserId, toUserId
+  let confirmationDirection, notificationDirection
+
+  if (aiResult.direction === 'paid') {
+    // User paid the mentioned person
+    fromUserId = user.id
+    toUserId = mentionedUser.id
+    confirmationDirection = 'to'
+    notificationDirection = 'paid_to_you'
+  } else {
+    // User received from mentioned person
+    fromUserId = mentionedUser.id
+    toUserId = user.id
+    confirmationDirection = 'from'
+    notificationDirection = 'received_from_you'
+  }
+
+  // 8. Create the payment record
+  try {
+    await createPayment({
+      groupId,
+      fromUserId,
+      toUserId,
+      amount,
+      recordedBy: user.id
+    })
+
+    // 9. Send confirmation to the person who recorded
+    const confirmationMessage = formatPaymentConfirmation(
+      amount,
+      mentionedUser.name,
+      groupName,
+      confirmationDirection
+    )
+    await sendMessage(from, confirmationMessage)
+
+    // 10. Send notification to the other party
+    const otherUser = await getUserById(mentionedUser.id)
+    if (otherUser?.phone) {
+      const notificationMessage = formatPaymentNotification(
+        amount,
+        user.name,
+        groupName,
+        notificationDirection
+      )
+      await sendMessage(otherUser.phone, notificationMessage)
+    }
+  } catch (error) {
+    console.error('Error creating AI payment:', error)
+    await sendMessage(
+      from,
+      '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
+    )
+  }
+}
+
+/**
+ * Simple categorization based on description keywords
+ * Used for AI-parsed expenses
+ */
+function categorizeFromDescription(description) {
+  const keywords = {
+    food: [
+      'lunch', 'almuerzo', 'dinner', 'cena', 'breakfast', 'desayuno',
+      'comida', 'restaurant', 'restaurante', 'pizza', 'burger',
+      'coffee', 'café', 'beer', 'cerveza', 'birra', 'drink', 'bebida',
+      'snack', 'groceries', 'supermercado', 'market', 'mercado', 'morfi'
+    ],
+    transport: [
+      'taxi', 'uber', 'cabify', 'bus', 'colectivo', 'bondi', 'train', 'tren',
+      'metro', 'subte', 'subway', 'flight', 'vuelo', 'car', 'auto',
+      'rental', 'alquiler', 'gas', 'nafta', 'parking', 'estacionamiento'
+    ],
+    accommodation: [
+      'hotel', 'airbnb', 'hostel', 'alojamiento', 'lodging',
+      'rent', 'alquiler', 'house', 'casa', 'apartment', 'apartamento', 'depto'
+    ],
+    entertainment: [
+      'ticket', 'entrada', 'show', 'espectaculo', 'museum', 'museo',
+      'tour', 'excursion', 'excursión', 'activity', 'actividad',
+      'game', 'juego', 'movie', 'cine', 'theater', 'teatro',
+      'club', 'bar', 'disco', 'party', 'fiesta', 'boliche'
+    ]
+  }
+
+  const lowerDesc = description.toLowerCase()
+
+  for (const [category, words] of Object.entries(keywords)) {
+    for (const word of words) {
+      if (lowerDesc.includes(word)) {
+        return category
+      }
+    }
+  }
+
+  return 'general'
 }
 
 export default router
