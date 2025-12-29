@@ -21,8 +21,10 @@ This document explains the Firestore security rules implemented for Text the Che
 #### Expenses Collection (`/expenses/{expenseId}`)
 - **READ**: All authenticated users (collaborative expense tracking)
 - **CREATE**: Users can create expenses, but only with their own `userId`
-- **UPDATE**: Users can only update their own expenses
-- **DELETE**: Users can only delete their own expenses
+- **UPDATE**: Users can only update their own expenses (ownership verified via user document lookup)
+- **DELETE**: Users can only delete their own expenses (ownership verified via user document lookup)
+
+> **Note:** Ownership is verified by looking up the creator's `authUid` from their user document. This allows managing expenses created via WhatsApp (which don't have `authUid` on the expense itself) from the Dashboard.
 
 #### Payments Collection (`/payments/{paymentId}`)
 - **READ**: All authenticated users (collaborative tracking)
