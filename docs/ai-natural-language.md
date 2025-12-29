@@ -155,8 +155,8 @@ Using Gemini 1.5 Flash:
 
 ## Technical Details
 
-### Provider: Google Gemini 1.5 Flash
-- **Model:** `gemini-1.5-flash`
+### Provider: Google Gemini 2.0 Flash
+- **Model:** `gemini-2.0-flash-exp`
 - **Why:** Cheapest, fast (~800ms), good structured output
 - **Fallback:** Regex parser (existing messageParser.ts)
 

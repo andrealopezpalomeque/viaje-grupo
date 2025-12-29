@@ -398,7 +398,10 @@ async function handleTextMessage(from, text, messageId) {
       const confidenceThreshold = getConfidenceThreshold()
 
       // Handle based on AI result
-      if (aiResult.type === 'expense' && aiResult.confidence >= confidenceThreshold) {
+      if (aiResult.type === 'error') {
+        // AI had an error - fall back to regex
+        console.log('[AI] Error occurred, falling back to regex:', aiResult.error)
+      } else if (aiResult.type === 'expense' && aiResult.confidence >= confidenceThreshold) {
         await handleAIExpense(from, aiResult, user, groupId, group?.name, text)
         return
       } else if (aiResult.type === 'payment' && aiResult.confidence >= confidenceThreshold) {
@@ -408,9 +411,10 @@ async function handleTextMessage(from, text, messageId) {
         // AI couldn't understand - send helpful suggestion
         await sendMessage(from, `🤔 ${aiResult.suggestion}`)
         return
+      } else {
+        // If confidence is low, fall through to regex parsing
+        console.log('[AI] Low confidence, falling back to regex parser')
       }
-      // If confidence is low or AI returned unknown, fall through to regex parsing
-      console.log('[AI] Low confidence or unknown, falling back to regex parser')
     } catch (error) {
       console.error('[AI] Parsing failed, falling back to regex:', error)
       // Fall through to regex parsing

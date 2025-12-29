@@ -41,7 +41,12 @@ export interface AIUnknownResult {
   suggestion?: string
 }
 
-export type AIParseResult = AIExpenseResult | AIPaymentResult | AICommandResult | AIUnknownResult
+export interface AIErrorResult {
+  type: 'error'
+  error: string
+}
+
+export type AIParseResult = AIExpenseResult | AIPaymentResult | AICommandResult | AIUnknownResult | AIErrorResult
 
 // Configuration from environment
 const AI_TIMEOUT_MS = parseInt(process.env.AI_TIMEOUT_MS || '5000', 10)
@@ -100,7 +105,8 @@ export async function parseMessageWithAI(
 
     // Get the Gemini client
     const ai = getGenAI()
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Use gemini-2.0-flash-exp (latest flash model as of Dec 2025)
+    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // Build the prompt
     const systemPrompt = buildExtractionPrompt(groupMemberNames)
@@ -134,11 +140,11 @@ export async function parseMessageWithAI(
     console.error('[AI] Error:', error)
     console.log('[AI] Latency (error):', `${Date.now() - startTime}ms`)
 
-    // Return unknown with low confidence on error
+    // Return error type so caller knows to fall back to regex
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return {
-      type: 'unknown',
-      confidence: 0,
-      suggestion: 'Error al procesar el mensaje'
+      type: 'error',
+      error: errorMessage
     }
   }
 }
