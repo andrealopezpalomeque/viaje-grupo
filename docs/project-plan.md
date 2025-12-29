@@ -17,7 +17,7 @@
 
 ## Current Status: Production Deployed ✅
 
-**Last updated:** December 28, 2025
+**Last updated:** December 29, 2025
 
 ### Production URLs
 
@@ -47,6 +47,10 @@
 - [x] Firebase onSnapshot real-time sync
 - [x] Payment recording via WhatsApp (`pagué`/`recibí`) and dashboard
 - [x] Unified activity feed (expenses + payments)
+- [x] **AI natural language parsing** (Google Gemini 2.0 Flash)
+- [x] **Argentine Spanish slang support** (lucas, k, mangos, birra, morfi, bondi)
+- [x] **Smart split detection** ("con Juan" = include sender, "@Juan" = only mentioned)
+- [x] **AI fallback to regex** when confidence < 0.7 or timeout
 
 ---
 
@@ -179,7 +183,9 @@ See [Product Status](./product-status.md) for detailed assessment.
 | Purpose | Path |
 |---------|------|
 | Webhook routes | `server/src/routes/whatsapp.js` |
-| Message parser | `server/src/utils/messageParser.ts` |
+| **AI service** | `server/src/services/aiService.ts` |
+| **AI prompts** | `server/src/prompts/expenseExtraction.ts` |
+| Message parser (fallback) | `server/src/utils/messageParser.ts` |
 | WhatsApp service | `server/src/services/whatsappService.ts` |
 | User service | `server/src/services/userService.ts` |
 | Mention matching | `server/src/services/mentionService.ts` |
@@ -229,6 +235,12 @@ NODE_ENV=development
 NODE_ENV=production
 SKIP_SIGNATURE_VERIFICATION=false
 EXCHANGE_RATE_API_KEY=your_api_key
+
+# AI / Gemini
+GEMINI_API_KEY=your_gemini_api_key
+AI_ENABLED=true
+AI_CONFIDENCE_THRESHOLD=0.7
+AI_TIMEOUT_MS=5000
 ```
 
 ---
@@ -236,6 +248,21 @@ EXCHANGE_RATE_API_KEY=your_api_key
 ## Testing Checklist
 
 Use these to verify the bot works correctly:
+
+### AI Natural Language Tests
+
+| Test | Input | Expected Result |
+|------|-------|-----------------|
+| Natural expense | `Gasté 150 en pizza` | ✅ AI parses: 150 ARS, "pizza" |
+| Natural with currency | `50 dólares la cena` | ✅ AI parses: 50 USD, converts to ARS |
+| Argentine slang | `5 lucas el taxi` | ✅ AI parses: 5000 ARS |
+| Natural "con" split | `50 cena con Juan` | ✅ Sender + Juan split it |
+| Explicit @ split | `50 cena @Juan` | ✅ Only Juan owes |
+| Multiple "con" | `100 pizza con Juan y María` | ✅ Sender + Juan + María split it |
+| Multiple @ | `100 pizza @Juan @María` | ✅ Only Juan + María split it |
+| Vague message | `150` | 🤔 AI asks for clarification |
+
+### Fallback/Syntax Tests
 
 | Test | Input | Expected Result |
 |------|-------|-----------------|
@@ -248,6 +275,11 @@ Use these to verify the bot works correctly:
 | Invalid amount | `0 nothing` | ❌ Validation error |
 | Negative amount | `-50 refund` | ❌ Validation error |
 | Duplicate message | Send same message twice quickly | Only one expense created |
+
+### Commands
+
+| Test | Input | Expected Result |
+|------|-------|-----------------|
 | Help command | `/ayuda` or `/help` | 📖 Usage instructions |
 | Balance command | `/balance` or `/saldo` | 💰 Group balances |
 | List command | `/lista` or `/list` | 📋 Last 10 expenses |
@@ -639,3 +671,29 @@ When starting a new Claude Code session, paste this context:
   - Updated splitting-logic.md with section on how payments affect balances
   - Updated project-plan.md with session log and key files
 - 📍 Status: Payment Recording Feature COMPLETE
+
+### December 29, 2025 (AI Natural Language Parsing)
+- ✅ **Implemented AI-powered natural language parsing**
+  - Users can now type expenses naturally: "Gasté 150 en pizza", "50 dólares la cena con Juan"
+  - AI understands Argentine Spanish slang: lucas, k, mangos, birra, morfi, bondi
+  - Original syntax still works as fallback
+- ✅ **Server-side implementation**
+  - Created `server/src/services/aiService.ts` - Gemini AI integration
+  - Created `server/src/prompts/expenseExtraction.ts` - AI system prompts
+  - Updated `server/src/routes/whatsapp.js` - AI integration in message flow
+  - AI tries first, falls back to regex if confidence < 0.7 or timeout (5s)
+- ✅ **Smart split detection ("con" vs "@")**
+  - Added `includesSender` field to AI expense result
+  - "con Juan" → sender + Juan split it (natural language, participatory)
+  - "@Juan" → only Juan owes (explicit mention, logging for others)
+  - Updated `handleAIExpense()` to use `includesSender` flag
+- ✅ **Environment variables**
+  - `GEMINI_API_KEY` - Google Gemini API key
+  - `AI_ENABLED=true` - Enable/disable AI parsing
+  - `AI_CONFIDENCE_THRESHOLD=0.7` - Minimum confidence to use AI result
+  - `AI_TIMEOUT_MS=5000` - Timeout before falling back to regex
+- ✅ **Documentation updates**
+  - Updated all docs to reflect AI capabilities
+  - Updated testing checklist with AI-specific tests
+  - Added AI section to session-handoff.md
+- 📍 Status: AI Natural Language Parsing COMPLETE

@@ -58,6 +58,12 @@ FIREBASE_PROJECT_ID=viaje-grupo
 FIREBASE_CLIENT_EMAIL=your_client_email
 FIREBASE_PRIVATE_KEY=your_private_key
 
+# AI / Gemini (NEW - December 2025)
+GEMINI_API_KEY=your_gemini_api_key
+AI_ENABLED=true
+AI_CONFIDENCE_THRESHOLD=0.7
+AI_TIMEOUT_MS=5000
+
 # Server (may be set by platform)
 PORT=4000
 
@@ -311,6 +317,12 @@ If deployment fails:
 - `FIREBASE_CLIENT_EMAIL`
 - `FIREBASE_PRIVATE_KEY` ⚠️ Secret
 
+**Required for AI (Gemini):**
+- `GEMINI_API_KEY` ⚠️ Secret
+- `AI_ENABLED=true`
+- `AI_CONFIDENCE_THRESHOLD=0.7`
+- `AI_TIMEOUT_MS=5000`
+
 **Required for Security:**
 - `NODE_ENV=production`
 - `ALLOWED_PHONE_NUMBERS`
@@ -343,4 +355,4 @@ Deployment is complete when:
 
 ---
 
-*Last updated: December 18, 2025*
+*Last updated: December 29, 2025*

@@ -76,16 +76,21 @@ setInterval(cleanupExpiredPendingStates, 60 * 1000)
 export function getHelpMessage(): string {
   return `📖 *Cómo usar Text the Check*
 
-*Agregar gasto:*
-\`100 taxi\` - Divide entre todos
-\`50 cena @Juan @María\` - Solo Juan y María
-\`50 cena @Yo @Juan\` - Vos + Juan
+*Agregar gasto (escribí natural):*
+\`Gasté 150 en pizza\` - IA entiende
+\`50 dólares la cena\` - Detecta moneda
+\`5 lucas el taxi\` - Entiende "lucas"
+
+*Dividir gastos:*
+\`50 cena con Juan\` - Vos + Juan
+\`50 cena @Juan\` - Solo Juan
+\`100 pizza @Juan @María\` - Solo ellos
 
 *Registrar pago:*
 \`pagué 5000 @María\` - Pagaste a María
 \`recibí 5000 @Juan\` - Recibiste de Juan
 
-*Tip:* Mencioná tu nombre para incluirte
+*Tip:* "con" te incluye, "@" no te incluye
 
 *Monedas:* USD, EUR, BRL (se convierten a ARS)
 

@@ -42,12 +42,36 @@ Instead of asking everyone to download an app:
 ## How It Works
 
 ### Logging expenses (WhatsApp — anyone in the group)
+
+**Natural language (AI-powered):**
+```
+Gasté 150 en pizza           → AI understands and logs
+50 dólares la cena con Juan  → Sender + Juan split it
+5 lucas el taxi              → Understands "lucas" = 5000 ARS
+pagué 200 de nafta           → Natural expense description
+```
+
+**Split logic ("con" vs "@"):**
+```
+50 cena con Juan             → Sender + Juan split it
+50 cena @Juan                → Only Juan owes (explicit mention)
+```
+
+**Structured syntax (fallback):**
 ```
 50 lunch                     → Splits among everyone
-USD 20 dinner @Ana @Pedro    → Converts to ARS, splits among 3
+USD 20 dinner @Ana @Pedro    → Converts to ARS, splits among mentioned
 /balance                     → See who owes whom
 /lista                       → See recent expenses
 ```
+
+**Argentine slang supported:**
+- `lucas/luquitas` = thousands (5 lucas = 5000)
+- `k` = thousands (5k = 5000)
+- `mangos` = pesos
+- `birra` = beer
+- `morfi` = food
+- `bondi` = bus
 
 ### Viewing balances (Web Dashboard — anyone)
 - View real-time expense feed
@@ -113,11 +137,15 @@ A US-based team building for Venmo/Zelle users won't invest in CBU/alias support
 ## What's Built (Production Ready)
 
 ### WhatsApp Bot
-- [x] Natural language expense entry (`50 lunch`)
+- [x] **AI-powered natural language parsing** (Google Gemini)
+- [x] **Argentine Spanish slang support** (lucas, k, mangos, birra, morfi, bondi)
+- [x] **Smart split detection** ("con Juan" = include sender, "@Juan" = only Juan)
+- [x] Natural language expense entry (`Gasté 150 en pizza`)
 - [x] Multi-currency conversion (USD, EUR, BRL → ARS with live rates)
 - [x] @mention splitting with fuzzy name matching
-- [x] Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`
+- [x] Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`, `/grupo`
 - [x] Auto-categorization (food, transport, accommodation, etc.)
+- [x] Fallback to regex parser if AI fails
 - [x] Message deduplication and rate limiting
 
 ### Web Dashboard

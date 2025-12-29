@@ -1,24 +1,24 @@
-# AI Natural Language Processing - Strategic Decision
+# AI Natural Language Processing
 
-**Decision Date:** December 2025
-**Status:** Implementation Phase 1
+**Last Updated:** December 29, 2025
+**Status:** ✅ Implemented and Production Ready
 
 ---
 
 ## Why This Makes Sense Now
 
-### The Core Problem
+### The Core Problem (Solved!)
 
-Our whole thesis is "reduce friction." But making users learn a syntax IS friction.
+Our whole thesis is "reduce friction." Making users learn a syntax IS friction.
 
-| Current (Rigid Syntax) | Result |
-|------------------------|--------|
-| `150 pizza` | ✅ Works |
-| `USD 50 cena @Juan @Maria` | ✅ Works |
-| `Gasté 150 en pizza` | ❌ Fails |
-| `Pagué un taxi 200p` | ❌ Fails |
-| `50 dólares la cena con juan` | ❌ Fails |
-| `Le di 5 lucas a Maru` | ❌ Fails |
+| Before AI (Rigid Syntax) | After AI (Natural Language) |
+|--------------------------|----------------------------|
+| `150 pizza` ✅ | `150 pizza` ✅ |
+| `USD 50 cena @Juan @Maria` ✅ | `USD 50 cena @Juan @Maria` ✅ |
+| `Gasté 150 en pizza` ❌ | `Gasté 150 en pizza` ✅ |
+| `Pagué un taxi 200p` ❌ | `Pagué un taxi 200p` ✅ |
+| `50 dólares la cena con juan` ❌ | `50 dólares la cena con juan` ✅ |
+| `5 lucas el taxi` ❌ | `5 lucas el taxi` ✅ |
 
 ### Why Now?
 
@@ -31,37 +31,53 @@ Our whole thesis is "reduce friction." But making users learn a syntax IS fricti
 
 ---
 
-## Proposed Architecture
+## Architecture (Implemented)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  USER MESSAGE                                               │
-│  "Gasté 50 dólares en la cena, dividan entre juan y mari"   │
+│  "50 dólares la cena con juan"                              │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  AI LAYER (Gemini Flash)                                    │
+│  Is Command? (/balance, /grupo, /ayuda)                     │
+│  → YES: Handle command directly (bypass AI)                 │
+│  → NO: Continue to AI parsing                               │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  AI LAYER (Gemini 2.0 Flash)                                │
 │                                                             │
 │  Input: User message + group member names for context       │
 │                                                             │
 │  Output (structured JSON):                                  │
 │  {                                                          │
-│    "type": "expense" | "payment" | "command" | "unknown",   │
+│    "type": "expense",                                       │
 │    "amount": 50,                                            │
-│    "currency": "USD" | "ARS" | "BRL" | "EUR",               │
+│    "currency": "USD",                                       │
 │    "description": "cena",                                   │
-│    "splitAmong": ["juan", "mari"],                          │
+│    "splitAmong": ["juan"],                                  │
+│    "includesSender": true,  ← NEW: "con" = include sender   │
 │    "confidence": 0.95                                       │
 │  }                                                          │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  EXISTING LOGIC (unchanged)                                 │
+│  Confidence ≥ 0.7?                                          │
+│  → YES: Use AI result                                       │
+│  → NO or ERROR: Fall back to regex parser                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  EXISTING LOGIC                                             │
 │  - Resolve mentions (mentionService)                        │
+│  - If includesSender=true, add sender to split              │
 │  - Convert currency (exchangeRateService)                   │
-│  - Create expense/payment (expenseService/paymentService)   │
+│  - Create expense (expenseService)                          │
 │  - Send confirmation (whatsappService)                      │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -134,22 +150,25 @@ Using Gemini 1.5 Flash:
 
 ---
 
-## Phased Implementation
+## Implementation Status
 
-### Phase 1: Expenses Only (Current)
+### Phase 1: Expenses ✅ COMPLETE
 - [x] AI parses expense messages
-- [x] Existing commands unchanged
-- [x] Fallback to regex if AI fails
-- [ ] Test with beta groups
+- [x] Existing commands unchanged (bypass AI)
+- [x] Fallback to regex if AI fails or low confidence
+- [x] Smart split detection ("con" vs "@")
+- [x] `includesSender` field for split logic
 
-### Phase 2: Payments
-- [ ] AI recognizes "pagué", "le di", "transferí"
-- [ ] Same confirmation flow
+### Phase 2: Payments ✅ COMPLETE
+- [x] AI recognizes "pagué", "le di", "transferí"
+- [x] Same confirmation flow
+- [x] Payment notifications to other party
 
-### Phase 3: Smart Features (Future)
+### Phase 3: Smart Features (Future/Backlog)
 - [ ] "¿Cuánto le debo a Juan?" → AI answers from balance
 - [ ] "Borrar el último" → AI understands context
 - [ ] Multi-message context
+- [ ] Allow specifying who paid (not just sender) - See GitHub issue #34
 
 ---
 
@@ -208,4 +227,6 @@ The AI prompt includes these local terms:
 
 | Date | Change |
 |------|--------|
-| Dec 2025 | Initial implementation (Phase 1) |
+| Dec 29, 2025 | Added `includesSender` for smart split detection ("con" vs "@") |
+| Dec 28, 2025 | Payment recognition ("pagué", "recibí") |
+| Dec 27, 2025 | Initial implementation (Phase 1 - expenses) |

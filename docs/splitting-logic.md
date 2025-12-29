@@ -1,14 +1,44 @@
 # Smart Splitting Logic
 
+**Last updated:** December 29, 2025
+
 This document explains how Text the Check calculates who owes whom.
+
+---
+
+## Quick Reference: Who Gets Included?
+
+| Pattern | Payer Included? | Example |
+| :--- | :---: | :--- |
+| No mentions | ✅ Yes (everyone splits) | `2000 taxi` |
+| "con [names]" | ✅ Yes | `2000 taxi con Juan` |
+| "@[names]" | ❌ No | `2000 taxi @Juan` |
+| "para [name]" | ❌ No | `2000 regalo para Juan` |
+| Payer mentions self | ✅ Yes | `2000 taxi @Juan @Pipi` |
+
+> **Splitting Rules:**
+>
+> 1. **No mentions** → Everyone in the group splits equally
+>
+> 2. **Natural language "con/with"** → Payer + mentioned people split
+>    - "cena con Juan" = You + Juan
+>    - The word "con" implies you participated
+>
+> 3. **Explicit @mentions** → Only mentioned people split (payer NOT auto-included)
+>    - "cena @Juan" = Only Juan owes
+>    - Use this to log expenses on behalf of others
+>    - To include yourself, mention yourself: "@Juan @Pipi"
+
+---
 
 ## 1. The Core Variable: `splitAmong`
 Every expense has a field called `splitAmong`. This is a list of User IDs derived from @mentions in the WhatsApp message, or from checkbox selection in the web dashboard.
 
 ## 2. Input Rules
 
-### WhatsApp
-The parser scans the message for `@Mentions`.
+### WhatsApp: Explicit @Mentions
+
+The parser scans the message for `@Mentions`. With explicit mentions, the payer is **NOT** automatically included.
 
 | Message | Parsed `splitAmong` | Who Splits |
 | :--- | :--- | :--- |
@@ -16,9 +46,33 @@ The parser scans the message for `@Mentions`.
 | `2000 Sushi @Juan @Maria` | `['Juan', 'Maria']` | **Only Juan & Maria** (2 people) |
 | `2000 Sushi @Pipi @Juan @Maria` | `['Pipi', 'Juan', 'Maria']` | **Pipi, Juan & Maria** (3 people) |
 
-> **Key Rule:** The payer is **NOT** automatically added to the split. If you want to include yourself in a split expense, you must mention yourself explicitly.
->
-> **Use Case:** This allows someone to log expenses on behalf of others. For example, if Pipi pays for Juan and Maria's lunch (and doesn't eat), Pipi can log: `2000 Almuerzo @Juan @Maria` - and only Juan and Maria will owe Pipi.
+> **Use Case for @mentions:** Log expenses on behalf of others. If Pipi pays for Juan and Maria's lunch (and doesn't eat), Pipi logs: `2000 Almuerzo @Juan @Maria` - and only Juan and Maria will owe Pipi.
+
+### WhatsApp: Natural Language with "con" (AI-Powered)
+
+With AI natural language support, you can use conversational Spanish. The key difference is how **"con" (with)** vs **"@" (mention)** affects who splits:
+
+| Message | Who Splits | Why |
+| :--- | :--- | :--- |
+| `2000 Sushi` | **Everyone** | No one mentioned |
+| `2000 Sushi con Juan` | **Payer + Juan** | "con" implies payer participated |
+| `2000 Sushi @Juan` | **Only Juan** | Explicit mention, payer not included |
+| `2000 Sushi con Juan y Maria` | **Payer + Juan + Maria** | "con" implies payer participated |
+| `2000 Sushi @Juan @Maria` | **Only Juan & Maria** | Explicit mentions only |
+
+> **Key Rule for Natural Language:**
+> - **"con/with"** = You participated → You ARE included in the split
+> - **"@mention"** = Explicit list → You are NOT included (unless you mention yourself)
+
+**More Examples:**
+```
+"50 dólares la cena con Gonzalo"     → Payer + Gonzalo split it
+"50 dólares la cena @Gonzalo"        → Only Gonzalo owes (payer paid FOR him)
+"Gasté 150 en pizza con los chicos"  → Everyone (vague "los chicos")
+"5 lucas el taxi con Juan y María"   → Payer + Juan + María
+"100 para Juan"                      → Only Juan (like @mention)
+"le pagué el almuerzo a Juan"        → Only Juan owes
+```
 
 ### Web Dashboard
 When adding an expense via the dashboard:
@@ -79,10 +133,48 @@ The balance calculation iterates through every expense:
     *   Nico: Paid $0, Share $1000. **Net: -$1000** (Owes Pipi).
     *   Juani: Paid $0, Share $1000. **Net: -$1000** (Owes Pipi).
 
+### Example Scenario 4: Natural language "con" (payer included automatically)
+*   **Users:** Pipi, Nico, Juani.
+*   **Action:** Pipi sends "3000 Cena con Nico" (natural language with "con").
+*   **AI Interpretation:** `includesSender = true` (because of "con")
+*   **Math:**
+    *   Payer: Pipi.
+    *   Participants: Pipi + Nico (2 people, Pipi auto-included).
+    *   Cost per person: $1500.
+*   **Result:**
+    *   Pipi: Paid $3000, Share $1500. **Net: +$1500** (Owed back).
+    *   Nico: Paid $0, Share $1500. **Net: -$1500** (Owes Pipi).
+    *   Juani: Paid $0, Share $0. **Net: $0** (Not involved).
+
+### Example Scenario 5: Explicit @mention (payer NOT included)
+*   **Users:** Pipi, Nico, Juani.
+*   **Action:** Pipi sends "3000 Cena @Nico" (explicit @mention).
+*   **AI Interpretation:** `includesSender = false` (explicit mention)
+*   **Math:**
+    *   Payer: Pipi.
+    *   Participants: Only Nico (1 person, Pipi NOT included).
+    *   Cost per person: $3000.
+*   **Result:**
+    *   Pipi: Paid $3000, Share $0. **Net: +$3000** (Owed back in full).
+    *   Nico: Paid $0, Share $3000. **Net: -$3000** (Owes Pipi everything).
+    *   Juani: Paid $0, Share $0. **Net: $0** (Not involved).
+
+> **Comparison:** Notice how "3000 Cena con Nico" vs "3000 Cena @Nico" produce completely different results:
+> - **"con Nico"** → Pipi + Nico split it (each owes $1500)
+> - **"@Nico"** → Only Nico owes the full $3000
+
 ## 4. Edge Cases
+
+### General
 *   **Unknown Names:** If you type `@Unknown`, the system ignores it. If no valid users are found in the mentions, it falls back to **Everyone**.
-*   **Self-Mention:** If you want to be included in a split expense, you must explicitly mention yourself (e.g., `@Pipi`).
+*   **Self-Mention:** With @mentions, if you want to be included, mention yourself (e.g., `@Pipi`). With "con", you're included automatically.
 *   **Empty Web Selection:** On the dashboard, you must select at least one participant or the form won't submit.
+
+### AI Natural Language
+*   **Vague References:** If AI can't identify specific names (e.g., "con los chicos", "con todos"), it splits among **Everyone**.
+*   **Mixed Patterns:** If message has both "con" and "@" (e.g., "cena con Juan @Maria"), AI prioritizes the dominant pattern.
+*   **Low Confidence:** If AI isn't sure (confidence < 0.7), it falls back to the regex parser.
+*   **AI Timeout:** If AI takes longer than 5 seconds, the system falls back to regex parsing.
 
 ## 5. Payments (Settling Debts)
 

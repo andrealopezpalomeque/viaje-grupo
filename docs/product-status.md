@@ -1,6 +1,6 @@
 # Text the Check - Product Status
 
-**Last updated:** December 28, 2025
+**Last updated:** December 29, 2025
 **Purpose:** Honest assessment for co-founders, investors, and collaborators
 
 ---
@@ -60,6 +60,10 @@
 
 | Feature | Example | Status |
 |---------|---------|--------|
+| **AI Natural Language** | `Gasté 150 en pizza` | ✅ Working |
+| **Argentine Slang** | `5 lucas el taxi` | ✅ Working |
+| **Smart Split ("con")** | `50 cena con Juan` → sender + Juan | ✅ Working |
+| **Explicit Split ("@")** | `50 cena @Juan` → only Juan | ✅ Working |
 | Simple expense | `100 taxi` | ✅ Working |
 | Multi-currency | `USD 50 dinner` | ✅ Working |
 | Split with mentions | `200 lunch @Juan @Maria` | ✅ Working |

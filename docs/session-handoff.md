@@ -1,6 +1,6 @@
 # Text the Check - Session Handoff Document
 
-**Last updated:** December 28, 2025
+**Last updated:** December 29, 2025
 **Purpose:** Context document to start new Claude conversations with full project knowledge
 
 ---
@@ -31,12 +31,28 @@ Paste this at the start of any new Claude conversation:
 
 ### What It Does
 
-Users split expenses during trips by texting a WhatsApp bot:
+Users split expenses during trips by texting a WhatsApp bot using **natural language**:
+
+**Natural language (AI-powered):**
+- `Gasté 150 en pizza` → AI understands and logs expense
+- `50 dólares la cena con Gonzalo` → Sender + Gonzalo split it
+- `5 lucas el taxi` → Understands "lucas" = thousands (5000 ARS)
+- `pagué 200 de nafta` → Natural payment description
+
+**Structured syntax (still works as fallback):**
 - `100 taxi` → Logs expense, splits among everyone in group
-- `USD 50 dinner @Juan @Maria` → Converts currency, splits ONLY among mentioned people
+- `USD 50 dinner @Juan @Maria` → Converts currency, splits ONLY among mentioned
 - `50 cena @Yo @Juan` → Include yourself by mentioning your name
+
+**Split logic ("con" vs "@"):**
+- `50 cena con Juan` → Sender + Juan split it (natural language, "with")
+- `50 cena @Juan` → Only Juan owes (explicit mention, logging for others)
+
+**Payments:**
 - `pagué 5000 @Maria` → Record payment made to Maria
 - `recibí 5000 @Juan` → Record payment received from Juan
+
+**Commands:**
 - `/balance` → Shows who owes whom
 - `/grupo` → Switch between groups
 
@@ -100,14 +116,16 @@ payments/
 
 | File | Purpose |
 |------|---------|
-| `routes/whatsapp.js` | Webhook handler, message routing |
+| `routes/whatsapp.js` | Webhook handler, message routing, AI integration |
+| `services/aiService.ts` | Google Gemini integration for NLP parsing |
+| `prompts/expenseExtraction.ts` | AI system prompts for expense extraction |
 | `services/commandService.ts` | Bot commands (/ayuda, /balance, etc.) |
 | `services/expenseService.ts` | CRUD for expenses |
 | `services/paymentService.ts` | CRUD for payments (settling debts) |
 | `services/userService.ts` | User lookup, group membership |
 | `services/mentionService.ts` | Fuzzy @mention matching (Fuse.js) |
 | `services/exchangeRateService.ts` | DolarApi.com integration |
-| `utils/messageParser.ts` | Parse "100 taxi @Juan" and "pagué 5000 @Maria" |
+| `utils/messageParser.ts` | Regex fallback parser for "100 taxi @Juan" |
 
 ### Key Components (Client)
 
@@ -126,8 +144,17 @@ payments/
 
 ## ✅ What's Built & Working
 
+### AI Natural Language (NEW - December 2025)
+- [x] Google Gemini AI integration for message parsing
+- [x] Argentine Spanish slang support (lucas, k, mangos, birra, morfi, bondi)
+- [x] Natural language expense entry ("gasté 150 en pizza", "50 dólares la cena con juan")
+- [x] Smart split detection ("con Juan" = include sender, "@Juan" = only Juan)
+- [x] Fallback to regex parser if AI fails or has low confidence
+- [x] Confidence threshold (0.7) for AI responses
+- [x] 5-second timeout with automatic fallback
+
 ### WhatsApp Bot
-- [x] Natural language expense entry
+- [x] Natural language expense entry (AI-powered)
 - [x] Multi-currency (USD, EUR, BRL → ARS via DolarApi.com Blue rate)
 - [x] @mention splitting with fuzzy matching (Fuse.js)
 - [x] Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`, `/grupo`
@@ -214,6 +241,9 @@ payments/
 
 | Decision | Choice | Why |
 |----------|--------|-----|
+| AI Provider | Google Gemini 2.0 Flash | Cheap (~$0.02/month), fast (~800ms), good structured output |
+| AI Fallback | Regex parser | Graceful degradation if AI fails/times out |
+| Split detection | "con" vs "@" | Natural language includes sender, explicit @ does not |
 | Exchange rate API | DolarApi.com | Free, has Blue Dollar, supports EUR/BRL |
 | Fuzzy matching | Fuse.js | Lightweight, handles typos and accents |
 | Auth | Google (Firebase Auth) | Simple, most users have Google |
@@ -262,14 +292,17 @@ payments/
 └── components/                 # UI components
 
 /server
-├── src/routes/whatsapp.js      # Webhook handler
+├── src/routes/whatsapp.js      # Webhook handler, AI integration
 ├── src/services/
+│   ├── aiService.ts            # Gemini AI integration (NEW)
 │   ├── commandService.ts       # Bot commands
 │   ├── expenseService.ts       # Expense CRUD
 │   ├── userService.ts          # User/group queries
 │   ├── mentionService.ts       # @mention matching
 │   └── exchangeRateService.ts  # Currency conversion
-├── src/utils/messageParser.ts  # Message parsing
+├── src/prompts/
+│   └── expenseExtraction.ts    # AI system prompts (NEW)
+├── src/utils/messageParser.ts  # Regex fallback parser
 ├── scripts/
 │   ├── seedUsers.ts            # Seed Brazil Trip 2025
 │   ├── seedTestGroup.ts        # Seed Demo Group
@@ -303,6 +336,12 @@ ALLOWED_PHONE_NUMBERS=+5493794702813,+5493794702875,...
 FIREBASE_PROJECT_ID=xxx
 FIREBASE_CLIENT_EMAIL=xxx
 FIREBASE_PRIVATE_KEY=xxx
+
+# AI / Gemini (NEW)
+GEMINI_API_KEY=xxx
+AI_ENABLED=true
+AI_CONFIDENCE_THRESHOLD=0.7
+AI_TIMEOUT_MS=5000
 
 # Server
 PORT=4000
@@ -359,14 +398,16 @@ git push origin main
 
 ---
 
-## 🎯 Next Steps (As of December 28, 2025)
+## 🎯 Next Steps (As of December 29, 2025)
 
 1. **Done:** Splitting logic redesign - payer not auto-included (see `docs/splitting-logic.md`)
 2. **Done:** Payment recording feature - WhatsApp commands + dashboard button
 3. **Done:** Activity feed shows both expenses and payments
-4. **Test:** Verify payment feature with test groups
-5. **Parallel:** Research WhatsApp Business verification process
-6. **After testing:** Build self-registration and group creation features
+4. **Done:** AI natural language parsing with Gemini (see `docs/ai-natural-language.md`)
+5. **Done:** Smart split detection ("con" vs "@")
+6. **Test:** Real trip testing scheduled for January 2025
+7. **Parallel:** Research WhatsApp Business verification process
+8. **After testing:** Build self-registration and group creation features
 
 ---
 
