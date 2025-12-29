@@ -99,14 +99,13 @@ export async function parseMessageWithAI(
   const startTime = Date.now()
 
   try {
+    // Get the Gemini client
+    const ai = getGenAI()
+    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+
     // Log input
     console.log('[AI] Input:', message)
     console.log('[AI] Group members:', groupMemberNames)
-
-    // Get the Gemini client
-    const ai = getGenAI()
-    // Use gemini-2.0-flash-exp (latest flash model as of Dec 2025)
-    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // Build the prompt
     const systemPrompt = buildExtractionPrompt(groupMemberNames)
