@@ -722,7 +722,15 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
   if (aiResult.splitAmong && aiResult.splitAmong.length > 0 && groupId) {
     const groupMembers = await getGroupMembers(groupId)
     resolvedSplitAmong = resolveMentionsToUserIds(aiResult.splitAmong, groupMembers)
-    displayNames = aiResult.splitAmong
+    displayNames = [...aiResult.splitAmong]
+
+    // If includesSender is true (natural language like "con Juan"),
+    // add the sender to the split if not already included
+    if (aiResult.includesSender && !resolvedSplitAmong.includes(user.id)) {
+      resolvedSplitAmong.push(user.id)
+      // Add sender's name to display names for confirmation message
+      displayNames.push(user.name)
+    }
   }
 
   // 4. Auto-categorize based on description

@@ -17,6 +17,7 @@ export interface AIExpenseResult {
   currency: 'ARS' | 'USD' | 'EUR' | 'BRL'
   description: string
   splitAmong: string[]  // Raw names/mentions to resolve
+  includesSender: boolean  // Whether the sender should be included in the split
   confidence: number
 }
 
@@ -205,6 +206,11 @@ function validateExpenseResult(parsed: Record<string, unknown>): AIExpenseResult
   const splitAmong = Array.isArray(parsed.splitAmong)
     ? parsed.splitAmong.filter((s): s is string => typeof s === 'string')
     : []
+  // Default to true when no mentions (split among everyone including sender)
+  // or when not specified (backwards compatibility)
+  const includesSender = typeof parsed.includesSender === 'boolean'
+    ? parsed.includesSender
+    : true
   const confidence = typeof parsed.confidence === 'number'
     ? Math.min(1, Math.max(0, parsed.confidence))
     : 0.5
@@ -215,6 +221,7 @@ function validateExpenseResult(parsed: Record<string, unknown>): AIExpenseResult
     currency,
     description,
     splitAmong,
+    includesSender,
     confidence
   }
 }

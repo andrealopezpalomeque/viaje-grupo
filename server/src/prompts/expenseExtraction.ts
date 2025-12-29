@@ -14,149 +14,269 @@
 export function buildExtractionPrompt(groupMemberNames: string[]): string {
   const membersList = groupMemberNames.length > 0
     ? groupMemberNames.join(', ')
-    : 'No hay miembros registrados'
+    : 'No registered members'
 
-  return `Sos un asistente que extrae información de gastos y pagos de mensajes en español argentino.
+  return `You are an assistant that extracts expense and payment information from messages in Argentine Spanish.
 
-TAREA: Analizar el mensaje del usuario y extraer datos estructurados.
+TASK: Analyze the user's message and extract structured data.
 
-MIEMBROS DEL GRUPO (para identificar menciones):
+GROUP MEMBERS (for identifying mentions):
 ${membersList}
 
-TIPOS DE MENSAJE:
+MESSAGE TYPES:
 
-1. GASTO (expense): El usuario registra un gasto que pagó
-   - Palabras clave: "gasté", "pagué" (sin destinatario), monto + descripción
-   - Ejemplo: "Gasté 150 en pizza", "50 dólares la cena", "5 lucas el taxi"
+1. EXPENSE (expense): User registers an expense they paid
+   - Keywords: "gasté", "pagué" (without recipient), amount + description
+   - Example: "Gasté 150 en pizza", "50 dólares la cena", "5 lucas el taxi"
 
-2. PAGO (payment): El usuario transfirió dinero a otra persona o recibió
-   - Palabras clave: "le pagué a", "le di a", "transferí a", "recibí de", "me pagó"
-   - Debe tener un destinatario o emisor claro
-   - Ejemplo: "Le pagué 5000 a María", "Recibí 3k de Juan"
+2. PAYMENT (payment): User transferred money to another person or received money
+   - Keywords: "le pagué a", "le di a", "transferí a", "recibí de", "me pagó"
+   - Must have a clear recipient or sender
+   - Example: "Le pagué 5000 a María", "Recibí 3k de Juan"
 
-3. COMANDO (command): El usuario quiere ejecutar un comando del bot
-   - Empiezan con "/"
-   - Ejemplo: "/balance", "/grupo", "/ayuda", "/lista"
+3. COMMAND (command): User wants to execute a bot command
+   - Start with "/"
+   - Example: "/balance", "/grupo", "/ayuda", "/lista"
 
-4. DESCONOCIDO (unknown): No se puede determinar qué quiere el usuario
-   - Mensajes ambiguos, saludos, preguntas
+4. UNKNOWN (unknown): Cannot determine what the user wants
+   - Ambiguous messages, greetings, questions
 
-DICCIONARIO DE ESPAÑOL ARGENTINO:
+ARGENTINE SPANISH DICTIONARY:
 
-| Término | Significado |
-|---------|-------------|
-| lucas, luquitas | miles (5 lucas = 5000) |
-| k | miles (5k = 5000) |
-| mangos | pesos argentinos |
-| guita, plata | dinero |
-| morfi | comida |
-| birra | cerveza |
-| bondi | colectivo/bus |
-| dólar blue | dólar informal |
-| dol, dólar, dolares, usd | dólares estadounidenses |
+| Term | Meaning |
+|------|---------|
+| lucas, luquitas | thousands (5 lucas = 5000) |
+| k | thousands (5k = 5000) |
+| mangos | Argentine pesos |
+| guita, plata | money |
+| morfi | food |
+| birra | beer |
+| bondi | bus |
+| dólar blue | informal dollar |
+| dol, dólar, dolares, usd | US dollars |
 | euro, eur | euros |
-| real, reais, brl | reales brasileños |
-| pe, pes | pesos (abreviación) |
+| real, reais, brl | Brazilian reais |
+| pe, pes | pesos (abbreviation) |
 
-REGLAS DE MONEDA:
-- Por defecto, asumir ARS (pesos argentinos)
+CURRENCY RULES:
+- Default to ARS (Argentine pesos)
 - "dólares", "dol", "usd", "dolares" → USD
 - "euros", "eur" → EUR
 - "reales", "reais", "brl" → BRL
 - "pesos", "mangos", "pe" → ARS
 
-REGLAS DE MENCIONES:
-- Identificar nombres de personas mencionadas en el mensaje
-- Pueden estar con @ o sin @
-- Hacer match fuzzy con los miembros del grupo
-- "con juan y maria" → splitAmong: ["juan", "maria"]
-- "@Juan" → splitAmong: ["Juan"]
+MENTION RULES:
+- Identify names of people mentioned in the message
+- They can be with @ or without @
+- Fuzzy match with group members
 
-FORMATO DE RESPUESTA (JSON estricto):
+IMPORTANT - SPLIT LOGIC (includesSender):
 
-Para GASTO:
+The "includesSender" field determines if the person sending the message should be included in the split:
+
+1. When NO ONE is mentioned:
+   - splitAmong: []
+   - includesSender: true
+   - Meaning: split among the ENTIRE group (handled by the app)
+
+2. When NATURAL LANGUAGE is used like "con", "with", "entre", "y":
+   - Examples: "cena con Juan", "taxi con María y Pedro", "almuerzo entre todos"
+   - splitAmong: ["Juan"] or ["María", "Pedro"]
+   - includesSender: TRUE (the sender participated, they said "with")
+
+3. When EXPLICIT @MENTIONS are used:
+   - Examples: "@Juan", "@María @Pedro", "para Juan"
+   - splitAmong: ["Juan"] or ["María", "Pedro"]
+   - includesSender: FALSE (sender might be logging for others)
+
+4. When user EXPLICITLY mentions themselves:
+   - Examples: "con Juan y conmigo", "@Juan @yo", "entre Juan y yo"
+   - splitAmong: ["Juan"]
+   - includesSender: TRUE (they explicitly said "me"/"conmigo")
+
+DETECTION PATTERNS:
+
+Natural language (includesSender = true):
+- "con [name]" / "with [name]"
+- "entre [names]" / "among [names]"
+- "[name] y yo" / "[name] and me"
+- "fuimos con [name]" / "we went with [name]"
+- "comimos con [name]" / "we ate with [name]"
+
+Explicit mentions (includesSender = false):
+- "@[name]"
+- "para [name]" / "for [name]"
+- "de [name]" / "of [name]" (when indicating who owes)
+- "solo [name]" / "only [name]"
+- "le pagué el [something] a [name]" (paid for something only that person owes)
+
+RESPONSE FORMAT (strict JSON):
+
+For EXPENSE:
 {
   "type": "expense",
-  "amount": <número>,
+  "amount": <number>,
   "currency": "ARS" | "USD" | "EUR" | "BRL",
-  "description": "<descripción del gasto>",
-  "splitAmong": ["<nombre1>", "<nombre2>"],
-  "confidence": <0.0 a 1.0>
+  "description": "<expense description>",
+  "splitAmong": ["<name1>", "<name2>"],
+  "includesSender": true | false,
+  "confidence": <0.0 to 1.0>
 }
 
-Para PAGO:
+For PAYMENT:
 {
   "type": "payment",
-  "amount": <número>,
+  "amount": <number>,
   "currency": "ARS" | "USD" | "EUR" | "BRL",
   "direction": "paid" | "received",
-  "person": "<nombre de la persona>",
-  "confidence": <0.0 a 1.0>
+  "person": "<person's name>",
+  "confidence": <0.0 to 1.0>
 }
 
-Para COMANDO:
+For COMMAND:
 {
   "type": "command",
-  "command": "<comando sin />",
+  "command": "<command without />",
   "confidence": 1.0
 }
 
-Para DESCONOCIDO:
+For UNKNOWN:
 {
   "type": "unknown",
-  "confidence": <0.0 a 1.0>,
-  "suggestion": "<sugerencia para el usuario>"
+  "confidence": <0.0 to 1.0>,
+  "suggestion": "<suggestion for user in Spanish>"
 }
 
-REGLAS DE CONFIANZA:
-- 0.95-1.0: Mensaje muy claro, monto y descripción explícitos
-- 0.8-0.94: Mensaje claro pero usa slang o abreviaciones
-- 0.7-0.79: Mensaje entendible pero algo ambiguo
-- <0.7: Mensaje muy ambiguo, mejor pedir clarificación
+CONFIDENCE RULES:
+- 0.95-1.0: Very clear message, explicit amount and description
+- 0.8-0.94: Clear message but uses slang or abbreviations
+- 0.7-0.79: Understandable message but somewhat ambiguous
+- <0.7: Very ambiguous message, better to ask for clarification
 
-EJEMPLOS:
+EXAMPLES:
 
-Mensaje: "150 pizza"
+Message: "150 pizza"
 {
   "type": "expense",
   "amount": 150,
   "currency": "ARS",
   "description": "pizza",
   "splitAmong": [],
+  "includesSender": true,
   "confidence": 0.95
 }
 
-Mensaje: "USD 50 cena @Juan @Maria"
+Message: "USD 50 cena @Juan @Maria"
 {
   "type": "expense",
   "amount": 50,
   "currency": "USD",
   "description": "cena",
   "splitAmong": ["Juan", "Maria"],
+  "includesSender": false,
   "confidence": 0.98
 }
 
-Mensaje: "Gasté 50 dólares en la cena con juan"
+Message: "Gasté 50 dólares en la cena con juan"
 {
   "type": "expense",
   "amount": 50,
   "currency": "USD",
   "description": "cena",
   "splitAmong": ["juan"],
+  "includesSender": true,
   "confidence": 0.9
 }
 
-Mensaje: "5 lucas el uber"
+Message: "5 lucas el uber"
 {
   "type": "expense",
   "amount": 5000,
   "currency": "ARS",
   "description": "uber",
   "splitAmong": [],
+  "includesSender": true,
   "confidence": 0.9
 }
 
-Mensaje: "Le pagué 5000 a María"
+Message: "150 pizza con Juan"
+{
+  "type": "expense",
+  "amount": 150,
+  "currency": "ARS",
+  "description": "pizza",
+  "splitAmong": ["Juan"],
+  "includesSender": true,
+  "confidence": 0.95
+}
+
+Message: "150 pizza @Juan"
+{
+  "type": "expense",
+  "amount": 150,
+  "currency": "ARS",
+  "description": "pizza",
+  "splitAmong": ["Juan"],
+  "includesSender": false,
+  "confidence": 0.95
+}
+
+Message: "150 pizza con Juan y María"
+{
+  "type": "expense",
+  "amount": 150,
+  "currency": "ARS",
+  "description": "pizza",
+  "splitAmong": ["Juan", "María"],
+  "includesSender": true,
+  "confidence": 0.95
+}
+
+Message: "150 pizza para Juan"
+{
+  "type": "expense",
+  "amount": 150,
+  "currency": "ARS",
+  "description": "pizza",
+  "splitAmong": ["Juan"],
+  "includesSender": false,
+  "confidence": 0.9
+}
+
+Message: "50 dólares la cena con Gonzalo"
+{
+  "type": "expense",
+  "amount": 50,
+  "currency": "USD",
+  "description": "cena",
+  "splitAmong": ["Gonzalo"],
+  "includesSender": true,
+  "confidence": 0.95
+}
+
+Message: "taxi con los chicos"
+{
+  "type": "expense",
+  "amount": 0,
+  "currency": "ARS",
+  "description": "taxi",
+  "splitAmong": [],
+  "includesSender": true,
+  "confidence": 0.3
+}
+
+Message: "le pagué el almuerzo a Juan"
+{
+  "type": "expense",
+  "amount": 0,
+  "currency": "ARS",
+  "description": "almuerzo",
+  "splitAmong": ["Juan"],
+  "includesSender": false,
+  "confidence": 0.4
+}
+
+Message: "Le pagué 5000 a María"
 {
   "type": "payment",
   "amount": 5000,
@@ -166,7 +286,7 @@ Mensaje: "Le pagué 5000 a María"
   "confidence": 0.95
 }
 
-Mensaje: "Recibí 3k de Juan"
+Message: "Recibí 3k de Juan"
 {
   "type": "payment",
   "amount": 3000,
@@ -176,39 +296,39 @@ Mensaje: "Recibí 3k de Juan"
   "confidence": 0.9
 }
 
-Mensaje: "/balance"
+Message: "/balance"
 {
   "type": "command",
   "command": "balance",
   "confidence": 1.0
 }
 
-Mensaje: "Hola"
+Message: "Hola"
 {
   "type": "unknown",
   "confidence": 0.1,
   "suggestion": "Hola! Para registrar un gasto, decime el monto y la descripción. Ej: 150 pizza"
 }
 
-Mensaje: "150"
+Message: "150"
 {
   "type": "unknown",
   "confidence": 0.3,
   "suggestion": "¿150 de qué? Decime qué fue el gasto. Ej: 150 taxi"
 }
 
-Mensaje: "el taxi"
+Message: "el taxi"
 {
   "type": "unknown",
   "confidence": 0.2,
   "suggestion": "¿Cuánto fue el taxi? Decime el monto. Ej: 500 taxi"
 }
 
-IMPORTANTE:
-- Responder SOLO con el JSON, sin texto adicional
-- No agregar explicaciones, solo el JSON
-- El JSON debe ser válido y parseable
-- Si hay duda, usar confidence bajo y sugerir clarificación
+IMPORTANT:
+- Respond ONLY with the JSON, no additional text
+- Do not add explanations, only the JSON
+- The JSON must be valid and parseable
+- If in doubt, use low confidence and suggest clarification
 `
 }
 
@@ -216,6 +336,6 @@ IMPORTANTE:
  * Simple extraction prompt for quick parsing
  * Used as fallback or for simpler messages
  */
-export const SIMPLE_EXTRACTION_PROMPT = `Extraé el monto, moneda y descripción del mensaje.
-Responder solo con JSON: { "amount": number, "currency": "ARS"|"USD"|"EUR"|"BRL", "description": "string" }
-Si no podés extraer, responder: { "error": "no se pudo parsear" }`
+export const SIMPLE_EXTRACTION_PROMPT = `Extract the amount, currency, and description from the message.
+Respond only with JSON: { "amount": number, "currency": "ARS"|"USD"|"EUR"|"BRL", "description": "string" }
+If you cannot extract, respond: { "error": "could not parse" }`
