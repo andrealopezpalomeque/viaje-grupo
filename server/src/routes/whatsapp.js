@@ -155,32 +155,45 @@ function verifyWebhookSignature(req, res, next) {
 /**
  * Get welcome message for new users
  * Sent on first WhatsApp interaction
+ * @param userName - User's full name
+ * @param groups - Array of groups the user belongs to
  */
-function getWelcomeMessage(userName) {
+function getWelcomeMessage(userName, groups = []) {
   const firstName = userName?.split(' ')[0] || 'Hola'
+
+  // Build group info section
+  let groupInfo = ''
+  if (groups.length === 1) {
+    groupInfo = `\n📍 Estás en el grupo: *${groups[0].name}*\n`
+  } else if (groups.length > 1) {
+    const groupNames = groups.map(g => g.name).join(', ')
+    groupInfo = `\n📍 Estás en los grupos: *${groupNames}*\nUsá /grupo para cambiar entre ellos.\n`
+  }
+
   return `¡Hola ${firstName}! 👋 Bienvenido a *Text the Check*
 
-Soy tu bot para dividir gastos. Hablame natural:
+Soy tu bot para dividir gastos entre amigos.${groupInfo}
 
-📝 *Registrar gastos:*
-- "150 pizza" → divide entre todos
-- "50 dólares cena con Juan" → divide con Juan
-- "5 lucas taxi @María @Pedro" → solo ellos
+💬 *Simplemente contame qué pagaste:*
+"Puse 5 lucas en el súper"
+"Pagué la cena, 12000"
+"Gasté 50 dólares en nafta con Juan"
 
-💸 *Registrar pagos:*
-- "pagué 5000 @María" → pagaste a María
-- "recibí 3000 @Juan" → recibiste de Juan
+La IA entiende lo que escribas y te pide confirmar antes de guardar.
 
-⚡ *Comandos rápidos:*
-- /balance → quién debe a quién
-- /grupo → cambiar de grupo
-- /ayuda → más opciones
+💸 *Para registrar pagos entre ustedes:*
+"Le pagué 5000 a María"
+"Recibí 3000 de Juan"
+
+⚡ *Comandos:*
+/balance → quién debe a quién
+/lista → ver últimos gastos
+/ayuda → más opciones
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
-💡 *Consejo:* Para ver los balances con más detalle, info de pagos y un historial completo, entrá al dashboard:
-
-🌐 *textthecheck.app*
+📊 Para editar gastos, ver detalles de pagos e historial completo:
+https://textthecheck.app
 
 ¡Empezá a cargar gastos! 🎉`
 }
@@ -334,7 +347,9 @@ async function handleTextMessage(from, text, messageId) {
 
   // 3. Check if this is the user's first interaction (send welcome message)
   if (!user.welcomedAt) {
-    await sendMessage(from, getWelcomeMessage(user.name))
+    // Get user's groups to include in welcome message
+    const userGroups = await getAllGroupsByUserId(user.id)
+    await sendMessage(from, getWelcomeMessage(user.name, userGroups))
     await markUserAsWelcomed(user.id)
     // Don't process first message - let them read the welcome first
     return
