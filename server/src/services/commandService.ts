@@ -138,7 +138,12 @@ export function getHelpMessage(): string {
 /balance - Ver saldos
 /lista - Ver últimos gastos
 /borrar [n] - Eliminar gasto
-/ayuda - Ver esta ayuda`
+/ayuda - Ver esta ayuda
+
+━━━━━━━━━━━━━━━━━━━━━━
+
+💡 También podés ver todo en el dashboard:
+🌐 textthecheck.app`
 }
 
 /**

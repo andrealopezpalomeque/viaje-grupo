@@ -161,21 +161,27 @@ function getWelcomeMessage(userName) {
   const firstName = userName?.split(' ')[0] || 'Hola'
   return `¡Hola ${firstName}! 👋 Bienvenido a *Text the Check*
 
-Soy tu bot para dividir gastos de viaje. Así funciona:
+Soy tu bot para dividir gastos. Hablame natural:
 
-*Registrar gastos:*
-• \`150 pizza\` → divide entre todos
-• \`USD 50 cena @Juan @Maria\` → divide entre mencionados
-• \`BRL 200 uber\` → convierte a pesos argentinos (USD, EUR, BRL)
+📝 *Registrar gastos:*
+- "150 pizza" → divide entre todos
+- "50 dólares cena con Juan" → divide con Juan
+- "5 lucas taxi @María @Pedro" → solo ellos
 
-*Comandos útiles:*
-• /balance → ver quién debe a quién
-• /lista → ver últimos gastos
-• /grupo → cambiar de grupo
-• /ayuda → ver todas las opciones
+💸 *Registrar pagos:*
+- "pagué 5000 @María" → pagaste a María
+- "recibí 3000 @Juan" → recibiste de Juan
 
-También podés ver todo en el dashboard:
-🌐 https://textthecheck.app
+⚡ *Comandos rápidos:*
+- /balance → quién debe a quién
+- /grupo → cambiar de grupo
+- /ayuda → más opciones
+
+━━━━━━━━━━━━━━━━━━━━━━
+
+💡 *Consejo:* Para ver los balances con más detalle, info de pagos y un historial completo, entrá al dashboard:
+
+🌐 *textthecheck.app*
 
 ¡Empezá a cargar gastos! 🎉`
 }
