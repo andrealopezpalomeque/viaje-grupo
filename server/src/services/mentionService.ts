@@ -48,7 +48,7 @@ interface SearchableUser {
 function prepareUsersForSearch(users: User[]): SearchableUser[] {
   return users.map(user => ({
     user,
-    aliases: user.aliases.map(a => normalizeText(a)),
+    aliases: (user.aliases || []).map(a => normalizeText(a)),
     normalizedName: normalizeText(user.name)
   }))
 }

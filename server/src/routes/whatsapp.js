@@ -392,8 +392,12 @@ async function handleTextMessage(from, text, messageId) {
   if (isAIEnabled() && groupId) {
     try {
       const groupMembers = await getGroupMembers(groupId)
-      const memberNames = groupMembers.map(m => m.name)
-      const aiResult = await parseMessageWithAI(text, memberNames)
+      // Pass member names WITH aliases so AI can recognize nicknames
+      const memberInfos = groupMembers.map(m => ({
+        name: m.name,
+        aliases: m.aliases || []
+      }))
+      const aiResult = await parseMessageWithAI(text, memberInfos)
 
       const confidenceThreshold = getConfidenceThreshold()
 

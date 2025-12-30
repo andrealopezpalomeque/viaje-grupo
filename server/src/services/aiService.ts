@@ -8,7 +8,10 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { buildExtractionPrompt } from '../prompts/expenseExtraction.js'
+import { buildExtractionPrompt, type MemberInfo } from '../prompts/expenseExtraction.js'
+
+// Re-export MemberInfo for callers
+export type { MemberInfo } from '../prompts/expenseExtraction.js'
 
 // Types for AI responses
 export interface AIExpenseResult {
@@ -90,12 +93,12 @@ export function getConfidenceThreshold(): number {
  * Parse a message using AI
  *
  * @param message - The user's message
- * @param groupMemberNames - Names of group members for context
+ * @param groupMembers - Members with names and aliases for context
  * @returns Parsed result with type, data, and confidence
  */
 export async function parseMessageWithAI(
   message: string,
-  groupMemberNames: string[]
+  groupMembers: MemberInfo[]
 ): Promise<AIParseResult> {
   const startTime = Date.now()
 
@@ -106,10 +109,10 @@ export async function parseMessageWithAI(
 
     // Log input
     console.log('[AI] Input:', message)
-    console.log('[AI] Group members:', groupMemberNames)
+    console.log('[AI] Group members:', groupMembers.map(m => `${m.name} (${(m.aliases || []).join(', ')})`))
 
     // Build the prompt
-    const systemPrompt = buildExtractionPrompt(groupMemberNames)
+    const systemPrompt = buildExtractionPrompt(groupMembers)
 
     // Create the request with timeout
     const result = await Promise.race([

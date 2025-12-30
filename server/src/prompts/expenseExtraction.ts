@@ -6,15 +6,34 @@
  */
 
 /**
+ * Member info for AI context
+ */
+export interface MemberInfo {
+  name: string
+  aliases: string[]
+}
+
+/**
  * Build the system prompt for expense/payment extraction
  *
- * @param groupMemberNames - Names of group members for context
+ * @param groupMembers - Members with names and aliases for context
  * @returns Complete system prompt
  */
-export function buildExtractionPrompt(groupMemberNames: string[]): string {
-  const membersList = groupMemberNames.length > 0
-    ? groupMemberNames.join(', ')
-    : 'No registered members'
+export function buildExtractionPrompt(groupMembers: MemberInfo[]): string {
+  let membersList: string
+  if (groupMembers.length === 0) {
+    membersList = 'No registered members'
+  } else {
+    // Format each member with their aliases
+    // Example: "Gonzalo Soria (aliases: Gonza, Gordo)"
+    membersList = groupMembers.map(m => {
+      const aliases = m.aliases || []
+      if (aliases.length > 0) {
+        return `${m.name} (aliases: ${aliases.join(', ')})`
+      }
+      return m.name
+    }).join('\n')
+  }
 
   return `You are an assistant that extracts expense and payment information from messages in Argentine Spanish.
 
@@ -68,6 +87,8 @@ CURRENCY RULES:
 MENTION RULES:
 - Identify names of people mentioned in the message
 - They can be with @ or without @
+- Match against both full names AND aliases (e.g., "Gonza" matches "Gonzalo Soria")
+- Use the exact name or alias as it appears in the message for splitAmong
 - Fuzzy match with group members
 
 IMPORTANT - SPLIT LOGIC (includesSender):
