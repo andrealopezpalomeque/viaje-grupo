@@ -811,7 +811,10 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
 
   // 4. REJECT if there are unresolved names (don't allow partial splits)
   if (unresolvedNames.length > 0) {
-    let errorMsg = `⚠️ *No pude encontrar a estas personas en el grupo:*\n`
+    const isSingular = unresolvedNames.length === 1
+    let errorMsg = isSingular
+      ? `⚠️ *No pude encontrar a esta persona en el grupo:*\n`
+      : `⚠️ *No pude encontrar a estas personas en el grupo:*\n`
     for (const name of unresolvedNames) {
       errorMsg += `• ${name}\n`
     }
