@@ -85,11 +85,12 @@ CURRENCY RULES:
 - "pesos", "mangos", "pe" → ARS
 
 MENTION RULES:
-- Identify names of people mentioned in the message
+- Identify ALL names of people mentioned in the message
+- Include EVERY name in splitAmong, even if it doesn't match any group member
+- The app will handle matching and warn about unrecognized names
 - They can be with @ or without @
-- Match against both full names AND aliases (e.g., "Gonza" matches "Gonzalo Soria")
 - Use the exact name or alias as it appears in the message for splitAmong
-- Fuzzy match with group members
+- Examples: "cena con gonza y xyz123" → splitAmong: ["gonza", "xyz123"]
 
 IMPORTANT - SPLIT LOGIC (includesSender):
 
