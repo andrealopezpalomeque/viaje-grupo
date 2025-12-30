@@ -16,7 +16,7 @@ Split expenses with friends during trips. Add expenses via WhatsApp, see balance
 - **Unresolved Name Check**: Rejects expense if any mentioned name can't be found
 - **Multi-currency**: USD, EUR, BRL auto-converted to ARS (Blue Dollar rate)
 - **Payment Recording**: `pagué 5000 @Maria` or `recibí 5000 @Juan`
-- **Bot Commands**: `/balance`, `/lista`, `/borrar`, `/grupo`, `/ayuda`
+- **Bot Commands**: `/balance`, `/lista`, `/grupo`, `/ayuda`
 
 ### Web Dashboard
 - **Real-time Updates**: Firebase Firestore syncs instantly across devices
@@ -160,8 +160,9 @@ Users can send expenses in natural language (AI-powered):
 | `/ayuda` or `/help` | Show usage instructions |
 | `/balance` or `/saldo` | Show group balances (who owes whom) |
 | `/lista` or `/list` | Show last 10 expenses |
-| `/borrar [n]` or `/delete [n]` | Delete expense by number |
 | `/grupo` or `/group` | Switch between groups (for multi-group users) |
+
+> **Note:** Edit and delete operations are dashboard-only. The bot redirects users to textthecheck.app for these actions.
 
 ## Scripts
 

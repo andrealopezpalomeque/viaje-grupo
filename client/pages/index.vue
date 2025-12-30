@@ -46,6 +46,8 @@
               show-add-button
               empty-message="No tenes actividad aun"
               @add-expense="openExpenseModal"
+              @edit-expense="handleEditExpense"
+              @delete-expense="confirmDeleteExpense"
             />
           </div>
 
@@ -78,6 +80,8 @@
               title="Actividad del Grupo"
               show-count
               :limit="10"
+              @edit-expense="handleEditExpense"
+              @delete-expense="confirmDeleteExpense"
             />
           </div>
         </div>
@@ -96,11 +100,22 @@
       :user="paymentModalUser"
       @close="closePaymentModal"
     />
+
+    <!-- Delete Confirmation Dialog -->
+    <ConfirmDialog
+      v-model="showDeleteConfirm"
+      title="Eliminar Gasto"
+      :message="deleteConfirmMessage"
+      confirm-text="Eliminar"
+      cancel-text="Cancelar"
+      variant="danger"
+      @confirm="handleDeleteExpense"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { User, Settlement } from '~/types'
+import type { User, Settlement, Expense } from '~/types'
 
 definePageMeta({
   middleware: ['auth'],
@@ -112,7 +127,7 @@ const expenseStore = useExpenseStore()
 const paymentStore = usePaymentStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
-const { activeTab, openExpenseModal } = useNavigationState()
+const { activeTab, openExpenseModal, openEditExpenseModal } = useNavigationState()
 const { filterByPerson, filterByPayer } = useExpenseFilters()
 
 // Start with loading = true, only set to false when we KNOW data is ready
@@ -237,5 +252,36 @@ const showPaymentInfo = (userId: string) => {
 const closePaymentModal = () => {
   showPaymentModal.value = false
   paymentModalUser.value = null
+}
+
+// Delete expense
+const showDeleteConfirm = ref(false)
+const expenseToDelete = ref<Expense | null>(null)
+
+const deleteConfirmMessage = computed(() => {
+  if (!expenseToDelete.value) return ''
+  return `¿Estas seguro de que queres eliminar "${expenseToDelete.value.description}" por ${formatCurrency(expenseToDelete.value.amount)}? Esta accion no se puede deshacer.`
+})
+
+const confirmDeleteExpense = (expense: Expense) => {
+  expenseToDelete.value = expense
+  showDeleteConfirm.value = true
+}
+
+const handleDeleteExpense = async () => {
+  if (!expenseToDelete.value?.id) return
+
+  try {
+    await expenseStore.deleteExpense(expenseToDelete.value.id)
+  } catch (error) {
+    console.error('Error deleting expense:', error)
+  } finally {
+    expenseToDelete.value = null
+  }
+}
+
+// Edit expense
+const handleEditExpense = (expense: Expense) => {
+  openEditExpenseModal(expense)
 }
 </script>

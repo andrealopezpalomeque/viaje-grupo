@@ -33,7 +33,7 @@
 |------------|:--------:|:---------:|-------|
 | **Create** expense | ✅ Natural language | ✅ Form | Both work |
 | **View** expenses | ✅ `/lista` | ✅ Feed | Both work |
-| **Delete** expense | ✅ `/borrar N` | ✅ Button | Both work |
+| **Delete** expense | ❌ | ✅ Button | Dashboard only |
 | **Edit** expense | ❌ | ✅ Form | Dashboard only |
 | **Create** payment | ✅ `pagué/recibí` | ✅ Button | Both work |
 | **View** balances | ✅ `/balance` | ✅ Summary | Both work |
@@ -53,13 +53,13 @@
 - ✅ View expense list (/lista)
 - ✅ Record payments ("pagué 5000 @María")
 - ✅ Switch groups (/grupo)
-- ✅ Delete their own expenses (/borrar 1)
 
 ### What Juan CANNOT Do:
 - ❌ Access textthecheck.app (requires Google Auth with linked email)
 - ❌ See settlement recommendations with payment info
 - ❌ See other members' payment details (CBU, alias)
 - ❌ Edit expenses (amount, description, split)
+- ❌ Delete expenses (must use dashboard)
 
 **Is this OK?** ✅ YES - This is the core use case! Most users will be WhatsApp-only.
 
@@ -112,15 +112,14 @@ All data syncs in real-time via Firestore:
 
 | Does | Doesn't |
 |------|---------|
-| ✅ Log expenses (AI natural language) | ❌ Edit expenses |
-| ✅ Log payments | ❌ Edit payments |
-| ✅ Delete expenses (`/borrar N`) | ❌ Complex multi-step flows |
-| ✅ View balances (`/balance`) | ❌ Settlement calculations |
-| ✅ View expenses (`/lista`) | ❌ Payment info display |
-| ✅ Switch groups (`/grupo`) | |
-| ✅ Get help (`/ayuda`) | |
+| ✅ Log expenses (AI natural language) | ❌ Edit expenses (dashboard only) |
+| ✅ Log payments | ❌ Delete expenses (dashboard only) |
+| ✅ View balances (`/balance`) | ❌ Edit payments |
+| ✅ View expenses (`/lista`) | ❌ Complex multi-step flows |
+| ✅ Switch groups (`/grupo`) | ❌ Settlement calculations |
+| ✅ Get help (`/ayuda`) | ❌ Payment info display |
 
-**Design principle:** Bot does ONE thing well - log expenses quickly with minimal friction.
+**Design principle:** Bot does ONE thing well - log expenses quickly with minimal friction. Edit/delete operations require the dashboard for a better UX.
 
 ---
 

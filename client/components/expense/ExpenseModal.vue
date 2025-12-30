@@ -27,7 +27,7 @@
               <!-- Header -->
               <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Agregar gasto
+                  {{ isEditMode ? 'Editar gasto' : 'Agregar gasto' }}
                 </h3>
                 <button
                   @click="handleClose"
@@ -153,7 +153,7 @@
                     class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-xl transition-colors"
                   >
                     <span v-if="loading">Guardando...</span>
-                    <span v-else>Agregar</span>
+                    <span v-else>{{ isEditMode ? 'Guardar cambios' : 'Agregar' }}</span>
                   </button>
                 </div>
               </form>
@@ -170,13 +170,14 @@ import IconClose from '~icons/mdi/close'
 
 import type { ExpenseCategory } from '~/types'
 
-const { isExpenseModalOpen, closeExpenseModal } = useNavigationState()
+const { isExpenseModalOpen, closeExpenseModal, expenseModalMode, expenseToEdit } = useNavigationState()
 const { user, firestoreUser } = useAuth()
 const expenseStore = useExpenseStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 
 const isOpen = computed(() => isExpenseModalOpen.value)
+const isEditMode = computed(() => expenseModalMode.value === 'edit')
 const users = computed(() => userStore.users)
 
 const loading = ref(false)
@@ -188,6 +189,19 @@ const form = reactive({
   category: 'general' as ExpenseCategory,
   currency: 'ARS' as 'ARS' | 'USD' | 'EUR' | 'BRL',
   participants: [] as string[]
+})
+
+// Watch for modal open in edit mode to populate form
+watch(isOpen, (newVal) => {
+  if (newVal && isEditMode.value && expenseToEdit.value) {
+    const expense = expenseToEdit.value
+    // If expense has original currency, use that
+    form.currency = (expense.originalCurrency as 'ARS' | 'USD' | 'EUR' | 'BRL') || 'ARS'
+    form.amount = expense.originalAmount || expense.amount
+    form.description = expense.description
+    form.category = expense.category
+    form.participants = expense.splitAmong?.length ? [...expense.splitAmong] : []
+  }
 })
 
 // Exchange rates (approximate, for UI preview)
@@ -262,22 +276,35 @@ const handleSubmit = async () => {
     const originalAmount = form.currency !== 'ARS' ? form.amount : undefined
     const originalCurrency = form.currency !== 'ARS' ? form.currency : undefined
 
-    await expenseStore.addExpense(
-      firestoreUser.value.id,
-      firestoreUser.value.name,
-      user.value.uid,
-      Math.round(amountInARS),
-      form.description.trim(),
-      form.category,
-      `${form.amount} ${form.currency} ${form.description}`,
-      groupStore.selectedGroupId,
-      form.participants,
-      originalAmount,
-      originalCurrency
-    )
+    if (isEditMode.value && expenseToEdit.value?.id) {
+      // Update existing expense
+      await expenseStore.updateExpense(expenseToEdit.value.id, {
+        amount: Math.round(amountInARS),
+        originalAmount,
+        originalCurrency,
+        description: form.description.trim(),
+        category: form.category,
+        splitAmong: form.participants
+      })
+    } else {
+      // Create new expense
+      await expenseStore.addExpense(
+        firestoreUser.value.id,
+        firestoreUser.value.name,
+        user.value.uid,
+        Math.round(amountInARS),
+        form.description.trim(),
+        form.category,
+        `${form.amount} ${form.currency} ${form.description}`,
+        groupStore.selectedGroupId,
+        form.participants,
+        originalAmount,
+        originalCurrency
+      )
+    }
     handleClose()
   } catch (err) {
-    console.error('Error adding expense:', err)
+    console.error('Error saving expense:', err)
     error.value = 'Error al guardar el gasto. Intenta nuevamente.'
   } finally {
     loading.value = false

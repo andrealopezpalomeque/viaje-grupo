@@ -39,6 +39,8 @@
           :expense="item"
           :current-user-id="currentUserId"
           :show-user-share="showUserShare"
+          @edit="$emit('editExpense', $event)"
+          @delete="$emit('deleteExpense', $event)"
         />
         <PaymentItem
           v-else
@@ -93,6 +95,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 defineEmits<{
   (e: 'addExpense'): void
+  (e: 'editExpense', expense: Expense): void
+  (e: 'deleteExpense', expense: Expense): void
 }>()
 
 const showAll = ref(false)

@@ -24,7 +24,6 @@ import {
   getHelpMessage,
   getBalanceMessage,
   getExpenseListMessage,
-  deleteExpenseCommand,
   getUnknownCommandMessage,
   getGroupMessage,
   setPendingGroupSelection,
@@ -536,16 +535,8 @@ async function handleCommand(from, text, user, groupId) {
 
     case '/borrar':
     case '/delete':
-      if (!groupId) {
-        await sendMessage(from, '⚠️ No pertenecés a ningún grupo.')
-        return
-      }
-      if (!args.trim()) {
-        await sendMessage(from, '⚠️ Indicá qué gasto querés eliminar.\n\nEjemplo: /borrar 1\n\nUsá /lista para ver los gastos.')
-        return
-      }
-      const deleteResult = await deleteExpenseCommand(args.trim(), user.id, groupId)
-      await sendMessage(from, deleteResult.message)
+      // Redirect to dashboard - edit/delete is dashboard-only
+      await sendMessage(from, `✏️ Para editar o eliminar gastos, usá el dashboard:\n\n🌐 textthecheck.app\n\nAhí podés ver todos los gastos y modificarlos fácilmente.`)
       break
 
     default:

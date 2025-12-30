@@ -73,9 +73,9 @@
 | **Record payment (received)** | `recibí 5000 @Juan` | ✅ Working |
 | View balances | `/balance` | ✅ Working |
 | View expenses | `/lista` | ✅ Working |
-| Delete expense | `/borrar 1` | ✅ Working |
 | Switch groups | `/grupo` | ✅ Working |
 | Help | `/ayuda` | ✅ Working |
+| Edit/Delete | Dashboard only | Redirects to textthecheck.app |
 
 ### Web Dashboard Features
 

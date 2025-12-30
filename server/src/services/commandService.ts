@@ -137,13 +137,12 @@ export function getHelpMessage(): string {
 /grupo - Ver y cambiar grupo activo
 /balance - Ver saldos
 /lista - Ver últimos gastos
-/borrar [n] - Eliminar gasto
 /ayuda - Ver esta ayuda
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
-💡 También podés ver todo en el dashboard:
-🌐 textthecheck.app`
+✏️ *¿Editar o eliminar un gasto?*
+Hacelo desde el dashboard: textthecheck.app`
 }
 
 /**
@@ -315,7 +314,7 @@ export async function getExpenseListMessage(groupId: string): Promise<string> {
     message += `${index + 1}. ${amount} ${expense.description} - ${firstName} (${date})\n`
   })
 
-  message += '\n_Usá /borrar [n] para eliminar un gasto_'
+  message += '\n✏️ _Editá o eliminá gastos en textthecheck.app_'
 
   return message.trim()
 }

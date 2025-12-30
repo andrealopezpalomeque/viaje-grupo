@@ -55,8 +55,10 @@ Users split expenses during trips by texting a WhatsApp bot using **natural lang
 **Commands:**
 - `/balance` → Shows who owes whom
 - `/grupo` → Switch between groups
+- `/lista` → View recent expenses
+- `/ayuda` → Get help
 
-Dashboard at textthecheck.app shows real-time balances, settlements, payment recording, and payment info.
+**Edit/Delete:** Dashboard only at textthecheck.app (keeps bot simple)
 
 ### The Core Insight
 
@@ -161,7 +163,8 @@ payments/
 - [x] Natural language expense entry (AI-powered)
 - [x] Multi-currency (USD, EUR, BRL → ARS via DolarApi.com Blue rate)
 - [x] @mention splitting with fuzzy matching (Fuse.js)
-- [x] Commands: `/ayuda`, `/balance`, `/lista`, `/borrar`, `/grupo`
+- [x] Commands: `/ayuda`, `/balance`, `/lista`, `/grupo`
+- [x] Edit/Delete: Dashboard only (keeps bot simple, redirects to textthecheck.app)
 - [x] Auto-categorization (food, transport, accommodation, etc.)
 - [x] Multi-group support with `/grupo` switching
 - [x] **Payment recording**: `pagué 5000 @Maria` or `recibí 5000 @Juan`

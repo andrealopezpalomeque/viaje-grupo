@@ -1,5 +1,5 @@
 <template>
-  <div class="px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors overflow-hidden">
+  <div class="px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors overflow-hidden group">
     <div class="flex items-start gap-2">
       <!-- Category icon -->
       <CategoryIcon :category="expense.category" size="md" />
@@ -19,30 +19,51 @@
             </p>
           </div>
 
-          <!-- Amount (never truncates) -->
-          <div class="text-right flex-shrink-0">
-            <!-- Show user's share prominently if in personal view -->
-            <template v-if="showUserShare && userShare > 0">
-              <p class="text-sm font-semibold text-gray-900 dark:text-white font-mono tabular-nums whitespace-nowrap">
-                {{ formatCurrency(userShare) }}
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                tu parte
-              </p>
-            </template>
-            <template v-else>
-              <AmountDisplay
-                :amount="expense.amount"
-                size="sm"
-                bold
-              />
-              <p
-                v-if="expense.originalCurrency && expense.originalCurrency !== 'ARS'"
-                class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
+          <!-- Amount and actions -->
+          <div class="flex items-start gap-2">
+            <!-- Edit/Delete buttons (visible on hover/focus) -->
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+              <button
+                @click.stop="$emit('edit', expense)"
+                class="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                title="Editar gasto"
               >
-                {{ formatCurrencyByCode(expense.originalAmount ?? 0, expense.originalCurrency) }}
-              </p>
-            </template>
+                <IconPencil class="w-4 h-4" />
+              </button>
+              <button
+                @click.stop="$emit('delete', expense)"
+                class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                title="Eliminar gasto"
+              >
+                <IconTrash class="w-4 h-4" />
+              </button>
+            </div>
+
+            <!-- Amount (never truncates) -->
+            <div class="text-right flex-shrink-0">
+              <!-- Show user's share prominently if in personal view -->
+              <template v-if="showUserShare && userShare > 0">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white font-mono tabular-nums whitespace-nowrap">
+                  {{ formatCurrency(userShare) }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  tu parte
+                </p>
+              </template>
+              <template v-else>
+                <AmountDisplay
+                  :amount="expense.amount"
+                  size="sm"
+                  bold
+                />
+                <p
+                  v-if="expense.originalCurrency && expense.originalCurrency !== 'ARS'"
+                  class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
+                >
+                  {{ formatCurrencyByCode(expense.originalAmount ?? 0, expense.originalCurrency) }}
+                </p>
+              </template>
+            </div>
           </div>
         </div>
 
@@ -62,6 +83,8 @@
 </template>
 
 <script setup lang="ts">
+import IconPencil from '~icons/mdi/pencil-outline'
+import IconTrash from '~icons/mdi/delete-outline'
 import type { Expense } from '~/types'
 
 interface Props {
@@ -74,6 +97,11 @@ const props = withDefaults(defineProps<Props>(), {
   currentUserId: '',
   showUserShare: false
 })
+
+defineEmits<{
+  (e: 'edit', expense: Expense): void
+  (e: 'delete', expense: Expense): void
+}>()
 
 const userStore = useUserStore()
 
