@@ -6,7 +6,7 @@ import { createExpense } from '../services/expenseService.js'
 import { createPayment } from '../services/paymentService.js'
 import { parseExpenseMessage, extractCurrency, stripCurrencyFromDescription, parsePaymentMessage, isPaymentMessage } from '../utils/messageParser.js'
 import { convertToARS } from '../services/exchangeRateService.js'
-import { resolveMentionsToUserIds, matchMention } from '../services/mentionService.js'
+import { resolveMentionsToUserIds, matchMention, resolveMentionsWithTracking } from '../services/mentionService.js'
 import {
   sendMessage,
   formatExpenseConfirmation,
@@ -15,6 +15,8 @@ import {
   formatPaymentConfirmation,
   formatPaymentNotification,
   formatPaymentErrorMessage,
+  formatExpenseConfirmationRequest,
+  formatExpenseCancelledMessage,
 } from '../services/whatsappService.js'
 import {
   isCommand,
@@ -33,6 +35,13 @@ import {
   getPendingExpense,
   clearPendingExpense,
   getExpenseGroupPromptMessage,
+  // AI expense confirmation
+  setPendingAIExpense,
+  hasPendingAIExpense,
+  getPendingAIExpense,
+  clearPendingAIExpense,
+  isAffirmativeResponse,
+  isNegativeResponse,
 } from '../services/commandService.js'
 import {
   isAIEnabled,
@@ -326,6 +335,42 @@ async function handleTextMessage(from, text, messageId) {
     return
   }
 
+  // 3.5. Check for pending AI expense confirmation (before all other checks)
+  if (hasPendingAIExpense(user.id)) {
+    // Check if user is confirming ("si") or cancelling ("no")
+    if (isAffirmativeResponse(text)) {
+      const pending = getPendingAIExpense(user.id)
+      if (pending) {
+        await saveConfirmedAIExpense(pending)
+        clearPendingAIExpense(user.id)
+
+        // Send success message
+        const successMsg = formatExpenseConfirmation(
+          pending.expense.amount,
+          pending.expense.originalAmount,
+          pending.expense.originalCurrency,
+          pending.expense.description,
+          pending.expense.category,
+          pending.expense.displayNames,
+          pending.groupName
+        )
+        await sendMessage(from, successMsg)
+        return
+      }
+    }
+
+    if (isNegativeResponse(text)) {
+      clearPendingAIExpense(user.id)
+      await sendMessage(from, formatExpenseCancelledMessage())
+      return
+    }
+
+    // User sent something else (new expense, command, etc.)
+    // Cancel the old pending and continue with normal processing
+    clearPendingAIExpense(user.id)
+    // Fall through to process new message...
+  }
+
   // 4. Check for pending expense (user was asked which group for their expense)
   if (hasPendingExpense(user.id)) {
     const trimmed = text.trim()
@@ -597,6 +642,25 @@ async function handleExpenseMessage(from, text, user, groupId, groupName) {
 }
 
 /**
+ * Save a confirmed AI expense to Firestore
+ * Called when user confirms pending AI expense with "si"
+ */
+async function saveConfirmedAIExpense(pending) {
+  await createExpense({
+    userId: pending.userId,
+    userName: pending.userName,
+    amount: pending.expense.amount,
+    originalAmount: pending.expense.originalAmount,
+    originalCurrency: pending.expense.originalCurrency,
+    description: pending.expense.description,
+    category: pending.expense.category,
+    splitAmong: pending.expense.splitAmong,
+    groupId: pending.groupId,
+    timestamp: new Date()
+  })
+}
+
+/**
  * Handle payment messages
  * Processes "pagué X @Person" or "recibí X @Person" commands
  */
@@ -697,7 +761,8 @@ async function handlePaymentMessage(from, text, user, groupId, groupName) {
 
 /**
  * Handle AI-parsed expense
- * Processes expense data extracted by AI from natural language
+ * Instead of saving directly, stores as pending and asks for user confirmation
+ * This catches wrong group and unresolved name issues before saving
  */
 async function handleAIExpense(from, aiResult, user, groupId, groupName, originalText) {
   // 1. Convert currency if needed
@@ -719,62 +784,67 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
     return
   }
 
-  // 3. Resolve mentions to user IDs using fuzzy matching
+  // 3. Resolve mentions WITH TRACKING of unresolved names
+  const groupMembers = await getGroupMembers(groupId)
   let resolvedSplitAmong = []
   let displayNames = []
+  let unresolvedNames = []
 
-  if (aiResult.splitAmong && aiResult.splitAmong.length > 0 && groupId) {
-    const groupMembers = await getGroupMembers(groupId)
-    resolvedSplitAmong = resolveMentionsToUserIds(aiResult.splitAmong, groupMembers)
-    displayNames = [...aiResult.splitAmong]
+  if (aiResult.splitAmong && aiResult.splitAmong.length > 0) {
+    // Use the new tracking function to capture unresolved names
+    const resolution = resolveMentionsWithTracking(aiResult.splitAmong, groupMembers)
+    resolvedSplitAmong = resolution.resolvedUserIds
+    displayNames = resolution.resolvedNames
+    unresolvedNames = resolution.unresolvedNames
 
     // If includesSender is true (natural language like "con Juan"),
     // add the sender to the split if not already included
     if (aiResult.includesSender && !resolvedSplitAmong.includes(user.id)) {
       resolvedSplitAmong.push(user.id)
-      // Add sender's name to display names for confirmation message
       displayNames.push(user.name)
     }
+  } else if (aiResult.includesSender) {
+    // No mentions but includesSender is true - sender is part of the group split
+    // Don't add to displayNames, will show "Todo el grupo"
   }
 
   // 4. Auto-categorize based on description
   const category = categorizeFromDescription(aiResult.description)
 
-  // 5. Create expense in Firestore
-  try {
-    await createExpense({
-      userId: user.id,
-      userName: user.name,
+  // 5. Store as PENDING (don't save yet!)
+  setPendingAIExpense(user.id, {
+    from,
+    expense: {
       amount: finalAmount,
       originalAmount,
       originalCurrency,
-      originalInput: originalText,
       description: aiResult.description,
       category,
       splitAmong: resolvedSplitAmong,
-      groupId: groupId,
-      timestamp: new Date()
-    })
-
-    // 6. Send confirmation message
-    const confirmationMessage = formatExpenseConfirmation(
-      finalAmount,
-      originalAmount,
-      originalCurrency,
-      aiResult.description,
-      category,
       displayNames,
-      groupName
-    )
+      unresolvedNames,  // Track failures for warning display
+      includesSender: aiResult.includesSender
+    },
+    userId: user.id,
+    userName: user.name,
+    groupId,
+    groupName,
+    createdAt: new Date()
+  })
 
-    await sendMessage(from, confirmationMessage)
-  } catch (error) {
-    console.error('Error creating AI expense:', error)
-    await sendMessage(
-      from,
-      '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
-    )
-  }
+  // 6. Send confirmation REQUEST (not confirmation)
+  const confirmationRequestMsg = formatExpenseConfirmationRequest(
+    finalAmount,
+    originalAmount,
+    originalCurrency,
+    aiResult.description,
+    category,
+    groupName,
+    displayNames,
+    unresolvedNames  // Show unresolved as warnings
+  )
+
+  await sendMessage(from, confirmationRequestMsg)
 }
 
 /**

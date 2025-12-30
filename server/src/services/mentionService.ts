@@ -152,3 +152,57 @@ export function resolveMentionsToUserIds(mentions: string[], groupMembers: User[
 
   return result.matchedUserIds
 }
+
+/**
+ * Result of resolving mentions with full tracking
+ */
+export interface MentionResolutionResult {
+  resolvedUserIds: string[]     // User IDs that were successfully matched
+  resolvedNames: string[]       // Display names of matched users
+  unresolvedNames: string[]     // Original names that couldn't be matched
+}
+
+/**
+ * Resolve mentions to user IDs WITH tracking of unresolved names
+ * This is used for AI expense confirmation where we need to show warnings
+ *
+ * @param mentions - Array of mention strings extracted from message (without @)
+ * @param groupMembers - Array of User objects in the group
+ * @returns Object with resolved IDs, resolved names, and unresolved names
+ */
+export function resolveMentionsWithTracking(
+  mentions: string[],
+  groupMembers: User[]
+): MentionResolutionResult {
+  if (!mentions.length || !groupMembers.length) {
+    return {
+      resolvedUserIds: [],
+      resolvedNames: [],
+      unresolvedNames: mentions  // All mentions are unresolved if no group members
+    }
+  }
+
+  const resolvedUserIds: string[] = []
+  const resolvedNames: string[] = []
+  const unresolvedNames: string[] = []
+  const matchedIds = new Set<string>()  // Prevent duplicates
+
+  for (const mention of mentions) {
+    const matchedUser = matchMention(mention, groupMembers)
+
+    if (matchedUser && !matchedIds.has(matchedUser.id)) {
+      resolvedUserIds.push(matchedUser.id)
+      resolvedNames.push(matchedUser.name)
+      matchedIds.add(matchedUser.id)
+    } else if (!matchedUser) {
+      unresolvedNames.push(mention)
+    }
+    // If already matched (duplicate), silently skip
+  }
+
+  return {
+    resolvedUserIds,
+    resolvedNames,
+    unresolvedNames
+  }
+}

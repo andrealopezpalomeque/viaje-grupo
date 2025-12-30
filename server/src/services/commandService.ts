@@ -35,6 +35,30 @@ interface PendingExpense {
   expiresAt: number
 }
 
+/**
+ * Pending AI expense awaiting user confirmation
+ * Stores all expense data until user confirms with "si" or cancels with "no"
+ */
+export interface PendingAIExpense {
+  from: string              // WhatsApp number
+  expense: {
+    amount: number
+    originalAmount?: number
+    originalCurrency?: string
+    description: string
+    category: string
+    splitAmong: string[]    // Resolved user IDs
+    displayNames: string[]  // Names to show in confirmation
+    unresolvedNames: string[] // Names that couldn't be matched
+    includesSender: boolean
+  }
+  userId: string            // Sender's user ID
+  userName: string          // Sender's name
+  groupId: string
+  groupName: string
+  createdAt: Date           // For auto-expiry
+}
+
 // Store recent expense list for /borrar command reference
 // Key: groupId, Value: array of expense IDs (most recent first)
 const recentExpenseCache = new Map<string, string[]>()
@@ -47,11 +71,18 @@ const pendingGroupSelections = new Map<string, PendingGroupSelection>()
 // Key: userId, Value: { phone, text, groups[], expiresAt }
 const pendingExpenses = new Map<string, PendingExpense>()
 
+// Store pending AI expenses (waiting for user confirmation)
+// Key: userId, Value: PendingAIExpense
+const pendingAIExpenses = new Map<string, PendingAIExpense>()
+
 // 2 minute timeout for group selection
 const GROUP_SELECTION_TIMEOUT_MS = 2 * 60 * 1000
 
+// 5 minute timeout for AI expense confirmation
+const AI_EXPENSE_TIMEOUT_MS = 5 * 60 * 1000
+
 /**
- * Clean up expired group selection states and pending expenses
+ * Clean up expired group selection states, pending expenses, and pending AI expenses
  */
 function cleanupExpiredPendingStates() {
   const now = Date.now()
@@ -63,6 +94,13 @@ function cleanupExpiredPendingStates() {
   for (const [userId, pending] of pendingExpenses.entries()) {
     if (pending.expiresAt < now) {
       pendingExpenses.delete(userId)
+    }
+  }
+  // Clean up expired AI expense confirmations (5 minute timeout)
+  const fiveMinutesAgo = now - AI_EXPENSE_TIMEOUT_MS
+  for (const [userId, pending] of pendingAIExpenses.entries()) {
+    if (pending.createdAt.getTime() < fiveMinutesAgo) {
+      pendingAIExpenses.delete(userId)
     }
   }
 }
@@ -575,4 +613,74 @@ export function getExpenseGroupPromptMessage(groups: Group[]): string {
   message += '\n_Respondé con el número del grupo._'
 
   return message
+}
+
+// ========================================
+// Pending AI Expense Functions
+// ========================================
+
+/**
+ * Set up a pending AI expense awaiting user confirmation
+ */
+export function setPendingAIExpense(userId: string, data: PendingAIExpense): void {
+  pendingAIExpenses.set(userId, data)
+}
+
+/**
+ * Check if user has a pending AI expense awaiting confirmation
+ */
+export function hasPendingAIExpense(userId: string): boolean {
+  const pending = pendingAIExpenses.get(userId)
+  if (!pending) return false
+
+  // Check if expired (5 minutes)
+  const fiveMinutesAgo = Date.now() - AI_EXPENSE_TIMEOUT_MS
+  if (pending.createdAt.getTime() < fiveMinutesAgo) {
+    pendingAIExpenses.delete(userId)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Get pending AI expense for a user
+ */
+export function getPendingAIExpense(userId: string): PendingAIExpense | null {
+  const pending = pendingAIExpenses.get(userId)
+  if (!pending) return null
+
+  // Check if expired
+  const fiveMinutesAgo = Date.now() - AI_EXPENSE_TIMEOUT_MS
+  if (pending.createdAt.getTime() < fiveMinutesAgo) {
+    pendingAIExpenses.delete(userId)
+    return null
+  }
+
+  return pending
+}
+
+/**
+ * Clear pending AI expense for a user
+ */
+export function clearPendingAIExpense(userId: string): void {
+  pendingAIExpenses.delete(userId)
+}
+
+/**
+ * Check if text is an affirmative response (yes/si/etc.)
+ */
+export function isAffirmativeResponse(text: string): boolean {
+  const normalized = text.trim().toLowerCase()
+  const affirmatives = ['si', 'sí', 'yes', 's', 'ok', 'dale', 'va', 'bueno', 'listo', 'confirmo']
+  return affirmatives.includes(normalized)
+}
+
+/**
+ * Check if text is a negative response (no/cancel/etc.)
+ */
+export function isNegativeResponse(text: string): boolean {
+  const normalized = text.trim().toLowerCase()
+  const negatives = ['no', 'n', 'cancelar', 'cancel', 'nope', 'na', 'nel']
+  return negatives.includes(normalized)
 }

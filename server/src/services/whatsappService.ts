@@ -202,6 +202,71 @@ export function formatExpenseConfirmation(
 }
 
 /**
+ * Format confirmation REQUEST message for AI-parsed expenses
+ * Shows expense details and asks user to confirm with "si" or cancel with "no"
+ * Includes warnings for unresolved names
+ */
+export function formatExpenseConfirmationRequest(
+  amount: number,
+  originalAmount: number | undefined,
+  originalCurrency: string | undefined,
+  description: string,
+  category: string,
+  groupName: string,
+  displayNames: string[],      // Resolved names
+  unresolvedNames: string[]    // Names that weren't found
+): string {
+  let message = `🔍 *¿Guardar este gasto?*\n\n`
+  message += `📁 *Grupo: ${groupName}*\n\n`
+
+  // Amount line - use correct format for each currency
+  if (originalCurrency && originalCurrency !== 'ARS') {
+    message += `💵 ${originalCurrency} ${formatInternational(originalAmount || 0)} → $${formatARS(amount)} ARS\n`
+  } else {
+    message += `💵 $${formatARS(amount)} ARS\n`
+  }
+
+  message += `📝 ${description}\n`
+
+  if (category) {
+    message += `🏷️ ${getCategoryEmoji(category)} ${category}\n`
+  }
+
+  // Who splits
+  if (displayNames && displayNames.length > 0) {
+    message += `👥 Dividido entre: ${displayNames.join(', ')}\n`
+  } else {
+    message += `👥 Dividido entre: Todo el grupo\n`
+  }
+
+  // CRITICAL: Show unresolved names as warnings
+  if (unresolvedNames && unresolvedNames.length > 0) {
+    message += `\n⚠️ *No encontré en este grupo:*\n`
+    for (const name of unresolvedNames) {
+      message += `• ${name}\n`
+    }
+  }
+
+  message += `\n━━━━━━━━━━━━━━━━━━━━━━\n`
+  message += `Respondé *si* para guardar\n`
+  message += `Respondé *no* para cancelar\n`
+
+  // If there were unresolved names, suggest changing group
+  if (unresolvedNames && unresolvedNames.length > 0) {
+    message += `\n💡 ¿Grupo equivocado? Usá /grupo para cambiar`
+  }
+
+  return message
+}
+
+/**
+ * Format cancellation message for AI expenses
+ */
+export function formatExpenseCancelledMessage(): string {
+  return `❌ Gasto cancelado. Podés intentar de nuevo.`
+}
+
+/**
  * Format error message for parsing failures
  */
 export function formatParseErrorMessage(): string {
