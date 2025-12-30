@@ -82,7 +82,9 @@
 | Feature | Status |
 |---------|--------|
 | Google Authentication | ✅ Working |
+| **Create expense via form** | ✅ Working |
 | Real-time expense feed | ✅ Working |
+| **Edit/Delete expenses** | ✅ Working |
 | **Unified activity feed (expenses + payments)** | ✅ Working |
 | Personal balance view | ✅ Working |
 | Group balance overview | ✅ Working |
@@ -97,6 +99,7 @@
 | Component | Platform | Status |
 |-----------|----------|--------|
 | Backend API | Render | ✅ Deployed |
+| **Keep-alive cron** | cron-job.org | ✅ Running (every 10 min) |
 | Frontend | Firebase Hosting | ✅ Deployed |
 | Database | Firebase Firestore | ✅ Running |
 | Domain | textthecheck.app | ✅ Active |

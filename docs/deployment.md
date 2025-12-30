@@ -262,6 +262,21 @@ If deployment fails:
 
 ---
 
+## Keep Server Awake (Cron Job)
+
+Render's free tier spins down after 15 minutes of inactivity. To prevent cold starts:
+
+**Setup (already done):**
+1. Created account at [cron-job.org](https://cron-job.org)
+2. Created cron job:
+   - **URL:** `https://viaje-grupo-server.onrender.com/`
+   - **Interval:** Every 10 minutes
+   - **Status:** ✅ Active
+
+This keeps the server warm so WhatsApp responses are fast.
+
+---
+
 ## Monitoring & Maintenance
 
 ### Set Up Monitoring

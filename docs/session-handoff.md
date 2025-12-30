@@ -170,7 +170,9 @@ payments/
 
 ### Web Dashboard
 - [x] Google Authentication (linked to Firestore users)
+- [x] **Create expenses via form** (amount, description, currency, participants)
 - [x] Real-time expense feed
+- [x] **Edit/Delete expenses**
 - [x] **Unified activity feed**: Shows both expenses AND payments
 - [x] Personal view ("Tu Resumen") vs Group view
 - [x] Settlement recommendations
@@ -182,6 +184,7 @@ payments/
 
 ### Infrastructure
 - [x] Backend on Render (auto-deploy from GitHub)
+- [x] **Cron job (cron-job.org)** - Pings server every 10 minutes to prevent cold starts
 - [x] Frontend on Firebase Hosting
 - [x] Custom domain: textthecheck.app
 - [x] Firestore security rules
@@ -356,7 +359,7 @@ NODE_ENV=production
 
 ## ⚠️ Known Limitations & Gotchas
 
-1. **Cold starts on Render:** Free tier spins down after inactivity, first request can be slow
+1. **Cold starts on Render:** ~~Free tier spins down after inactivity, first request can be slow~~ **SOLVED** - Cron job pings server every 10 minutes via cron-job.org
 
 2. **WhatsApp test number:** Must manually add each phone to ALLOWED_PHONE_NUMBERS
 

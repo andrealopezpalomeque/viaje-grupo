@@ -41,7 +41,7 @@ Instead of asking everyone to download an app:
 
 ## How It Works
 
-### Logging expenses (WhatsApp — anyone in the group)
+### Logging expenses (WhatsApp OR Dashboard — anyone in the group)
 
 **Natural language (AI-powered):**
 ```
@@ -73,10 +73,13 @@ USD 20 dinner @Ana @Pedro    → Converts to ARS, splits among mentioned
 - `morfi` = food
 - `bondi` = bus
 
-### Viewing balances (Web Dashboard — anyone)
-- View real-time expense feed
+### Viewing balances & managing expenses (Web Dashboard — anyone)
+- **Create expenses** via form (amount, description, currency, participants)
+- View real-time expense feed (expenses + payments)
+- Edit or delete existing expenses
 - See your personal balance
 - Check settlement recommendations
+- Record payments with one click
 - Copy payment details (CBU, alias, etc.) to transfer
 
 ### Settlement
@@ -150,10 +153,13 @@ A US-based team building for Venmo/Zelle users won't invest in CBU/alias support
 
 ### Web Dashboard
 - [x] Google Authentication (linked to pre-registered users)
+- [x] **Create expenses** via form (amount, description, currency, participants)
 - [x] Real-time expense feed (Firebase Firestore)
+- [x] Edit and delete expenses
 - [x] Personal balance view with breakdown
 - [x] Group balance overview
 - [x] Settlement recommendations (who pays whom)
+- [x] **Record payments** with one-click button
 - [x] Payment info display with copy-to-clipboard
 - [x] User profiles with editable payment details
 - [x] Mobile-first responsive design
@@ -161,6 +167,7 @@ A US-based team building for Venmo/Zelle users won't invest in CBU/alias support
 
 ### Infrastructure
 - [x] Express.js backend on Render
+- [x] **Cron job (cron-job.org)** - Pings server every 10 minutes to prevent cold starts
 - [x] Nuxt.js frontend on Firebase Hosting
 - [x] Firebase Firestore for real-time sync
 - [x] Webhook signature verification
