@@ -17,7 +17,7 @@
 
 ## Current Status: Production Deployed ✅
 
-**Last updated:** December 29, 2025
+**Last updated:** December 30, 2025
 
 ### Production URLs
 
@@ -697,3 +697,49 @@ When starting a new Claude Code session, paste this context:
   - Updated testing checklist with AI-specific tests
   - Added AI section to session-handoff.md
 - 📍 Status: AI Natural Language Parsing COMPLETE
+
+### December 29, 2025 (AI Expense Confirmation Flow)
+- ✅ **Added user confirmation before saving AI-parsed expenses**
+  - AI expenses now stored as "pending" until user confirms with "si" or cancels with "no"
+  - Prevents accidental expense creation from misunderstood messages
+  - Original message text preserved and stored in Firestore when confirmed
+- ✅ **Member alias support in AI context**
+  - AI receives group member names WITH their aliases for better recognition
+  - Example: "Gonzalo Soria (aliases: gonza, suller)" helps AI match nicknames
+- ✅ **commandService.ts enhancements**
+  - Added `setPendingAIExpense()`, `getPendingAIExpense()`, `clearPendingAIExpense()`
+  - Added `isAffirmativeResponse()` and `isNegativeResponse()` for response detection
+  - Handles variations: "si", "sí", "dale", "ok" for yes; "no", "nope", "cancelar" for no
+- ✅ **WhatsApp handler flow**
+  - AI expenses create pending state and send confirmation request
+  - Next message from user checks for pending expense first
+  - "si" → saves expense and sends success message
+  - "no" → clears pending and sends cancellation message
+  - Any other message → clears pending and processes as new message
+- 📍 Status: AI Expense Confirmation Flow COMPLETE
+
+### December 30, 2025 (Unresolved Name Handling - Critical Bug Fix)
+- ✅ **Fixed bug where unresolved names weren't showing in confirmation**
+  - **Root cause:** AI prompt was filtering out names that didn't match group members
+  - **Fix:** Updated AI prompt to include ALL mentioned names in `splitAmong`
+  - AI now returns: `splitAmong: ["gonza", "robertro"]` even if "robertro" is unknown
+- ✅ **Made fuzzy matching stricter to prevent false positives**
+  - Fuse.js threshold: 0.4 → 0.3 (requires 70% similarity instead of 60%)
+  - Confidence threshold: 0.5 → 0.35 (rejects more marginal matches)
+  - Prevents "robertro" from incorrectly matching "Conrado Romero"
+  - Added debug logging to show match scores: `[Mention] "robertro" → REJECTED`
+- ✅ **Changed UX: Reject expense if any names unresolved (not just warn)**
+  - **Previous:** Showed warning but allowed saving (user might miss it)
+  - **New:** Rejects expense entirely with clear error message
+  - User must fix names before expense can be saved
+  - Error message shows:
+    - Which names couldn't be found
+    - Current group name
+    - Suggestions: check spelling, use /grupo, try again
+  - Singular/plural grammar: "esta persona" vs "estas personas"
+- ✅ **Updated files:**
+  - `server/src/prompts/expenseExtraction.ts` - AI prompt to include all names
+  - `server/src/services/mentionService.ts` - Stricter thresholds + debug logging
+  - `server/src/routes/whatsapp.js` - Reject on unresolved names
+  - `server/src/services/whatsappService.ts` - Simplified confirmation (no warning section)
+- 📍 Status: Unresolved Name Handling COMPLETE

@@ -1,6 +1,6 @@
 # AI Natural Language Processing
 
-**Last Updated:** December 29, 2025
+**Last Updated:** December 30, 2025
 **Status:** ✅ Implemented and Production Ready
 
 ---
@@ -41,6 +41,15 @@ Our whole thesis is "reduce friction." Making users learn a syntax IS friction.
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
+│  Has Pending AI Expense?                                    │
+│  → YES + "si": Save pending expense, send confirmation      │
+│  → YES + "no": Cancel pending, send cancellation message    │
+│  → YES + other: Clear pending, process as new message       │
+│  → NO: Continue to command/AI parsing                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
 │  Is Command? (/balance, /grupo, /ayuda)                     │
 │  → YES: Handle command directly (bypass AI)                 │
 │  → NO: Continue to AI parsing                               │
@@ -50,7 +59,7 @@ Our whole thesis is "reduce friction." Making users learn a syntax IS friction.
 ┌─────────────────────────────────────────────────────────────┐
 │  AI LAYER (Gemini 2.0 Flash)                                │
 │                                                             │
-│  Input: User message + group member names for context       │
+│  Input: User message + group members (names + aliases)      │
 │                                                             │
 │  Output (structured JSON):                                  │
 │  {                                                          │
@@ -58,8 +67,8 @@ Our whole thesis is "reduce friction." Making users learn a syntax IS friction.
 │    "amount": 50,                                            │
 │    "currency": "USD",                                       │
 │    "description": "cena",                                   │
-│    "splitAmong": ["juan"],                                  │
-│    "includesSender": true,  ← NEW: "con" = include sender   │
+│    "splitAmong": ["juan", "xyz"],  ← ALL names, even unknown│
+│    "includesSender": true,         ← "con" = include sender │
 │    "confidence": 0.95                                       │
 │  }                                                          │
 └─────────────────────────────────────────────────────────────┘
@@ -73,12 +82,28 @@ Our whole thesis is "reduce friction." Making users learn a syntax IS friction.
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  EXISTING LOGIC                                             │
-│  - Resolve mentions (mentionService)                        │
+│  MENTION RESOLUTION (mentionService)                        │
+│  - Fuzzy match names against group members (Fuse.js)        │
+│  - Threshold: 0.3 (70% similarity required)                 │
+│  - Confidence: 0.35 (strict rejection of marginal matches)  │
+│  - Returns: { resolvedNames, unresolvedNames }              │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Any Unresolved Names?                                      │
+│  → YES: REJECT expense, show error with suggestions         │
+│  → NO: Continue to confirmation                             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  CONFIRMATION REQUEST                                       │
+│  - Store as pending expense (not saved yet)                 │
+│  - Send confirmation message to user                        │
+│  - Wait for "si" or "no" response                           │
 │  - If includesSender=true, add sender to split              │
-│  - Convert currency (exchangeRateService)                   │
-│  - Create expense (expenseService)                          │
-│  - Send confirmation (whatsappService)                      │
+│  - Convert currency if needed                               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -86,22 +111,53 @@ Our whole thesis is "reduce friction." Making users learn a syntax IS friction.
 
 ## Key Design Decisions
 
-### 1. Always Confirm Interpretation
+### 1. Explicit Confirmation Before Saving
 
-Critical with AI - always show what was understood:
+AI-parsed expenses require user confirmation before saving:
 
 ```
-User: "50 dol cena con juancho y la mari"
+User: "50 dol cena con juancho"
+Bot: 🔍 ¿Guardar este gasto?
+
+     📁 Grupo: Brazil Trip 2025
+
+     💵 USD 50 → $52.500 ARS
+     📝 cena
+     🏷️ 🍽️ food
+     👥 Dividido entre: Juan Pérez, Pipi López
+
+     ━━━━━━━━━━━━━━━━━━━━━━
+     Respondé si para guardar
+     Respondé no para cancelar
+
+User: "si"
 Bot: ✅ Gasto registrado
-     💵 USD 50 → $52.500
-     📝 Cena
-     👥 Juancho, Mari
+     💵 USD 50 → $52.500 ARS
+     📝 cena
+     👥 Juan Pérez, Pipi López
      📁 Brazil Trip 2025
-
-     ¿Algo mal? Respondé "deshacer"
 ```
 
-### 2. Confidence Threshold
+### 2. Reject Unresolved Names (Don't Just Warn)
+
+If any mentioned name can't be matched, the expense is rejected entirely:
+
+```
+User: "50 cena con gonza y robertro"
+Bot: ⚠️ No pude encontrar a esta persona en el grupo:
+     • robertro
+
+     📁 Grupo actual: Brazil Trip 2025
+
+     💡 ¿Qué podés hacer?
+     • Revisá que el nombre esté bien escrito
+     • Usá /grupo para cambiar de grupo
+     • Volvé a enviar el gasto con los nombres correctos
+```
+
+**Why reject instead of warn?** Users might miss a warning and accidentally save an expense with incorrect splits.
+
+### 3. Confidence Threshold
 
 If AI confidence < 0.7, ask for clarification:
 
@@ -111,15 +167,22 @@ Bot: 🤔 No entendí bien. ¿Qué fue ese gasto?
      Ejemplo: "150 taxi" o "150 almuerzo"
 ```
 
-### 3. Hybrid Approach (Safety Net)
+### 4. Hybrid Approach (Safety Net)
 
 1. Try AI interpretation first
 2. If AI fails or times out (>5s) → fall back to regex parser
 3. Log everything for debugging and improvement
 
-### 4. Commands Stay Unchanged
+### 5. Commands Stay Unchanged
 
 Slash commands (`/balance`, `/grupo`, `/ayuda`, etc.) bypass AI entirely - they're already unambiguous.
+
+### 6. Strict Fuzzy Matching
+
+To prevent false positives like "robertro" matching "Conrado Romero":
+- Fuse.js threshold: 0.3 (requires 70% similarity)
+- Confidence threshold: 0.35 (rejects marginal matches)
+- Debug logging shows match scores for troubleshooting
 
 ---
 
@@ -164,7 +227,21 @@ Using Gemini 1.5 Flash:
 - [x] Same confirmation flow
 - [x] Payment notifications to other party
 
-### Phase 3: Smart Features (Future/Backlog)
+### Phase 3: Confirmation Flow ✅ COMPLETE
+- [x] AI expenses stored as "pending" until user confirms
+- [x] User responds "si" to save, "no" to cancel
+- [x] Original message text preserved in Firestore
+- [x] Member aliases passed to AI for better nickname recognition
+- [x] Affirmative/negative response detection (handles "dale", "ok", "nope", etc.)
+
+### Phase 4: Unresolved Name Handling ✅ COMPLETE
+- [x] AI returns ALL mentioned names (even unrecognized ones)
+- [x] Fuzzy matching made stricter (70% similarity, 0.35 confidence)
+- [x] Expense REJECTED if any names can't be resolved
+- [x] Clear error message with suggestions (check spelling, /grupo, try again)
+- [x] Singular/plural grammar ("esta persona" vs "estas personas")
+
+### Phase 5: Smart Features (Future/Backlog)
 - [ ] "¿Cuánto le debo a Juan?" → AI answers from balance
 - [ ] "Borrar el último" → AI understands context
 - [ ] Multi-message context
@@ -227,6 +304,11 @@ The AI prompt includes these local terms:
 
 | Date | Change |
 |------|--------|
+| Dec 30, 2025 | Reject expense if any names unresolved (not just warn) |
+| Dec 30, 2025 | Stricter fuzzy matching (0.3 threshold, 0.35 confidence) |
+| Dec 30, 2025 | AI prompt updated to include ALL mentioned names |
+| Dec 29, 2025 | Added confirmation flow (user must respond "si" to save) |
+| Dec 29, 2025 | Member aliases passed to AI for better recognition |
 | Dec 29, 2025 | Added `includesSender` for smart split detection ("con" vs "@") |
 | Dec 28, 2025 | Payment recognition ("pagué", "recibí") |
 | Dec 27, 2025 | Initial implementation (Phase 1 - expenses) |

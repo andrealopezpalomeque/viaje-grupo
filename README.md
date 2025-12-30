@@ -8,15 +8,25 @@ Split expenses with friends during trips. Add expenses via WhatsApp, see balance
 
 ## Features
 
-- **WhatsApp Integration**: Log expenses by texting a bot (e.g., "50 lunch")
-- **Real-time Updates**: Firebase Firestore syncs data instantly across all devices
+### WhatsApp Bot
+- **AI Natural Language**: Just text naturally - "Gasté 150 en pizza", "5 lucas el taxi"
+- **Argentine Slang**: Understands "lucas", "mangos", "birra", "morfi", "bondi"
+- **Smart Split Detection**: "con Juan" includes you, "@Juan" means only Juan
+- **Confirmation Flow**: AI asks for confirmation before saving (respond "si" or "no")
+- **Unresolved Name Check**: Rejects expense if any mentioned name can't be found
+- **Multi-currency**: USD, EUR, BRL auto-converted to ARS (Blue Dollar rate)
+- **Payment Recording**: `pagué 5000 @Maria` or `recibí 5000 @Juan`
+- **Bot Commands**: `/balance`, `/lista`, `/borrar`, `/grupo`, `/ayuda`
+
+### Web Dashboard
+- **Real-time Updates**: Firebase Firestore syncs instantly across devices
 - **Smart Balance Calculations**: Splitwise-style "who owes whom" logic
-- **Auto-categorization**: AI parsing of expense messages into categories
-- **Multi-currency Support**: USD, EUR, BRL auto-converted to ARS
-- **@mention Splitting**: Split expenses with specific people (e.g., "100 taxi @Juan @Maria")
-- **Bot Commands**: `/balance`, `/lista`, `/borrar`, `/ayuda`
-- **Dark Mode**: Full dark mode support
+- **Unified Activity Feed**: Shows both expenses and payments
+- **Settlement Recommendations**: See exactly who should pay whom
+- **Payment Info**: CBU, CVU, Mercado Pago details with copy-to-clipboard
+- **Multi-group Support**: Switch between trip groups
 - **Mobile-first**: Optimized for on-the-go usage
+- **Dark Mode**: Full dark mode support
 
 ## Tech Stack
 
@@ -34,15 +44,20 @@ Split expenses with friends during trips. Add expenses via WhatsApp, see balance
 - **Language**: TypeScript
 - **Database**: Firebase Firestore (Admin SDK)
 - **Webhook**: WhatsApp Business API integration
+- **AI**: Google Gemini 2.0 Flash (natural language parsing)
+- **Fuzzy Matching**: Fuse.js (for @mentions)
 
 ## Documentation
 
 - [Project Plan](./docs/project-plan.md) - Development phases and session log
+- [Product Status](./docs/product-status.md) - Current state and roadmap
+- [AI Natural Language](./docs/ai-natural-language.md) - AI parsing architecture and features
+- [Session Handoff](./docs/session-handoff.md) - Context for new development sessions
 - [Deployment Guide](./docs/deployment.md) - Production deployment checklist
 - [Google Auth Setup](./docs/google-auth.md) - Authentication configuration
 - [Firestore Security](./docs/firestore-security.md) - Security rules documentation
 - [Splitting Logic](./docs/splitting-logic.md) - Balance calculation algorithm
-- [Icon Usage](./docs/icons.md) - Using unplugin-icons
+- [Adding Groups](./docs/adding-groups.md) - How to create test groups
 - [Architecture Overview](./docs/overview.md) - Detailed system design
 
 ## Development
@@ -117,21 +132,36 @@ Then configure your WhatsApp webhook URL to:
 
 ## Message Format
 
-Users can send expenses in natural language:
+Users can send expenses in natural language (AI-powered):
 
+### Natural Language (AI understands)
+- `Gasté 150 en pizza` → AI parses: $150 ARS, "pizza"
+- `5 lucas el taxi` → AI understands slang: $5000 ARS, "taxi"
+- `50 dólares la cena` → AI detects currency: $50 USD → ARS
+
+### Split Options
+- `50 cena con Juan` → Sender + Juan split it (natural "with")
+- `50 cena @Juan` → Only Juan owes (explicit mention)
+- `100 pizza con Juan y María` → Sender + Juan + María split it
+- `100 pizza @Juan @María` → Only Juan and María split it
+
+### Payments
+- `pagué 5000 @Maria` → Record payment made to Maria
+- `recibí 5000 @Juan` → Record payment received from Juan
+
+### Legacy Syntax (still works)
 - `50 lunch` → $50 ARS, "lunch", category: food
-- `120 taxi to airport` → $120 ARS, "taxi to airport", category: transport
-- `USD 10 dinner` → Converted to ARS, "dinner", category: food
-- `100 hotel @Juan @Maria` → Split among Juan, Maria, and payer
+- `USD 10 dinner` → Converted to ARS, "dinner"
 
 ## Bot Commands
 
 | Command | Description |
 |---------|-------------|
 | `/ayuda` or `/help` | Show usage instructions |
-| `/balance` or `/saldo` | Show group balances |
+| `/balance` or `/saldo` | Show group balances (who owes whom) |
 | `/lista` or `/list` | Show last 10 expenses |
 | `/borrar [n]` or `/delete [n]` | Delete expense by number |
+| `/grupo` or `/group` | Switch between groups (for multi-group users) |
 
 ## Scripts
 

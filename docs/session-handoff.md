@@ -1,6 +1,6 @@
 # Text the Check - Session Handoff Document
 
-**Last updated:** December 29, 2025
+**Last updated:** December 30, 2025
 **Purpose:** Context document to start new Claude conversations with full project knowledge
 
 ---
@@ -144,7 +144,7 @@ payments/
 
 ## ✅ What's Built & Working
 
-### AI Natural Language (NEW - December 2025)
+### AI Natural Language (December 2025)
 - [x] Google Gemini AI integration for message parsing
 - [x] Argentine Spanish slang support (lucas, k, mangos, birra, morfi, bondi)
 - [x] Natural language expense entry ("gasté 150 en pizza", "50 dólares la cena con juan")
@@ -152,6 +152,10 @@ payments/
 - [x] Fallback to regex parser if AI fails or has low confidence
 - [x] Confidence threshold (0.7) for AI responses
 - [x] 5-second timeout with automatic fallback
+- [x] **Confirmation flow**: AI expenses require "si" to save, "no" to cancel
+- [x] **Member aliases**: AI receives nicknames for better recognition
+- [x] **Unresolved name rejection**: Expense blocked if any name can't be matched
+- [x] **Strict fuzzy matching**: 70% similarity required, prevents false positives
 
 ### WhatsApp Bot
 - [x] Natural language expense entry (AI-powered)
@@ -398,16 +402,18 @@ git push origin main
 
 ---
 
-## 🎯 Next Steps (As of December 29, 2025)
+## 🎯 Next Steps (As of December 30, 2025)
 
 1. **Done:** Splitting logic redesign - payer not auto-included (see `docs/splitting-logic.md`)
 2. **Done:** Payment recording feature - WhatsApp commands + dashboard button
 3. **Done:** Activity feed shows both expenses and payments
 4. **Done:** AI natural language parsing with Gemini (see `docs/ai-natural-language.md`)
 5. **Done:** Smart split detection ("con" vs "@")
-6. **Test:** Real trip testing scheduled for January 2025
-7. **Parallel:** Research WhatsApp Business verification process
-8. **After testing:** Build self-registration and group creation features
+6. **Done:** AI expense confirmation flow (user must confirm with "si")
+7. **Done:** Unresolved name handling (reject expense if names can't be matched)
+8. **Test:** Real trip testing scheduled for January 2025
+9. **Parallel:** Research WhatsApp Business verification process
+10. **After testing:** Build self-registration and group creation features
 
 ---
 
