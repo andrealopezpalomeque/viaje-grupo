@@ -204,7 +204,7 @@ export function formatExpenseConfirmation(
 /**
  * Format confirmation REQUEST message for AI-parsed expenses
  * Shows expense details and asks user to confirm with "si" or cancel with "no"
- * Includes warnings for unresolved names
+ * Note: Unresolved names are rejected earlier, so this only shows valid expenses
  */
 export function formatExpenseConfirmationRequest(
   amount: number,
@@ -213,8 +213,7 @@ export function formatExpenseConfirmationRequest(
   description: string,
   category: string,
   groupName: string,
-  displayNames: string[],      // Resolved names
-  unresolvedNames: string[]    // Names that weren't found
+  displayNames: string[]
 ): string {
   let message = `🔍 *¿Guardar este gasto?*\n\n`
   message += `📁 *Grupo: ${groupName}*\n\n`
@@ -239,22 +238,9 @@ export function formatExpenseConfirmationRequest(
     message += `👥 Dividido entre: Todo el grupo\n`
   }
 
-  // CRITICAL: Show unresolved names as warnings
-  if (unresolvedNames && unresolvedNames.length > 0) {
-    message += `\n⚠️ *No encontré en este grupo:*\n`
-    for (const name of unresolvedNames) {
-      message += `• ${name}\n`
-    }
-  }
-
   message += `\n━━━━━━━━━━━━━━━━━━━━━━\n`
   message += `Respondé *si* para guardar\n`
-  message += `Respondé *no* para cancelar\n`
-
-  // If there were unresolved names, suggest changing group
-  if (unresolvedNames && unresolvedNames.length > 0) {
-    message += `\n💡 ¿Grupo equivocado? Usá /grupo para cambiar`
-  }
+  message += `Respondé *no* para cancelar`
 
   return message
 }

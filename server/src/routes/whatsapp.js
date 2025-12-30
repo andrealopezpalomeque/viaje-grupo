@@ -809,10 +809,26 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
     // Don't add to displayNames, will show "Todo el grupo"
   }
 
-  // 4. Auto-categorize based on description
+  // 4. REJECT if there are unresolved names (don't allow partial splits)
+  if (unresolvedNames.length > 0) {
+    let errorMsg = `⚠️ *No pude encontrar a estas personas en el grupo:*\n`
+    for (const name of unresolvedNames) {
+      errorMsg += `• ${name}\n`
+    }
+    errorMsg += `\n📁 Grupo actual: *${groupName}*\n`
+    errorMsg += `\n💡 *¿Qué podés hacer?*\n`
+    errorMsg += `• Revisá que el nombre esté bien escrito\n`
+    errorMsg += `• Usá /grupo para cambiar de grupo\n`
+    errorMsg += `• Volvé a enviar el gasto con los nombres correctos`
+
+    await sendMessage(from, errorMsg)
+    return
+  }
+
+  // 5. Auto-categorize based on description
   const category = categorizeFromDescription(aiResult.description)
 
-  // 5. Store as PENDING (don't save yet!)
+  // 6. Store as PENDING (don't save yet!)
   setPendingAIExpense(user.id, {
     from,
     originalText,  // Store original message for Firestore
@@ -824,7 +840,6 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
       category,
       splitAmong: resolvedSplitAmong,
       displayNames,
-      unresolvedNames,  // Track failures for warning display
       includesSender: aiResult.includesSender
     },
     userId: user.id,
@@ -834,7 +849,7 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
     createdAt: new Date()
   })
 
-  // 6. Send confirmation REQUEST (not confirmation)
+  // 7. Send confirmation REQUEST (not confirmation)
   const confirmationRequestMsg = formatExpenseConfirmationRequest(
     finalAmount,
     originalAmount,
@@ -842,8 +857,7 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
     aiResult.description,
     category,
     groupName,
-    displayNames,
-    unresolvedNames  // Show unresolved as warnings
+    displayNames
   )
 
   await sendMessage(from, confirmationRequestMsg)
