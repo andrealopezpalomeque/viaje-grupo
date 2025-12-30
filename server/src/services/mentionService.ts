@@ -3,13 +3,13 @@ import type { User } from '../types/index.js'
 
 /**
  * Fuzzy matching configuration for @mentions
- * - threshold: 0.4 means matches need to be at least 60% similar
+ * - threshold: 0.3 means matches need to be at least 70% similar
  * - ignoreLocation: true to match anywhere in the string
  * - includeScore: true to get confidence scores
  */
 const FUSE_OPTIONS = {
   keys: ['aliases', 'normalizedName'],
-  threshold: 0.4,       // Lower = stricter matching (0 = exact, 1 = match anything)
+  threshold: 0.3,       // Lower = stricter matching (0 = exact, 1 = match anything)
   ignoreLocation: true, // Don't prefer matches at the start
   includeScore: true,   // Include match score for confidence filtering
   minMatchCharLength: 2 // Minimum characters to match
@@ -18,8 +18,9 @@ const FUSE_OPTIONS = {
 /**
  * Confidence threshold - reject matches with score higher than this
  * Fuse.js scores are 0 (perfect) to 1 (no match)
+ * Stricter threshold (0.35) to avoid false positives like "robertro" → "romero"
  */
-const CONFIDENCE_THRESHOLD = 0.5
+const CONFIDENCE_THRESHOLD = 0.35
 
 /**
  * Normalize text for matching
@@ -81,17 +82,23 @@ export function matchMention(mention: string, groupMembers: User[]): User | null
   const results = fuse.search(normalizedMention)
 
   if (results.length === 0) {
+    console.log(`[Mention] "${mention}" → no matches found`)
     return null
   }
 
   // Get the best match
   const bestMatch = results[0]
 
+  // Log the match attempt for debugging
+  console.log(`[Mention] "${mention}" → best match: "${bestMatch.item.user.name}" (score: ${bestMatch.score?.toFixed(3)}, threshold: ${CONFIDENCE_THRESHOLD})`)
+
   // Check confidence (score is 0 for perfect match, higher = worse)
   if (bestMatch.score !== undefined && bestMatch.score > CONFIDENCE_THRESHOLD) {
+    console.log(`[Mention] "${mention}" → REJECTED (score ${bestMatch.score?.toFixed(3)} > threshold ${CONFIDENCE_THRESHOLD})`)
     return null
   }
 
+  console.log(`[Mention] "${mention}" → MATCHED to "${bestMatch.item.user.name}"`)
   return bestMatch.item.user
 }
 
