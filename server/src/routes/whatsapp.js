@@ -652,6 +652,7 @@ async function saveConfirmedAIExpense(pending) {
     amount: pending.expense.amount,
     originalAmount: pending.expense.originalAmount,
     originalCurrency: pending.expense.originalCurrency,
+    originalInput: pending.originalText,  // Include original message
     description: pending.expense.description,
     category: pending.expense.category,
     splitAmong: pending.expense.splitAmong,
@@ -814,6 +815,7 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
   // 5. Store as PENDING (don't save yet!)
   setPendingAIExpense(user.id, {
     from,
+    originalText,  // Store original message for Firestore
     expense: {
       amount: finalAmount,
       originalAmount,

@@ -41,6 +41,7 @@ interface PendingExpense {
  */
 export interface PendingAIExpense {
   from: string              // WhatsApp number
+  originalText: string      // Original message text for Firestore
   expense: {
     amount: number
     originalAmount?: number
