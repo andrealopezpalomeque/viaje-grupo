@@ -30,8 +30,15 @@
         </div>
       </div>
 
-      <!-- Explanation text when simplified -->
-      <p v-if="simplified" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+      <!-- Info message when simplified but no effect -->
+      <p v-if="showNoEffectMessage"
+         class="text-xs text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">
+        <IconInformation class="w-4 h-4 flex-shrink-0" />
+        Las deudas ya estan simplificadas al maximo
+      </p>
+
+      <!-- Normal explanation text when simplified has effect -->
+      <p v-else-if="simplified" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
         Transferencias reducidas al minimo. No se muestra desglose por gasto.
       </p>
     </div>
@@ -61,10 +68,12 @@
 <script setup>
 import IconSwapHorizontal from '~icons/mdi/swap-horizontal'
 import IconCheck from '~icons/mdi/check'
+import IconInformation from '~icons/mdi/information-outline'
 
 defineProps({
   settlements: { type: Array, required: true },
-  simplified: { type: Boolean, default: false }
+  simplified: { type: Boolean, default: false },
+  showNoEffectMessage: { type: Boolean, default: false }
 })
 
 defineEmits(['toggle-simplify'])

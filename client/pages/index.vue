@@ -70,6 +70,7 @@
             <SettlementList
               :settlements="currentSettlements"
               :simplified="useSimplifiedSettlements"
+              :show-no-effect-message="showNoSimplificationMessage"
               @toggle-simplify="toggleSimplify"
             />
 
@@ -170,13 +171,55 @@ const settlements = computed(() => {
 // Simplified settlements toggle (group-level setting)
 const useSimplifiedSettlements = computed(() => groupStore.simplifySettlements)
 
-const currentSettlements = computed(() => {
+const directSettlements = computed(() => {
   // Touch reactive arrays to establish dependency
   void paymentStore.payments.length
   void expenseStore.expenses.length
+  return userStore.calculateSettlements()
+})
+
+const simplifiedSettlements = computed(() => {
+  // Touch reactive arrays to establish dependency
+  void paymentStore.payments.length
+  void expenseStore.expenses.length
+  return userStore.calculateSimplifiedSettlements()
+})
+
+const currentSettlements = computed(() => {
   return useSimplifiedSettlements.value
-    ? userStore.calculateSimplifiedSettlements()
-    : userStore.calculateSettlements()
+    ? simplifiedSettlements.value
+    : directSettlements.value
+})
+
+// Check if simplification actually reduces transfers
+const simplificationHasEffect = computed(() => {
+  // Compare number of settlements
+  if (directSettlements.value.length !== simplifiedSettlements.value.length) {
+    return true
+  }
+
+  // If same length, compare the pairings (simplified might have different pairings)
+  const directPairs = new Set(
+    directSettlements.value.map(s => `${s.fromUserId}-${s.toUserId}`)
+  )
+  const simplifiedPairs = new Set(
+    simplifiedSettlements.value.map(s => `${s.fromUserId}-${s.toUserId}`)
+  )
+
+  if (directPairs.size !== simplifiedPairs.size) return true
+
+  for (const pair of directPairs) {
+    if (!simplifiedPairs.has(pair)) return true
+  }
+
+  return false
+})
+
+// Show message when simplified is ON but has no effect
+const showNoSimplificationMessage = computed(() => {
+  return useSimplifiedSettlements.value &&
+         !simplificationHasEffect.value &&
+         currentSettlements.value.length > 0  // Don't show if no debts
 })
 
 const toggleSimplify = async () => {
