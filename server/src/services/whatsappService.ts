@@ -238,9 +238,10 @@ export function formatExpenseConfirmationRequest(
     message += `👥 Dividido entre: Todo el grupo\n`
   }
 
-  message += `\n━━━━━━━━━━━━━━━━━━━━━━\n`
-  message += `Respondé *si* para guardar\n`
-  message += `Respondé *no* para cancelar`
+  message += `\n━━━━━━━━━━━━━━━━━━━━━━\n\n`
+  message += `⬇️ *RESPONDÉ PARA CONFIRMAR* ⬇️\n\n`
+  message += `✅  *si*  → Guardar gasto\n`
+  message += `❌  *no*  → Cancelar`
 
   return message
 }
