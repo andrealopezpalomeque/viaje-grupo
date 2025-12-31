@@ -192,7 +192,7 @@ La IA entiende lo que escribas y te pide confirmar antes de guardar.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Para editar gastos, ver detalles de pagos e historial completo:
+📊 Desde el dashboard podés agregar, editar y eliminar gastos:
 https://textthecheck.app
 
 ¡Empezá a cargar gastos! 🎉`
@@ -551,7 +551,7 @@ async function handleCommand(from, text, user, groupId) {
     case '/borrar':
     case '/delete':
       // Redirect to dashboard - edit/delete is dashboard-only
-      await sendMessage(from, `✏️ Para editar o eliminar gastos, usá el dashboard:\n\nhttps://textthecheck.app\n\nAhí podés ver todos los gastos y modificarlos fácilmente.`)
+      await sendMessage(from, `✏️ Para agregar, editar o eliminar gastos manualmente, usá el dashboard:\n\nhttps://textthecheck.app`)
       break
 
     default:

@@ -136,7 +136,7 @@ Si mencionás personas, se divide solo entre ellas.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Ver historial y editar gastos:
+📊 Agregar, editar o eliminar gastos:
 https://textthecheck.app`
 }
 

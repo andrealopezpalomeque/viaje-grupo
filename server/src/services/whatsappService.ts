@@ -270,7 +270,7 @@ export function formatParseErrorMessage(): string {
  */
 export function formatValidationErrorMessage(error: string): string {
   return `⚠️ *${error}*\n\n` +
-    `Probá de nuevo o cargá el gasto desde el dashboard:\n` +
+    `Probá de nuevo o agregá el gasto desde el dashboard:\n` +
     `https://textthecheck.app`
 }
 
