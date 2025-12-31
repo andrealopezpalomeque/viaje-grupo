@@ -1,5 +1,5 @@
 <template>
-  <div class="px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors overflow-hidden group">
+  <div class="px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors overflow-hidden">
     <div class="flex items-start gap-2">
       <!-- Category icon -->
       <CategoryIcon :category="expense.category" size="md" />
@@ -21,18 +21,18 @@
 
           <!-- Amount and actions -->
           <div class="flex items-start gap-2">
-            <!-- Edit/Delete buttons (visible on hover/focus) -->
-            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+            <!-- Edit/Delete buttons (always visible, subtle) -->
+            <div class="flex items-center gap-0.5">
               <button
                 @click.stop="$emit('edit', expense)"
-                class="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                class="p-1.5 text-gray-300 dark:text-gray-600 hover:text-blue-500 dark:hover:text-blue-400 active:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:bg-blue-100 dark:active:bg-blue-900/30 rounded-lg transition-colors"
                 title="Editar gasto"
               >
                 <IconPencil class="w-4 h-4" />
               </button>
               <button
                 @click.stop="$emit('delete', expense)"
-                class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                class="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 active:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 active:bg-red-100 dark:active:bg-red-900/30 rounded-lg transition-colors"
                 title="Eliminar gasto"
               >
                 <IconTrash class="w-4 h-4" />
