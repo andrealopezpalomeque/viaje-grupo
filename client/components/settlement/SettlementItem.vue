@@ -66,8 +66,14 @@
       >
         <!-- Constrained width on desktop for better readability -->
         <div class="ml-5 pl-4 border-l-2 border-gray-200 dark:border-gray-600 space-y-4 md:max-w-md">
-          <!-- Expense breakdown with selection -->
-          <div>
+          <!-- Simplified mode: no expense breakdown available -->
+          <div v-if="simplified" class="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2">
+            <p>Con simplificacion activada, las transferencias se calculan para minimizar la cantidad de pagos.</p>
+            <p class="mt-1">Desactiva "Simplificar" para ver el desglose por gasto.</p>
+          </div>
+
+          <!-- Normal mode: Expense breakdown with selection -->
+          <div v-else>
             <div class="flex items-center justify-between mb-2">
               <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Selecciona que pagar
@@ -108,6 +114,42 @@
                 Sin desglose disponible
               </div>
             </div>
+            <!-- Payments already made (shows why settlement < expense total) -->
+            <div v-if="paymentsMade.length > 0" class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                Pagos realizados
+              </p>
+              <div class="space-y-1">
+                <div
+                  v-for="payment in paymentsMade"
+                  :key="payment.id"
+                  class="flex items-center justify-between text-sm py-1"
+                >
+                  <span class="text-gray-600 dark:text-gray-400">
+                    {{ formatDate(payment.createdAt) }}
+                  </span>
+                  <span class="text-positive-600 dark:text-positive-400 font-medium">
+                    -{{ formatAmount(payment.amount) }}
+                  </span>
+                </div>
+              </div>
+              <!-- Show the math: expenses - payments = remaining -->
+              <div class="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">
+                <div class="flex justify-between">
+                  <span>Total gastos:</span>
+                  <span>{{ formatAmount(Math.round(totalExpenseDebt)) }}</span>
+                </div>
+                <div class="flex justify-between text-positive-600 dark:text-positive-400">
+                  <span>Ya pagado:</span>
+                  <span>-{{ formatAmount(totalPaid) }}</span>
+                </div>
+                <div class="flex justify-between font-medium text-gray-700 dark:text-gray-300 mt-1">
+                  <span>Pendiente:</span>
+                  <span>{{ formatAmount(settlement.amount) }}</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Selected total -->
             <div v-if="breakdown.length > 0" class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
               <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -211,7 +253,17 @@
               </div>
             </div>
 
-            <!-- Record payment button -->
+            <!-- Record payment button - Simplified mode (no expense selection) -->
+            <button
+              v-else-if="simplified"
+              @click="startSimplifiedPayment"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <IconCash class="w-4 h-4" />
+              Registrar pago de {{ formatAmount(settlement.amount) }}
+            </button>
+
+            <!-- Record payment button - Normal mode (with expense selection) -->
             <button
               v-else
               @click="startPayment"
@@ -268,7 +320,8 @@ import IconLoading from '~icons/mdi/loading'
 
 const props = defineProps({
   settlement: { type: Object, required: true },
-  index: { type: Number, required: true }
+  index: { type: Number, required: true },
+  simplified: { type: Boolean, default: false }
 })
 
 const userStore = useUserStore()
@@ -346,6 +399,12 @@ const formatAmount = (amount) => {
 const startPayment = () => {
   // Use selected total if there are selected items, otherwise full amount
   paymentAmount.value = selectedTotal.value > 0 ? Math.round(selectedTotal.value) : props.settlement.amount
+  showPaymentConfirm.value = true
+}
+
+const startSimplifiedPayment = () => {
+  // In simplified mode, always use the full settlement amount
+  paymentAmount.value = props.settlement.amount
   showPaymentConfirm.value = true
 }
 
@@ -436,4 +495,30 @@ const breakdown = computed(() => {
     new Date(b.expense.timestamp).getTime() - new Date(a.expense.timestamp).getTime()
   )
 })
+
+// Get payments already made from debtor to creditor
+const paymentsMade = computed(() => {
+  return paymentStore.payments
+    .filter(p =>
+      p.fromUserId === props.settlement.fromUserId &&
+      p.toUserId === props.settlement.toUserId
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+})
+
+// Total amount already paid
+const totalPaid = computed(() => {
+  return paymentsMade.value.reduce((sum, p) => sum + p.amount, 0)
+})
+
+// Total debt from expenses (before payments)
+const totalExpenseDebt = computed(() => {
+  return breakdown.value.reduce((sum, item) => sum + item.amount, 0)
+})
+
+// Format date for payment display
+const formatDate = (date) => {
+  const d = new Date(date)
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+}
 </script>

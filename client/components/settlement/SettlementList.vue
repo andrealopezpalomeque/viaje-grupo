@@ -1,11 +1,39 @@
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-    <!-- Header -->
-    <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-      <IconSwapHorizontal class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-        Para Saldar Deudas
-      </h3>
+    <!-- Header with Toggle -->
+    <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <IconSwapHorizontal class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            Para Saldar Deudas
+          </h3>
+        </div>
+
+        <!-- Simplification Toggle -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Simplificar</span>
+          <button
+            @click="$emit('toggle-simplify')"
+            :class="[
+              'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
+              simplified ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+            ]"
+          >
+            <span
+              :class="[
+                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                simplified ? 'translate-x-4' : 'translate-x-0.5'
+              ]"
+            />
+          </button>
+        </div>
+      </div>
+
+      <!-- Explanation text when simplified -->
+      <p v-if="simplified" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        Transferencias reducidas al minimo. No se muestra desglose por gasto.
+      </p>
     </div>
 
     <!-- All Settled State -->
@@ -21,9 +49,10 @@
     <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
       <SettlementItem
         v-for="(settlement, index) in settlements"
-        :key="index"
+        :key="`${settlement.fromUserId}-${settlement.toUserId}-${index}`"
         :settlement="settlement"
         :index="index"
+        :simplified="simplified"
       />
     </div>
   </div>
@@ -34,6 +63,9 @@ import IconSwapHorizontal from '~icons/mdi/swap-horizontal'
 import IconCheck from '~icons/mdi/check'
 
 defineProps({
-  settlements: { type: Array, required: true }
+  settlements: { type: Array, required: true },
+  simplified: { type: Boolean, default: false }
 })
+
+defineEmits(['toggle-simplify'])
 </script>

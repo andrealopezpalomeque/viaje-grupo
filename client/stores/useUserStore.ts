@@ -311,6 +311,64 @@ export const useUserStore = defineStore('user', {
     },
 
     /**
+     * Calculate simplified settlements (minimum transfers algorithm)
+     * Uses net balances instead of tracking individual debts
+     * This minimizes the number of transfers needed to settle all debts
+     */
+    calculateSimplifiedSettlements(): Settlement[] {
+      const balances = this.calculateBalances()
+      const settlements: Settlement[] = []
+
+      // Separate into debtors (negative net) and creditors (positive net)
+      const debtors = balances
+        .filter(b => b.net < -0.01)
+        .map(b => ({ id: b.userId, amount: Math.abs(b.net) }))
+        .sort((a, b) => b.amount - a.amount)
+
+      const creditors = balances
+        .filter(b => b.net > 0.01)
+        .map(b => ({ id: b.userId, amount: b.net }))
+        .sort((a, b) => b.amount - a.amount)
+
+      // Make copies to avoid mutating during iteration
+      const debtorsCopy = debtors.map(d => ({ ...d }))
+      const creditorsCopy = creditors.map(c => ({ ...c }))
+
+      // Greedy algorithm: match debtors to creditors
+      let i = 0 // debtor index
+      let j = 0 // creditor index
+
+      while (i < debtorsCopy.length && j < creditorsCopy.length) {
+        const debtor = debtorsCopy[i]
+        const creditor = creditorsCopy[j]
+
+        // Safety check (should never happen due to while condition)
+        if (!debtor || !creditor) break
+
+        // Settlement amount is the minimum of what debtor owes and creditor is owed
+        const amount = Math.min(debtor.amount, creditor.amount)
+
+        if (amount > 0.01) {
+          settlements.push({
+            fromUserId: debtor.id,
+            toUserId: creditor.id,
+            amount: Math.round(amount)
+          })
+        }
+
+        // Reduce amounts
+        debtor.amount -= amount
+        creditor.amount -= amount
+
+        // Move to next debtor/creditor if fully settled
+        if (debtor.amount < 0.01) i++
+        if (creditor.amount < 0.01) j++
+      }
+
+      return settlements.sort((a, b) => b.amount - a.amount)
+    },
+
+    /**
      * Update user's payment info
      */
     async updateUserPaymentInfo(userId: string, paymentInfo: PaymentInfo) {

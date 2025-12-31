@@ -67,7 +67,11 @@
             />
 
             <!-- Settlement List -->
-            <SettlementList :settlements="settlements" />
+            <SettlementList
+              :settlements="currentSettlements"
+              :simplified="useSimplifiedSettlements"
+              @toggle-simplify="toggleSimplify"
+            />
 
             <!-- All Group Activity -->
             <ExpenseList
@@ -162,6 +166,22 @@ const settlements = computed(() => {
   void expenseStore.expenses.length
   return userStore.calculateSettlements()
 })
+
+// Simplified settlements toggle
+const useSimplifiedSettlements = ref(false)
+
+const currentSettlements = computed(() => {
+  // Touch reactive arrays to establish dependency
+  void paymentStore.payments.length
+  void expenseStore.expenses.length
+  return useSimplifiedSettlements.value
+    ? userStore.calculateSimplifiedSettlements()
+    : userStore.calculateSettlements()
+})
+
+const toggleSimplify = () => {
+  useSimplifiedSettlements.value = !useSimplifiedSettlements.value
+}
 
 // Personal balance (for Inicio tab)
 const myBalance = computed(() => {
