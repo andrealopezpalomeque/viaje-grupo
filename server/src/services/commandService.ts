@@ -115,34 +115,29 @@ setInterval(cleanupExpiredPendingStates, 60 * 1000)
 export function getHelpMessage(): string {
   return `📖 *Cómo usar Text the Check*
 
-*Agregar gasto (escribí natural):*
-\`Gasté 150 en pizza\` - IA entiende
-\`50 dólares la cena\` - Detecta moneda
-\`5 lucas el taxi\` - Entiende "lucas"
+💬 *Contame qué pagaste:*
+"Puse 150 en la pizza"
+"Pagué 50 dólares la cena"
+"Gasté 5 lucas en el taxi"
 
-*Dividir gastos:*
-\`50 cena con Juan\` - Vos + Juan
-\`50 cena @Juan\` - Solo Juan
-\`100 pizza @Juan @María\` - Solo ellos
+Por defecto se divide entre todos.
+Si mencionás personas, se divide solo entre ellas.
 
-*Registrar pago:*
-\`pagué 5000 @María\` - Pagaste a María
-\`recibí 5000 @Juan\` - Recibiste de Juan
+💸 *Registrar pagos:*
+"Le pagué 5000 a María"
+"Recibí 3000 de Juan"
 
-*Tip:* "con" te incluye, "@" no te incluye
+💱 *Monedas:* USD, EUR, BRL → se convierten a ARS
 
-*Monedas:* USD, EUR, BRL (se convierten a ARS)
-
-*Comandos:*
-/grupo - Ver y cambiar grupo activo
-/balance - Ver saldos
+⚡ *Comandos:*
+/balance - Ver quién debe a quién
 /lista - Ver últimos gastos
-/ayuda - Ver esta ayuda
+/grupo - Cambiar de grupo
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
-✏️ *¿Editar o eliminar un gasto?*
-Hacelo desde el dashboard: https://textthecheck.app`
+📊 Ver historial y editar gastos:
+https://textthecheck.app`
 }
 
 /**
