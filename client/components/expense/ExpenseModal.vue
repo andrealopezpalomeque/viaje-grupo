@@ -167,6 +167,7 @@
 
 <script setup lang="ts">
 import IconClose from '~icons/mdi/close'
+import { deleteField } from 'firebase/firestore'
 
 import type { ExpenseCategory } from '~/types'
 
@@ -273,20 +274,31 @@ const handleSubmit = async () => {
 
   try {
     const amountInARS = convertToARS(form.amount, form.currency)
-    const originalAmount = form.currency !== 'ARS' ? form.amount : undefined
-    const originalCurrency = form.currency !== 'ARS' ? form.currency : undefined
 
     if (isEditMode.value && expenseToEdit.value?.id) {
-      // Update existing expense
-      await expenseStore.updateExpense(expenseToEdit.value.id, {
+      // Update existing expense - build update object without undefined values
+      const updateData: Record<string, any> = {
         amount: Math.round(amountInARS),
-        originalAmount,
-        originalCurrency,
         description: form.description.trim(),
         category: form.category,
         splitAmong: form.participants
-      })
+      }
+
+      // Only include original currency fields if not ARS
+      if (form.currency !== 'ARS') {
+        updateData.originalAmount = form.amount
+        updateData.originalCurrency = form.currency
+      } else {
+        // If switching back to ARS, remove original currency fields
+        updateData.originalAmount = deleteField()
+        updateData.originalCurrency = deleteField()
+      }
+
+      await expenseStore.updateExpense(expenseToEdit.value.id, updateData)
     } else {
+      // For create, prepare the values
+      const originalAmount = form.currency !== 'ARS' ? form.amount : undefined
+      const originalCurrency = form.currency !== 'ARS' ? form.currency : undefined
       // Create new expense
       await expenseStore.addExpense(
         firestoreUser.value.id,
