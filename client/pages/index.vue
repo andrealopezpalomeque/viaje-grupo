@@ -60,10 +60,6 @@
               :total-spent="expenseStore.totalSpent"
             />
 
-            <!-- Filters -->
-            <ExpenseFilters />
-            <ExpenseFilterChips />
-
             <!-- Balance List -->
             <BalanceList
               :balances="sortedBalances"
@@ -128,7 +124,6 @@ const paymentStore = usePaymentStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 const { activeTab, openExpenseModal, openEditExpenseModal } = useNavigationState()
-const { filterByPerson, filterByPayer } = useExpenseFilters()
 
 // Start with loading = true, only set to false when we KNOW data is ready
 // This prevents any flash of empty content during hydration
@@ -192,7 +187,7 @@ const myCredits = computed<Settlement[]>(() => {
 
 // Unified activity list (expenses + payments)
 const groupActivity = computed(() => {
-  const expenses = filteredExpenses.value
+  const expenses = expenseStore.expenses
   const payments = paymentStore.payments
 
   // Combine and sort by date descending
@@ -225,31 +220,6 @@ const myRecentActivity = computed(() => {
     return dateB.getTime() - dateA.getTime()
   }).slice(0, 10)
 })
-
-// Filtered expenses for stats (keep as is for stats calculations)
-const filteredExpenses = computed(() => {
-  let result = expenseStore.expenses
-
-  // Filter by person
-  if (filterByPerson.value) {
-    result = result.filter(expense => {
-      const isInvolved = expense.userId === filterByPerson.value ||
-        (expense.splitAmong && expense.splitAmong.includes(filterByPerson.value!)) ||
-        (!expense.splitAmong || expense.splitAmong.length === 0)
-      return isInvolved
-    })
-  }
-
-  // Filter by payer
-  if (filterByPayer.value === 'me') {
-    result = result.filter(e => e.userId === currentUserId.value)
-  } else if (filterByPayer.value === 'others') {
-    result = result.filter(e => e.userId !== currentUserId.value)
-  }
-
-  return result
-})
-
 
 // Payment info modal
 const showPaymentModal = ref(false)
