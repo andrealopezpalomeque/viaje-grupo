@@ -54,8 +54,9 @@ interface Props {
 const props = defineProps<Props>()
 
 const totalSizeClass = computed(() => {
-  if (props.totalSpent >= 1000000) return 'text-xs'
-  if (props.totalSpent >= 100000) return 'text-sm'
+  if (props.totalSpent >= 100000) return 'text-[0.625rem] md:text-sm'
+  if (props.totalSpent >= 10000) return 'text-xs md:text-base'
+  if (props.totalSpent >= 1000) return 'text-sm md:text-lg'
   return 'text-lg'
 })
 </script>
