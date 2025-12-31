@@ -142,7 +142,7 @@ export function getHelpMessage(): string {
 ━━━━━━━━━━━━━━━━━━━━━━
 
 ✏️ *¿Editar o eliminar un gasto?*
-Hacelo desde el dashboard: textthecheck.app`
+Hacelo desde el dashboard: https://textthecheck.app`
 }
 
 /**
@@ -258,6 +258,8 @@ export async function getBalanceMessage(groupId: string): Promise<string> {
     }
   })
 
+  message += '\n\n📊 Ver detalles en https://textthecheck.app'
+
   return message.trim()
 }
 
@@ -314,7 +316,7 @@ export async function getExpenseListMessage(groupId: string): Promise<string> {
     message += `${index + 1}. ${amount} ${expense.description} - ${firstName} (${date})\n`
   })
 
-  message += '\n✏️ _Editá o eliminá gastos en textthecheck.app_'
+  message += '\n\n📊 Ver historial completo en https://textthecheck.app'
 
   return message.trim()
 }
@@ -407,7 +409,7 @@ export async function deleteExpenseCommand(
  * Unknown command message
  */
 export function getUnknownCommandMessage(command: string): string {
-  return `❓ Comando no reconocido: ${command}\n\nEscribí /ayuda para ver los comandos disponibles.`
+  return `❓ Comando no reconocido: ${command}\n\nEscribí /ayuda para ver los comandos disponibles.\n\n📊 O visitá https://textthecheck.app`
 }
 
 /**

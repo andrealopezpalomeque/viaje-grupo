@@ -551,7 +551,7 @@ async function handleCommand(from, text, user, groupId) {
     case '/borrar':
     case '/delete':
       // Redirect to dashboard - edit/delete is dashboard-only
-      await sendMessage(from, `✏️ Para editar o eliminar gastos, usá el dashboard:\n\n🌐 textthecheck.app\n\nAhí podés ver todos los gastos y modificarlos fácilmente.`)
+      await sendMessage(from, `✏️ Para editar o eliminar gastos, usá el dashboard:\n\nhttps://textthecheck.app\n\nAhí podés ver todos los gastos y modificarlos fácilmente.`)
       break
 
     default:
@@ -648,7 +648,7 @@ async function handleExpenseMessage(from, text, user, groupId, groupName) {
     console.error('Error creating expense:', error)
     await sendMessage(
       from,
-      '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
+      '❌ *Error al guardar el gasto*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.\n\n📊 También podés cargarlo desde https://textthecheck.app'
     )
   }
 }
@@ -767,7 +767,7 @@ async function handlePaymentMessage(from, text, user, groupId, groupName) {
     console.error('Error creating payment:', error)
     await sendMessage(
       from,
-      '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
+      '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.\n\n📊 También podés registrarlo desde https://textthecheck.app'
     )
   }
 }
@@ -834,7 +834,8 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
     errorMsg += `\n💡 *¿Qué podés hacer?*\n`
     errorMsg += `• Revisá que el nombre esté bien escrito\n`
     errorMsg += `• Usá /grupo para cambiar de grupo\n`
-    errorMsg += `• Volvé a enviar el gasto con los nombres correctos`
+    errorMsg += `• Volvé a enviar el gasto con los nombres correctos\n`
+    errorMsg += `\n📊 O cargalo desde https://textthecheck.app`
 
     await sendMessage(from, errorMsg)
     return
@@ -970,7 +971,7 @@ async function handleAIPayment(from, aiResult, user, groupId, groupName) {
     console.error('Error creating AI payment:', error)
     await sendMessage(
       from,
-      '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.'
+      '❌ *Error al registrar el pago*\n\nOcurrió un error al procesar tu mensaje. Por favor intentá de nuevo.\n\n📊 También podés registrarlo desde https://textthecheck.app'
     )
   }
 }

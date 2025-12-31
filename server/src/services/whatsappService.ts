@@ -249,7 +249,7 @@ export function formatExpenseConfirmationRequest(
  * Format cancellation message for AI expenses
  */
 export function formatExpenseCancelledMessage(): string {
-  return `❌ Gasto cancelado. Podés intentar de nuevo.`
+  return `❌ Gasto cancelado.\n\nPodés intentar de nuevo o cargarlo desde https://textthecheck.app`
 }
 
 /**
@@ -257,13 +257,12 @@ export function formatExpenseCancelledMessage(): string {
  */
 export function formatParseErrorMessage(): string {
   return `⚠️ *No pude entender el mensaje*\n\n` +
-    `Usá este formato:\n` +
-    `\`[monto] [descripción]\`\n\n` +
-    `*Ejemplos:*\n` +
-    `• \`50 almuerzo\`\n` +
-    `• \`1500 taxi al aeropuerto\`\n` +
-    `• \`USD 20 cena @Juan @María\`\n\n` +
-    `_Escribí /ayuda para más info_`
+    `Probá decirlo de otra forma, por ejemplo:\n` +
+    `• "Puse 50 en el almuerzo"\n` +
+    `• "Pagué 1500 del taxi"\n` +
+    `• "Gasté 20 dólares en la cena con Juan"\n\n` +
+    `_Escribí /ayuda para más info_\n\n` +
+    `📊 También podés cargar gastos en https://textthecheck.app`
 }
 
 /**
@@ -271,10 +270,8 @@ export function formatParseErrorMessage(): string {
  */
 export function formatValidationErrorMessage(error: string): string {
   return `⚠️ *${error}*\n\n` +
-    `*Ejemplos válidos:*\n` +
-    `• \`100 taxi\`\n` +
-    `• \`USD 50 cena @Juan\`\n\n` +
-    `_Escribí /ayuda para más info_`
+    `Probá de nuevo o cargá el gasto desde el dashboard:\n` +
+    `https://textthecheck.app`
 }
 
 /**
@@ -349,7 +346,7 @@ export function formatPaymentNotification(
 ${message}
 Grupo: ${groupName}
 
-Usá /balance para ver tu balance actualizado.`
+📊 Ver detalles en https://textthecheck.app`
 }
 
 /**
@@ -364,5 +361,6 @@ export function formatPaymentErrorMessage(errorType: 'no_mention' | 'invalid_men
     self_payment: "⚠️ No podés registrar un pago a vos mismo"
   }
 
-  return messages[errorType] || "⚠️ Error al procesar el pago"
+  const baseMessage = messages[errorType] || "⚠️ Error al procesar el pago"
+  return `${baseMessage}\n\n📊 También podés registrar pagos en https://textthecheck.app`
 }
