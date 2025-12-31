@@ -167,8 +167,8 @@ const settlements = computed(() => {
   return userStore.calculateSettlements()
 })
 
-// Simplified settlements toggle
-const useSimplifiedSettlements = ref(false)
+// Simplified settlements toggle (group-level setting)
+const useSimplifiedSettlements = computed(() => groupStore.simplifySettlements)
 
 const currentSettlements = computed(() => {
   // Touch reactive arrays to establish dependency
@@ -179,8 +179,8 @@ const currentSettlements = computed(() => {
     : userStore.calculateSettlements()
 })
 
-const toggleSimplify = () => {
-  useSimplifiedSettlements.value = !useSimplifiedSettlements.value
+const toggleSimplify = async () => {
+  await groupStore.toggleSimplifySettlements()
 }
 
 // Personal balance (for Inicio tab)

@@ -5,7 +5,9 @@ import {
   query,
   where,
   doc,
-  updateDoc
+  updateDoc,
+  onSnapshot,
+  type Unsubscribe
 } from 'firebase/firestore'
 import type { Group } from '~/types'
 
@@ -15,6 +17,7 @@ interface GroupState {
   currentUserId: string | null  // Track current user for Firestore updates
   loading: boolean
   error: string | null
+  groupUnsubscribe: Unsubscribe | null  // Real-time listener for selected group
 }
 
 const STORAGE_KEY = 'text-the-check-selected-group'
@@ -25,7 +28,8 @@ export const useGroupStore = defineStore('group', {
     selectedGroupId: null,
     currentUserId: null,
     loading: false,
-    error: null
+    error: null,
+    groupUnsubscribe: null
   }),
 
   getters: {
@@ -49,7 +53,14 @@ export const useGroupStore = defineStore('group', {
     /**
      * Check if user has multiple groups
      */
-    hasMultipleGroups: (state): boolean => state.groups.length > 1
+    hasMultipleGroups: (state): boolean => state.groups.length > 1,
+
+    /**
+     * Get the simplifySettlements setting for the selected group
+     */
+    simplifySettlements(): boolean {
+      return this.selectedGroup?.simplifySettlements || false
+    }
   },
 
   actions: {
@@ -95,27 +106,35 @@ export const useGroupStore = defineStore('group', {
         return
       }
 
+      let groupIdToSelect: string | null = null
+
       // 1. Try to use activeGroupId from Firestore (highest priority)
       if (activeGroupId && this.groups.some(g => g.id === activeGroupId)) {
-        this.selectedGroupId = activeGroupId
+        groupIdToSelect = activeGroupId
         // Also update localStorage to keep in sync
         if (import.meta.client) {
           localStorage.setItem(STORAGE_KEY, activeGroupId)
         }
-        return
       }
-
       // 2. Try to restore from localStorage
-      if (import.meta.client) {
+      else if (import.meta.client) {
         const savedGroupId = localStorage.getItem(STORAGE_KEY)
         if (savedGroupId && this.groups.some(g => g.id === savedGroupId)) {
-          this.selectedGroupId = savedGroupId
-          return
+          groupIdToSelect = savedGroupId
         }
       }
 
       // 3. Default to first group
-      this.selectedGroupId = this.groups[0]?.id || null
+      if (!groupIdToSelect) {
+        groupIdToSelect = this.groups[0]?.id || null
+      }
+
+      this.selectedGroupId = groupIdToSelect
+
+      // Subscribe to real-time updates for the selected group
+      if (groupIdToSelect) {
+        this.subscribeToSelectedGroup(groupIdToSelect)
+      }
     },
 
     /**
@@ -128,6 +147,9 @@ export const useGroupStore = defineStore('group', {
       }
 
       this.selectedGroupId = groupId
+
+      // Subscribe to real-time updates for this group
+      this.subscribeToSelectedGroup(groupId)
 
       // Persist to localStorage
       if (import.meta.client) {
@@ -151,11 +173,67 @@ export const useGroupStore = defineStore('group', {
      * Clear group state (on logout)
      */
     clearGroups() {
+      if (this.groupUnsubscribe) {
+        this.groupUnsubscribe()
+        this.groupUnsubscribe = null
+      }
       this.groups = []
       this.selectedGroupId = null
       this.currentUserId = null
       if (import.meta.client) {
         localStorage.removeItem(STORAGE_KEY)
+      }
+    },
+
+    /**
+     * Subscribe to real-time updates for the selected group
+     */
+    subscribeToSelectedGroup(groupId: string) {
+      const { db } = useFirebase()
+
+      // Unsubscribe from previous listener
+      if (this.groupUnsubscribe) {
+        this.groupUnsubscribe()
+      }
+
+      const groupRef = doc(db, 'groups', groupId)
+      this.groupUnsubscribe = onSnapshot(groupRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data()
+          const updatedGroup = {
+            id: snapshot.id,
+            ...data
+          } as Group
+
+          // Update the group in the groups array
+          const index = this.groups.findIndex(g => g.id === groupId)
+          if (index !== -1) {
+            this.groups[index] = updatedGroup
+          }
+        }
+      })
+    },
+
+    /**
+     * Toggle the simplifySettlements setting for the current group
+     */
+    async toggleSimplifySettlements() {
+      const { db } = useFirebase()
+
+      if (!this.selectedGroupId) return
+
+      try {
+        const groupRef = doc(db, 'groups', this.selectedGroupId)
+        const currentValue = this.selectedGroup?.simplifySettlements || false
+
+        await updateDoc(groupRef, {
+          simplifySettlements: !currentValue
+        })
+
+        // Note: Local state will be updated via the onSnapshot listener
+      } catch (error) {
+        console.error('Error toggling simplify settlements:', error)
+        throw error
       }
     }
   }

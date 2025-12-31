@@ -29,6 +29,7 @@ export interface Group {
   members: string[]       // Array of user IDs
   createdBy: string       // User ID of creator
   createdAt?: Date
+  simplifySettlements?: boolean  // Group-level setting for settlement simplification
 }
 
 // The Expense Record
