@@ -803,7 +803,52 @@ async function handleAIExpense(from, aiResult, user, groupId, groupName, origina
   let displayNames = []
   let unresolvedNames = []
 
-  if (aiResult.splitAmong && aiResult.splitAmong.length > 0) {
+  // Handle exclusion pattern: "todos menos [names]"
+  if (aiResult.excludeFromSplit && aiResult.excludeFromSplit.length > 0) {
+    // This is an exclusion pattern - start with all group members
+    const allMemberIds = groupMembers.map(m => m.id)
+    const allMemberNames = groupMembers.map(m => m.name)
+
+    // Resolve excluded names to IDs
+    const excludeResolution = resolveMentionsWithTracking(aiResult.excludeFromSplit, groupMembers)
+
+    // Check for unresolved exclusion names
+    if (excludeResolution.unresolvedNames.length > 0) {
+      const isSingular = excludeResolution.unresolvedNames.length === 1
+      let errorMsg = isSingular
+        ? `⚠️ *No pude encontrar a esta persona en el grupo:*\n`
+        : `⚠️ *No pude encontrar a estas personas en el grupo:*\n`
+      for (const name of excludeResolution.unresolvedNames) {
+        errorMsg += `• ${name}\n`
+      }
+      errorMsg += `\n📁 Grupo actual: *${groupName}*\n`
+      errorMsg += `\n💡 *¿Qué podés hacer?*\n`
+      errorMsg += `• Revisá que el nombre esté bien escrito\n`
+      errorMsg += `• Usá /grupo para cambiar de grupo\n`
+      errorMsg += `• Volvé a enviar el gasto con los nombres correctos\n`
+      errorMsg += `\n📊 O cargalo desde https://textthecheck.app`
+
+      await sendMessage(from, errorMsg)
+      return
+    }
+
+    // Filter out excluded members
+    resolvedSplitAmong = allMemberIds.filter(id => !excludeResolution.resolvedUserIds.includes(id))
+    displayNames = allMemberNames.filter((name, i) => !excludeResolution.resolvedUserIds.includes(allMemberIds[i]))
+
+    // Handle includesSender for exclusion patterns
+    if (!aiResult.includesSender && resolvedSplitAmong.includes(user.id)) {
+      resolvedSplitAmong = resolvedSplitAmong.filter(id => id !== user.id)
+      displayNames = displayNames.filter(name => name !== user.name)
+    }
+
+    // Check if we have anyone left to split with
+    if (resolvedSplitAmong.length === 0) {
+      await sendMessage(from, '⚠️ No podés excluir a todo el grupo. Tiene que haber al menos una persona para dividir el gasto.')
+      return
+    }
+  } else if (aiResult.splitAmong && aiResult.splitAmong.length > 0) {
+    // Normal mention pattern (not exclusion)
     // Use the new tracking function to capture unresolved names
     const resolution = resolveMentionsWithTracking(aiResult.splitAmong, groupMembers)
     resolvedSplitAmong = resolution.resolvedUserIds

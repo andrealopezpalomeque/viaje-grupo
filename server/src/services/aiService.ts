@@ -21,6 +21,7 @@ export interface AIExpenseResult {
   description: string
   splitAmong: string[]  // Raw names/mentions to resolve
   includesSender: boolean  // Whether the sender should be included in the split
+  excludeFromSplit: string[]  // Names to exclude when using "todos menos [name]" pattern
   confidence: number
 }
 
@@ -214,6 +215,10 @@ function validateExpenseResult(parsed: Record<string, unknown>): AIExpenseResult
   const includesSender = typeof parsed.includesSender === 'boolean'
     ? parsed.includesSender
     : true
+  // Names to exclude from "everyone" when using "todos menos [name]" pattern
+  const excludeFromSplit = Array.isArray(parsed.excludeFromSplit)
+    ? parsed.excludeFromSplit.filter((s): s is string => typeof s === 'string')
+    : []
   const confidence = typeof parsed.confidence === 'number'
     ? Math.min(1, Math.max(0, parsed.confidence))
     : 0.5
@@ -225,6 +230,7 @@ function validateExpenseResult(parsed: Record<string, unknown>): AIExpenseResult
     description,
     splitAmong,
     includesSender,
+    excludeFromSplit,
     confidence
   }
 }

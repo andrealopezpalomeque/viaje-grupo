@@ -132,6 +132,23 @@ Explicit mentions (includesSender = false):
 - "solo [name]" / "only [name]"
 - "le pagué el [something] a [name]" (paid for something only that person owes)
 
+EXCLUSION PATTERNS ("todos menos [name]"):
+
+Sometimes users want to split among everyone EXCEPT specific people. Recognize these patterns:
+
+- "todos menos [name]" → excludeFromSplit: ["name"], splitAmong: []
+- "todos excepto [name]" → excludeFromSplit: ["name"], splitAmong: []
+- "entre todos sin [name]" → excludeFromSplit: ["name"], splitAmong: []
+- "para todos menos yo" → excludeFromSplit: [], splitAmong: [], includesSender: false
+- "dividí entre todos menos [name] y [name2]" → excludeFromSplit: ["name", "name2"], splitAmong: []
+
+When you detect an exclusion pattern:
+1. Set splitAmong to [] (empty - means "everyone")
+2. Set excludeFromSplit to the names that should be EXCLUDED
+3. Set includesSender based on context (usually true for "todos", false if "menos yo")
+
+Note: "menos yo" or "excepto yo" means the sender excludes themselves, so set includesSender: false and excludeFromSplit: []
+
 RESPONSE FORMAT (strict JSON):
 
 For EXPENSE:
@@ -142,6 +159,7 @@ For EXPENSE:
   "description": "<expense description>",
   "splitAmong": ["<name1>", "<name2>"],
   "includesSender": true | false,
+  "excludeFromSplit": ["<name to exclude>"],
   "confidence": <0.0 to 1.0>
 }
 
@@ -185,6 +203,7 @@ Message: "150 pizza"
   "description": "pizza",
   "splitAmong": [],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.95
 }
 
@@ -196,6 +215,7 @@ Message: "USD 50 cena @Juan @Maria"
   "description": "cena",
   "splitAmong": ["Juan", "Maria"],
   "includesSender": false,
+  "excludeFromSplit": [],
   "confidence": 0.98
 }
 
@@ -207,6 +227,7 @@ Message: "Gasté 50 dólares en la cena con juan"
   "description": "cena",
   "splitAmong": ["juan"],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.9
 }
 
@@ -218,6 +239,7 @@ Message: "5 lucas el uber"
   "description": "uber",
   "splitAmong": [],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.9
 }
 
@@ -229,6 +251,7 @@ Message: "150 pizza con Juan"
   "description": "pizza",
   "splitAmong": ["Juan"],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.95
 }
 
@@ -240,6 +263,7 @@ Message: "150 pizza @Juan"
   "description": "pizza",
   "splitAmong": ["Juan"],
   "includesSender": false,
+  "excludeFromSplit": [],
   "confidence": 0.95
 }
 
@@ -251,6 +275,7 @@ Message: "150 pizza con Juan y María"
   "description": "pizza",
   "splitAmong": ["Juan", "María"],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.95
 }
 
@@ -262,6 +287,7 @@ Message: "150 pizza para Juan"
   "description": "pizza",
   "splitAmong": ["Juan"],
   "includesSender": false,
+  "excludeFromSplit": [],
   "confidence": 0.9
 }
 
@@ -273,6 +299,7 @@ Message: "50 dólares la cena con Gonzalo"
   "description": "cena",
   "splitAmong": ["Gonzalo"],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.95
 }
 
@@ -284,6 +311,7 @@ Message: "taxi con los chicos"
   "description": "taxi",
   "splitAmong": [],
   "includesSender": true,
+  "excludeFromSplit": [],
   "confidence": 0.3
 }
 
@@ -295,7 +323,44 @@ Message: "le pagué el almuerzo a Juan"
   "description": "almuerzo",
   "splitAmong": ["Juan"],
   "includesSender": false,
+  "excludeFromSplit": [],
   "confidence": 0.4
+}
+
+Message: "100 alcohol dividí entre todos menos pipi"
+{
+  "type": "expense",
+  "amount": 100,
+  "currency": "ARS",
+  "description": "alcohol",
+  "splitAmong": [],
+  "includesSender": true,
+  "excludeFromSplit": ["pipi"],
+  "confidence": 0.95
+}
+
+Message: "200 cena para todos excepto juan y maria"
+{
+  "type": "expense",
+  "amount": 200,
+  "currency": "ARS",
+  "description": "cena",
+  "splitAmong": [],
+  "includesSender": true,
+  "excludeFromSplit": ["juan", "maria"],
+  "confidence": 0.95
+}
+
+Message: "150 taxi entre todos menos yo"
+{
+  "type": "expense",
+  "amount": 150,
+  "currency": "ARS",
+  "description": "taxi",
+  "splitAmong": [],
+  "includesSender": false,
+  "excludeFromSplit": [],
+  "confidence": 0.95
 }
 
 Message: "Le pagué 5000 a María"
