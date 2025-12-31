@@ -62,7 +62,7 @@
     >
       <div
         v-if="isExpanded"
-        class="px-4 pb-4 overflow-hidden"
+        class="px-4 pt-2 pb-4 overflow-hidden"
       >
         <!-- Constrained width on desktop for better readability -->
         <div class="ml-5 pl-4 border-l-2 border-gray-200 dark:border-gray-600 space-y-4 md:max-w-md">
