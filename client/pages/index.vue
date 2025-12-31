@@ -156,11 +156,25 @@ watchEffect(() => {
 const currentUserId = computed(() => firestoreUser.value?.id || '')
 
 // Balance calculations
-const sortedBalances = computed(() => userStore.getSortedBalances())
-const settlements = computed(() => userStore.calculateSettlements())
+// Force reactive dependency on payments and expenses so Vue re-runs these when data changes
+const sortedBalances = computed(() => {
+  // Touch reactive arrays to establish dependency
+  void paymentStore.payments.length
+  void expenseStore.expenses.length
+  return userStore.getSortedBalances()
+})
+const settlements = computed(() => {
+  // Touch reactive arrays to establish dependency
+  void paymentStore.payments.length
+  void expenseStore.expenses.length
+  return userStore.calculateSettlements()
+})
 
 // Personal balance (for Inicio tab)
 const myBalance = computed(() => {
+  // Touch reactive arrays to establish dependency
+  void paymentStore.payments.length
+  void expenseStore.expenses.length
   const balances = userStore.calculateBalances()
   const myBalanceData = balances.find(b => b.userId === currentUserId.value)
   return myBalanceData?.net || 0
