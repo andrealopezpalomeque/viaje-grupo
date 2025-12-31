@@ -22,12 +22,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
-interface Props {
-  balance: number
-}
-
-const props = defineProps<Props>()
+<script setup>
+const props = defineProps({
+  balance: { type: Number, required: true }
+})
 
 // Responsive font size based on amount magnitude
 const balanceSizeClass = computed(() => {

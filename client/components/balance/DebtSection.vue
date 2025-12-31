@@ -50,28 +50,22 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconCashOut from '~icons/mdi/cash-minus'
 
-import type { Settlement } from '~/types'
+defineProps({
+  debts: { type: Array, required: true }
+})
 
-interface Props {
-  debts: Settlement[]
-}
-
-defineProps<Props>()
-
-defineEmits<{
-  (e: 'showPaymentInfo', userId: string): void
-}>()
+defineEmits(['showPaymentInfo'])
 
 const userStore = useUserStore()
 
-const getUserName = (userId: string) => {
+const getUserName = (userId) => {
   return userStore.getUserById(userId)?.name || 'Usuario'
 }
 
-const hasPaymentInfo = (userId: string) => {
+const hasPaymentInfo = (userId) => {
   const user = userStore.getUserById(userId)
   if (!user?.paymentInfo) return false
   const info = user.paymentInfo

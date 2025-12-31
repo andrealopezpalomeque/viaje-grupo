@@ -66,30 +66,20 @@
   </Teleport>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconAlert from '~icons/mdi/alert-circle-outline'
 import IconDanger from '~icons/mdi/alert-octagon-outline'
 
-interface Props {
-  modelValue: boolean
-  title: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-  variant?: 'default' | 'warning' | 'danger'
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  confirmText: 'Confirmar',
-  cancelText: 'Cancelar',
-  variant: 'default'
+const props = defineProps({
+  modelValue: { type: Boolean, required: true },
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  confirmText: { type: String, default: 'Confirmar' },
+  cancelText: { type: String, default: 'Cancelar' },
+  variant: { type: String, default: 'default' }
 })
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'confirm'): void
-  (e: 'cancel'): void
-}>()
+const emit = defineEmits(['update:modelValue', 'confirm', 'cancel'])
 
 const iconBgClass = computed(() => {
   return {

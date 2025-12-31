@@ -23,16 +23,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
-interface Props {
-  label: string
-  value: string
-  fieldKey: string
-  mono?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  mono: true
+<script setup>
+const props = defineProps({
+  label: { type: String, required: true },
+  value: { type: String, required: true },
+  fieldKey: { type: String, required: true },
+  mono: { type: Boolean, default: true }
 })
 
 const toast = useToast()

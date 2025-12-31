@@ -82,26 +82,17 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconPencil from '~icons/mdi/pencil-outline'
 import IconTrash from '~icons/mdi/delete-outline'
-import type { Expense } from '~/types'
 
-interface Props {
-  expense: Expense
-  currentUserId?: string
-  showUserShare?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  currentUserId: '',
-  showUserShare: false
+const props = defineProps({
+  expense: { type: Object, required: true },
+  currentUserId: { type: String, default: '' },
+  showUserShare: { type: Boolean, default: false }
 })
 
-defineEmits<{
-  (e: 'edit', expense: Expense): void
-  (e: 'delete', expense: Expense): void
-}>()
+defineEmits(['edit', 'delete'])
 
 const userStore = useUserStore()
 

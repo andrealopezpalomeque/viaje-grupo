@@ -94,33 +94,13 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconChevronRight from '~icons/mdi/chevron-right'
 
-import type { Expense } from '~/types'
-
-interface Balance {
-  userId: string
-  paid: number
-  share: number
-  net: number
-}
-
-interface BreakdownItem {
-  expense: Expense
-  amount: number
-  paidBy: string
-  date: Date
-}
-
-interface Props {
-  balance: Balance
-  breakdown: BreakdownItem[]
-  isCurrentUser?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  isCurrentUser: false
+const props = defineProps({
+  balance: { type: Object, required: true },
+  breakdown: { type: Array, required: true },
+  isCurrentUser: { type: Boolean, default: false }
 })
 
 const userStore = useUserStore()
@@ -140,7 +120,7 @@ const toggleExpand = () => {
   isExpanded.value = !isExpanded.value
 }
 
-const getFirstName = (fullName: string) => {
+const getFirstName = (fullName) => {
   if (!fullName) return '?'
   return fullName.split(' ')[0]
 }

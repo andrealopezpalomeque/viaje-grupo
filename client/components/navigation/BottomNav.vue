@@ -73,18 +73,16 @@
   </nav>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconHome from '~icons/mdi/home'
 import IconGroup from '~icons/mdi/account-group'
 import IconPlus from '~icons/mdi/plus'
 import IconUser from '~icons/mdi/account'
 
-import type { TabType } from '~/composables/useNavigationState'
-
 const route = useRoute()
 const { activeTab, switchTab, openExpenseModal } = useNavigationState()
 
-const isActive = (tab: TabType) => {
+const isActive = (tab) => {
   // Only show tab as active when on dashboard
   if (route.path !== '/') return false
   return activeTab.value === tab
@@ -92,7 +90,7 @@ const isActive = (tab: TabType) => {
 
 const isProfileActive = computed(() => route.path === '/profile')
 
-const handleTabClick = (tab: TabType) => {
+const handleTabClick = (tab) => {
   // If already on dashboard, just switch tab
   if (route.path === '/') {
     switchTab(tab)

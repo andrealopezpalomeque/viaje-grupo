@@ -35,23 +35,14 @@
   </div>
 </template>
 
-<script setup lang="ts">
-interface Props {
-  name?: string | null
-  photoUrl?: string | null
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'default' | 'positive' | 'negative'
-  showName?: boolean
-  firstNameOnly?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  name: null,
-  photoUrl: null,
-  size: 'md',
-  variant: 'default',
-  showName: false,
-  firstNameOnly: false
+<script setup>
+const props = defineProps({
+  name: { type: String, default: null },
+  photoUrl: { type: String, default: null },
+  size: { type: String, default: 'md' },
+  variant: { type: String, default: 'default' },
+  showName: { type: Boolean, default: false },
+  firstNameOnly: { type: Boolean, default: false }
 })
 
 const initials = computed(() => {

@@ -255,7 +255,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   middleware: ['auth'],
   ssr: false  // Disable SSR - Firebase auth only works on client
@@ -267,7 +267,7 @@ const groupStore = useGroupStore()
 
 const isEditing = ref(false)
 const saving = ref(false)
-const saveError = ref<string | null>(null)
+const saveError = ref(null)
 
 // Computed property to properly handle loading state
 // Only show loading while auth is initializing AND we don't have user data yet
@@ -306,7 +306,7 @@ const hasPaymentInfo = computed(() => {
   return paymentForm.accountNumber || paymentForm.alias || paymentForm.bankName
 })
 
-const getUserInitials = (name: string) => {
+const getUserInitials = (name) => {
   if (!name) return '??'
   const parts = name.split(' ').filter(Boolean)
   if (parts.length >= 2 && parts[0] && parts[1]) {

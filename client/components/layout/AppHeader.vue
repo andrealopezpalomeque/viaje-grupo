@@ -104,7 +104,7 @@
   </header>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconLocation from '~icons/mdi/map-marker'
 import IconPlus from '~icons/mdi/plus'
 import IconHome from '~icons/mdi/home'
@@ -118,12 +118,11 @@ const handleAddExpense = () => {
   openExpenseModal()
 }
 
-const handleGroupChange = (event: Event) => {
-  const target = event.target as HTMLSelectElement
-  groupStore.selectGroup(target.value)
+const handleGroupChange = (event) => {
+  groupStore.selectGroup(event.target.value)
 }
 
-const getUserInitials = (displayName: string | null) => {
+const getUserInitials = (displayName) => {
   if (!displayName) return 'U'
   const parts = String(displayName).trim().split(/\s+/).filter(Boolean)
   const first = parts[0]?.[0] ?? 'U'

@@ -40,18 +40,16 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconUsers from '~icons/mdi/account-group'
 import IconReceipt from '~icons/mdi/receipt-text-outline'
 import IconCurrency from '~icons/mdi/currency-usd'
 
-interface Props {
-  memberCount: number
-  expenseCount: number
-  totalSpent: number
-}
-
-const props = defineProps<Props>()
+const props = defineProps({
+  memberCount: { type: Number, required: true },
+  expenseCount: { type: Number, required: true },
+  totalSpent: { type: Number, required: true }
+})
 
 const totalSizeClass = computed(() => {
   if (props.totalSpent >= 100000) return 'text-[0.625rem] md:text-sm'

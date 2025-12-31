@@ -19,7 +19,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { isAuthenticated, firestoreUser, loading: authLoading } = useAuth()
 const expenseStore = useExpenseStore()
 const paymentStore = usePaymentStore()

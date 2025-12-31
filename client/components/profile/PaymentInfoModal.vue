@@ -91,21 +91,15 @@
   </Teleport>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconClose from '~icons/mdi/close'
 import IconCreditCard from '~icons/mdi/credit-card-outline'
 
-import type { User } from '~/types'
+const props = defineProps({
+  user: { type: Object, default: null }
+})
 
-interface Props {
-  user: User | null
-}
-
-const props = defineProps<Props>()
-
-defineEmits<{
-  (e: 'close'): void
-}>()
+defineEmits(['close'])
 
 const hasPaymentInfo = computed(() => {
   const info = props.user?.paymentInfo

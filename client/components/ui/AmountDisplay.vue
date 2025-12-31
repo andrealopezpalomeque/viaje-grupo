@@ -10,20 +10,13 @@
   </span>
 </template>
 
-<script setup lang="ts">
-interface Props {
-  amount: number
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
-  showSign?: boolean
-  colorCoded?: boolean
-  bold?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  size: 'md',
-  showSign: false,
-  colorCoded: false,
-  bold: false
+<script setup>
+const props = defineProps({
+  amount: { type: Number, required: true },
+  size: { type: String, default: 'md' },
+  showSign: { type: Boolean, default: false },
+  colorCoded: { type: Boolean, default: false },
+  bold: { type: Boolean, default: false }
 })
 
 const formattedAmount = computed(() => {

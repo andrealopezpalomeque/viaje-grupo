@@ -42,20 +42,16 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconCashIn from '~icons/mdi/cash-plus'
 
-import type { Settlement } from '~/types'
-
-interface Props {
-  credits: Settlement[]
-}
-
-defineProps<Props>()
+defineProps({
+  credits: { type: Array, required: true }
+})
 
 const userStore = useUserStore()
 
-const getUserName = (userId: string) => {
+const getUserName = (userId) => {
   return userStore.getUserById(userId)?.name || 'Usuario'
 }
 </script>

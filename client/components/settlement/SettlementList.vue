@@ -29,15 +29,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconSwapHorizontal from '~icons/mdi/swap-horizontal'
 import IconCheck from '~icons/mdi/check'
 
-import type { Settlement } from '~/types'
-
-interface Props {
-  settlements: Settlement[]
-}
-
-defineProps<Props>()
+defineProps({
+  settlements: { type: Array, required: true }
+})
 </script>

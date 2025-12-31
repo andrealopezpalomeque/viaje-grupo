@@ -21,25 +21,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconCurrencyUsd from '~icons/mdi/currency-usd'
 
-import type { Expense } from '~/types'
-
-interface Balance {
-  userId: string
-  paid: number
-  share: number
-  net: number
-}
-
-interface Props {
-  balances: Balance[]
-  currentUserId?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  currentUserId: ''
+const props = defineProps({
+  balances: { type: Array, required: true },
+  currentUserId: { type: String, default: '' }
 })
 
 const userStore = useUserStore()
@@ -51,17 +38,12 @@ const sortedBalances = computed(() => {
 })
 
 // Calculate expense breakdown for a user's balance
-const getBalanceBreakdown = (userId: string) => {
-  const breakdown: Array<{
-    expense: Expense
-    amount: number
-    paidBy: string
-    date: Date
-  }> = []
+const getBalanceBreakdown = (userId) => {
+  const breakdown = []
 
   expenseStore.expenses.forEach(expense => {
     // Determine who splits this expense
-    let splitUserIds: string[] = []
+    let splitUserIds = []
     if (expense.splitAmong && expense.splitAmong.length > 0) {
       splitUserIds = expense.splitAmong.filter(id =>
         userStore.users.some(u => u.id === id)

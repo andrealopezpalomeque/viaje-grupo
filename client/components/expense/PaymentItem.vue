@@ -42,16 +42,13 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconCash from '~icons/mdi/cash'
 import IconCheckCircle from '~icons/mdi/check-circle'
-import type { Payment } from '~/types'
 
-interface Props {
-  payment: Payment
-}
-
-const props = defineProps<Props>()
+const props = defineProps({
+  payment: { type: Object, required: true }
+})
 
 const userStore = useUserStore()
 

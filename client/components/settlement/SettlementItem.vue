@@ -257,7 +257,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconChevronRight from '~icons/mdi/chevron-right'
 import IconArrowRight from '~icons/mdi/arrow-right'
 import IconCreditCard from '~icons/mdi/credit-card'
@@ -266,14 +266,10 @@ import IconCash from '~icons/mdi/cash'
 import IconCheck from '~icons/mdi/check'
 import IconLoading from '~icons/mdi/loading'
 
-import type { Settlement, Expense } from '~/types'
-
-interface Props {
-  settlement: Settlement
-  index: number
-}
-
-const props = defineProps<Props>()
+const props = defineProps({
+  settlement: { type: Object, required: true },
+  index: { type: Number, required: true }
+})
 
 const userStore = useUserStore()
 const expenseStore = useExpenseStore()
@@ -286,7 +282,7 @@ const showPaymentConfirm = ref(false)
 const paymentAmount = ref(0)
 const isSubmitting = ref(false)
 const showSuccess = ref(false)
-const selectedExpenseIds = ref<Set<string>>(new Set())
+const selectedExpenseIds = ref(new Set())
 
 const debtor = computed(() => userStore.getUserById(props.settlement.fromUserId))
 const creditor = computed(() => userStore.getUserById(props.settlement.toUserId))
@@ -311,7 +307,7 @@ const toggleExpand = () => {
 }
 
 // Toggle an individual expense selection
-const toggleExpenseSelection = (expenseId: string) => {
+const toggleExpenseSelection = (expenseId) => {
   const newSet = new Set(selectedExpenseIds.value)
   if (newSet.has(expenseId)) {
     newSet.delete(expenseId)
@@ -343,7 +339,7 @@ const toggleAll = () => {
   }
 }
 
-const formatAmount = (amount: number) => {
+const formatAmount = (amount) => {
   return `$${amount.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
@@ -404,7 +400,7 @@ const confirmPayment = async () => {
 
 // Calculate expense breakdown for a settlement
 const breakdown = computed(() => {
-  const result: Array<{ expense: Expense; amount: number }> = []
+  const result = []
 
   expenseStore.expenses.forEach(expense => {
     // Only consider expenses paid by the creditor (toUserId)
@@ -412,7 +408,7 @@ const breakdown = computed(() => {
 
     // Determine who splits this expense
     // The payer is NOT auto-included - they must be explicitly listed
-    let splitUserIds: string[] = []
+    let splitUserIds = []
     if (expense.splitAmong && expense.splitAmong.length > 0) {
       splitUserIds = expense.splitAmong.filter(id =>
         userStore.users.some(u => u.id === id)

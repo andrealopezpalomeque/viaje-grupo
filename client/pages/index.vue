@@ -110,9 +110,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { User, Settlement, Expense } from '~/types'
-
+<script setup>
 definePageMeta({
   middleware: ['auth'],
   ssr: false  // Disable SSR - Firebase auth only works on client
@@ -176,12 +174,12 @@ const myBalance = computed(() => {
 })
 
 // My debts (settlements where I owe someone)
-const myDebts = computed<Settlement[]>(() => {
+const myDebts = computed(() => {
   return settlements.value.filter(s => s.fromUserId === currentUserId.value)
 })
 
 // My credits (settlements where someone owes me)
-const myCredits = computed<Settlement[]>(() => {
+const myCredits = computed(() => {
   return settlements.value.filter(s => s.toUserId === currentUserId.value)
 })
 
@@ -223,9 +221,9 @@ const myRecentActivity = computed(() => {
 
 // Payment info modal
 const showPaymentModal = ref(false)
-const paymentModalUser = ref<User | null>(null)
+const paymentModalUser = ref(null)
 
-const showPaymentInfo = (userId: string) => {
+const showPaymentInfo = (userId) => {
   const user = userStore.getUserById(userId)
   if (user) {
     paymentModalUser.value = user
@@ -240,14 +238,14 @@ const closePaymentModal = () => {
 
 // Delete expense
 const showDeleteConfirm = ref(false)
-const expenseToDelete = ref<Expense | null>(null)
+const expenseToDelete = ref(null)
 
 const deleteConfirmMessage = computed(() => {
   if (!expenseToDelete.value) return ''
   return `¿Estas seguro de que queres eliminar "${expenseToDelete.value.description}" por ${formatCurrency(expenseToDelete.value.amount)}? Esta accion no se puede deshacer.`
 })
 
-const confirmDeleteExpense = (expense: Expense) => {
+const confirmDeleteExpense = (expense) => {
   expenseToDelete.value = expense
   showDeleteConfirm.value = true
 }
@@ -265,7 +263,7 @@ const handleDeleteExpense = async () => {
 }
 
 // Edit expense
-const handleEditExpense = (expense: Expense) => {
+const handleEditExpense = (expense) => {
   openEditExpenseModal(expense)
 }
 </script>

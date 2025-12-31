@@ -165,11 +165,9 @@
   </Teleport>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconClose from '~icons/mdi/close'
 import { deleteField } from 'firebase/firestore'
-
-import type { ExpenseCategory } from '~/types'
 
 const { isExpenseModalOpen, closeExpenseModal, expenseModalMode, expenseToEdit } = useNavigationState()
 const { user, firestoreUser } = useAuth()
@@ -182,14 +180,14 @@ const isEditMode = computed(() => expenseModalMode.value === 'edit')
 const users = computed(() => userStore.users)
 
 const loading = ref(false)
-const error = ref<string | null>(null)
+const error = ref(null)
 
 const form = reactive({
-  amount: null as number | null,
+  amount: null,
   description: '',
-  category: 'general' as ExpenseCategory,
-  currency: 'ARS' as 'ARS' | 'USD' | 'EUR' | 'BRL',
-  participants: [] as string[]
+  category: 'general',
+  currency: 'ARS',
+  participants: []
 })
 
 // Watch for modal open in edit mode to populate form
@@ -197,7 +195,7 @@ watch(isOpen, (newVal) => {
   if (newVal && isEditMode.value && expenseToEdit.value) {
     const expense = expenseToEdit.value
     // If expense has original currency, use that
-    form.currency = (expense.originalCurrency as 'ARS' | 'USD' | 'EUR' | 'BRL') || 'ARS'
+    form.currency = expense.originalCurrency || 'ARS'
     form.amount = expense.originalAmount || expense.amount
     form.description = expense.description
     form.category = expense.category
@@ -212,9 +210,9 @@ const exchangeRates = {
   BRL: 260
 }
 
-const convertToARS = (amount: number, currency: string) => {
+const convertToARS = (amount, currency) => {
   if (currency === 'ARS') return amount
-  const rate = exchangeRates[currency as keyof typeof exchangeRates]
+  const rate = exchangeRates[currency]
   return rate ? Math.round(amount * rate) : amount
 }
 
@@ -277,7 +275,7 @@ const handleSubmit = async () => {
 
     if (isEditMode.value && expenseToEdit.value?.id) {
       // Update existing expense - build update object without undefined values
-      const updateData: Record<string, any> = {
+      const updateData = {
         amount: Math.round(amountInARS),
         description: form.description.trim(),
         category: form.category,

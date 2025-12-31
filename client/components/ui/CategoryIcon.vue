@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconFood from '~icons/mdi/silverware-fork-knife'
 import IconTransport from '~icons/mdi/car'
 import IconAccommodation from '~icons/mdi/bed'
@@ -18,15 +18,9 @@ import IconEntertainment from '~icons/mdi/party-popper'
 import IconShopping from '~icons/mdi/shopping'
 import IconGeneral from '~icons/mdi/file-document-outline'
 
-import type { ExpenseCategory } from '~/types'
-
-interface Props {
-  category: ExpenseCategory
-  size?: 'sm' | 'md' | 'lg'
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  size: 'md'
+const props = defineProps({
+  category: { type: String, required: true },
+  size: { type: String, default: 'md' }
 })
 
 const iconComponent = computed(() => {

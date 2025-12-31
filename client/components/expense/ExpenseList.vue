@@ -64,40 +64,22 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IconClipboardList from '~icons/mdi/clipboard-text-clock'
 import IconReceipt from '~icons/mdi/receipt-text-outline'
-import type { Expense, Payment } from '~/types'
 
-// Union type for the list
-type ActivityItem = Expense | Payment
-
-interface Props {
-  items: ActivityItem[]
-  title?: string
-  currentUserId?: string
-  showUserShare?: boolean
-  showCount?: boolean
-  showAddButton?: boolean
-  emptyMessage?: string
-  limit?: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  title: 'Actividad',
-  currentUserId: '',
-  showUserShare: false,
-  showCount: false,
-  showAddButton: false,
-  emptyMessage: 'No hay actividad',
-  limit: 5
+const props = defineProps({
+  items: { type: Array, required: true },
+  title: { type: String, default: 'Actividad' },
+  currentUserId: { type: String, default: '' },
+  showUserShare: { type: Boolean, default: false },
+  showCount: { type: Boolean, default: false },
+  showAddButton: { type: Boolean, default: false },
+  emptyMessage: { type: String, default: 'No hay actividad' },
+  limit: { type: Number, default: 5 }
 })
 
-defineEmits<{
-  (e: 'addExpense'): void
-  (e: 'editExpense', expense: Expense): void
-  (e: 'deleteExpense', expense: Expense): void
-}>()
+defineEmits(['addExpense', 'editExpense', 'deleteExpense'])
 
 const showAll = ref(false)
 
@@ -113,11 +95,11 @@ const displayedItems = computed(() => {
 })
 
 // Type guard
-const isExpense = (item: ActivityItem): item is Expense => {
+const isExpense = (item) => {
   return 'category' in item
 }
 
-const getKey = (item: ActivityItem) => {
+const getKey = (item) => {
   return isExpense(item) ? `exp-${item.id}` : `pay-${item.id}`
 }
 </script>
