@@ -170,7 +170,7 @@ function getWelcomeMessage(userName, groups = []) {
     groupInfo = `\n📍 Estás en los grupos: *${groupNames}*\nUsá /grupo para cambiar entre ellos.\n`
   }
 
-  return `¡Hola ${firstName}! 👋 Bienvenido a *Text the Check*
+  return `¡Hola ${firstName}! 👋 Bienvenido a *Text The Check*
 
 Soy tu bot para dividir gastos entre amigos.${groupInfo}
 

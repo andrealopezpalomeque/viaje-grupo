@@ -40,7 +40,7 @@ app.use('/api/whatsapp', whatsappRoutes)
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    name: 'Text the Check API',
+    name: 'Text The Check API',
     version: '1.0.0',
     status: 'running',
     endpoints: {
@@ -71,7 +71,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════╗
-║     🚀 Text the Check API Server       ║
+║     🚀 Text The Check API Server       ║
 ║                                        ║
 ║     Port: ${PORT}                        ║
 ║     Environment: ${process.env.NODE_ENV || 'development'}           ║

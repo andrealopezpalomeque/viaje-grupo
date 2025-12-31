@@ -1,6 +1,6 @@
-# Adding Groups to Text the Check
+# Adding Groups to Text The Check
 
-This guide explains how to create new groups and manage users in Text the Check.
+This guide explains how to create new groups and manage users in Text The Check.
 
 ---
 

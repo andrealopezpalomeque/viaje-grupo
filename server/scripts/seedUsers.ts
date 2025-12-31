@@ -251,7 +251,7 @@ async function updateExpenses(db: FirebaseFirestore.Firestore): Promise<number> 
 }
 
 async function main() {
-  console.log('\n=== Text the Check Seed Script ===\n')
+  console.log('\n=== Text The Check Seed Script ===\n')
 
   // Safety confirmation before destructive operation
   const confirmed = await confirmDestructiveAction()

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Google Authentication has been implemented in the Text the Check Nuxt.js client. This guide walks through enabling and configuring it.
+Google Authentication has been implemented in the Text The Check Nuxt.js client. This guide walks through enabling and configuring it.
 
 ## What Was Implemented
 
@@ -34,7 +34,7 @@ Google Authentication has been implemented in the Text the Check Nuxt.js client.
 3. Navigate to **Authentication** → **Sign-in method**
 4. Click on **Google** provider
 5. Click **Enable**
-6. Set **Project public-facing name**: Text the Check
+6. Set **Project public-facing name**: Text The Check
 7. Set **Project support email**: Your email
 8. Click **Save**
 

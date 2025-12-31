@@ -2,7 +2,7 @@
 
 **Last updated:** December 29, 2025
 
-This document explains how Text the Check calculates who owes whom.
+This document explains how Text The Check calculates who owes whom.
 
 ---
 

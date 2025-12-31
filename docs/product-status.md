@@ -1,4 +1,4 @@
-# Text the Check - Product Status
+# Text The Check - Product Status
 
 **Last updated:** December 30, 2025
 **Purpose:** Honest assessment for co-founders, investors, and collaborators
@@ -298,7 +298,7 @@
 │                              ↓                                  │
 │  Friends receive WhatsApp:                                      │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │ "Juan te agregó a 'Beach Trip 2026' en Text the Check.  │    │
+│  │ "Juan te agregó a 'Beach Trip 2026' en Text The Check.  │    │
 │  │  Guardá este número para enviar gastos."                │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                              ↓                                  │
@@ -319,7 +319,7 @@
 
 ## 📊 Comparison: Us vs. Competition
 
-| Friction Point | Splitwise | Text the Check (Public) | Text the Check (Now) |
+| Friction Point | Splitwise | Text The Check (Public) | Text The Check (Now) |
 |----------------|-----------|-------------------------|----------------------|
 | App download | Everyone | Nobody | Nobody |
 | Account creation | Everyone | 1 person (organizer) | Developer |

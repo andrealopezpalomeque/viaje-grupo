@@ -1,4 +1,4 @@
-# User Flow Scenarios - Text the Check
+# User Flow Scenarios - Text The Check
 
 **Last updated:** December 30, 2025
 

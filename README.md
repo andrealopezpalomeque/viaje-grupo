@@ -1,4 +1,4 @@
-# Text the Check
+# Text The Check
 
 > Collaborative expense tracking via WhatsApp
 

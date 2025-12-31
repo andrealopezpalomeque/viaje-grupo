@@ -1,6 +1,6 @@
 /**
  * WhatsApp Bot Command Service
- * Handles all slash commands for the Text the Check bot
+ * Handles all slash commands for the Text The Check bot
  */
 
 import { getExpensesByGroup, getAllExpensesByGroup, getExpenseById, deleteExpense } from './expenseService.js'
@@ -113,7 +113,7 @@ setInterval(cleanupExpiredPendingStates, 60 * 1000)
  * Format help message
  */
 export function getHelpMessage(): string {
-  return `📖 *Cómo usar Text the Check*
+  return `📖 *Cómo usar Text The Check*
 
 💬 *Contame qué pagaste:*
 "Puse 150 en la pizza"

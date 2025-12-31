@@ -1,4 +1,4 @@
-# Text the Check - Production Deployment Checklist
+# Text The Check - Production Deployment Checklist
 
 ## Overview
 

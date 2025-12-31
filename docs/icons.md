@@ -2,7 +2,7 @@
 
 ## Overview
 
-Text the Check uses **unplugin-icons** for all icons in the client application. This provides a consistent, performant way to use icons from various icon sets.
+Text The Check uses **unplugin-icons** for all icons in the client application. This provides a consistent, performant way to use icons from various icon sets.
 
 ## Setup
 

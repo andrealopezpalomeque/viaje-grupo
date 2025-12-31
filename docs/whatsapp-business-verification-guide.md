@@ -89,8 +89,8 @@ Before starting, gather these:
 ### 2.2 Enter Business Information
 
 ```
-Business name:        Text the Check
-                      (or "Text the Check by [Your Name]")
+Business name:        Text The Check
+                      (or "Text The Check by [Your Name]")
 
 Your name:            [Your legal name as on ID]
 
@@ -419,4 +419,4 @@ Before Brazil Trip 2025 (~3 weeks from Dec 30, 2024)
 ---
 
 **Last Updated:** December 31, 2024  
-**Author:** Claude (for Text the Check project)
+**Author:** Claude (for Text The Check project)

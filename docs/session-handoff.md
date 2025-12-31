@@ -1,4 +1,4 @@
-# Text the Check - Session Handoff Document
+# Text The Check - Session Handoff Document
 
 **Last updated:** December 30, 2025
 **Purpose:** Context document to start new Claude conversations with full project knowledge
@@ -9,7 +9,7 @@
 
 Paste this at the start of any new Claude conversation:
 
-> I'm working on **Text the Check**, a collaborative expense tracking app where users log expenses via WhatsApp and view balances on a web dashboard.
+> I'm working on **Text The Check**, a collaborative expense tracking app where users log expenses via WhatsApp and view balances on a web dashboard.
 >
 > **Tech Stack:**
 > - `/client`: Nuxt.js + Tailwind + Pinia (Firebase Hosting)

@@ -1,4 +1,4 @@
-# Text the Check - Project Plan
+# Text The Check - Project Plan
 
 > Collaborative expense tracking platform with WhatsApp chatbot and Nuxt.js dashboard
 
@@ -326,7 +326,7 @@ curl -X POST "https://graph.facebook.com/v18.0/YOUR_WABA_ID/subscribed_apps" \
 
 When starting a new Claude Code session, paste this context:
 
-> I'm working on Text the Check, a collaborative expense tracking platform.
+> I'm working on Text The Check, a collaborative expense tracking platform.
 > - `/client`: Nuxt.js + Tailwind frontend
 > - `/server`: Node.js + Express backend with WhatsApp integration
 > - Database: Firebase Firestore

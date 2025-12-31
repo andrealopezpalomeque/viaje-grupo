@@ -1,4 +1,4 @@
-# Text the Check - Product Overview
+# Text The Check - Product Overview
 
 ## ⚠️ Current Status: Closed Beta
 
@@ -27,7 +27,7 @@ The result: friction kills adoption. People revert to messy spreadsheets, WhatsA
 
 ## The Solution
 
-**Text the Check** takes a different approach:
+**Text The Check** takes a different approach:
 
 > Log expenses where you're already coordinating — WhatsApp.
 
@@ -118,7 +118,7 @@ When it's time to settle, the dashboard shows who pays whom, with a copy button 
 - ❌ Most are English-first, US-focused
 - ❌ Don't understand LATAM payment culture (CBU, alias, MP)
 
-### Text the Check
+### Text The Check
 - ✅ WhatsApp native entry
 - ✅ Real-time web dashboard
 - ✅ Spanish-first experience

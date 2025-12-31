@@ -4,7 +4,7 @@
       <!-- Logo/Title Card -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Text the Check
+          Text The Check
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
           Seguimiento colaborativo de gastos
@@ -86,7 +86,7 @@
 
       <!-- Footer -->
       <p class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-        Text the Check
+        Text The Check
       </p>
     </div>
   </div>
