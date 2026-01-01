@@ -95,9 +95,9 @@ const handleTabClick = (tab) => {
   if (route.path === '/') {
     switchTab(tab)
   } else {
-    // Navigate to dashboard and switch tab
-    navigateTo('/')
-    switchTab(tab)
+    // Navigate to dashboard with tab in URL
+    const query = tab === 'inicio' ? {} : { tab }
+    navigateTo({ path: '/', query })
   }
 }
 

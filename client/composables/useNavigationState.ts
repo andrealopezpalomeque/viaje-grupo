@@ -9,8 +9,51 @@ export const useNavigationState = () => {
   const expenseModalMode = useState<ExpenseModalMode>('expense-modal-mode', () => 'create')
   const expenseToEdit = useState<Expense | null>('expense-to-edit', () => null)
 
+  // URL sync initialized flag (per composable instance tracking)
+  const urlSyncInitialized = useState<boolean>('nav-url-sync-initialized', () => false)
+
+  const route = useRoute()
+  const router = useRouter()
+
+  // Initialize tab from URL query param (only once)
+  if (import.meta.client && !urlSyncInitialized.value) {
+    const tabFromUrl = route.query.tab
+    if (tabFromUrl === 'grupo' || tabFromUrl === 'inicio') {
+      activeTab.value = tabFromUrl
+    }
+    urlSyncInitialized.value = true
+  }
+
+  // Watch for URL changes (e.g., browser back/forward button)
+  if (import.meta.client) {
+    watch(() => route.query.tab, (newTab) => {
+      // Only update if on dashboard and tab is valid
+      if (route.path === '/') {
+        if (newTab === 'grupo') {
+          activeTab.value = 'grupo'
+        } else if (newTab === 'inicio' || newTab === undefined) {
+          activeTab.value = 'inicio'
+        }
+      }
+    })
+  }
+
   const switchTab = (tab: TabType) => {
     activeTab.value = tab
+
+    // Update URL (only on client and when on dashboard)
+    if (import.meta.client && route.path === '/') {
+      const query = { ...route.query }
+
+      if (tab === 'inicio') {
+        // Remove tab param for default tab (clean URL)
+        delete query.tab
+      } else {
+        query.tab = tab
+      }
+
+      router.replace({ query })
+    }
   }
 
   const openExpenseModal = () => {
