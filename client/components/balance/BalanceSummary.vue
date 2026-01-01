@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 text-center mb-2">
+    <h2 class="font-display text-sm font-semibold text-gray-500 dark:text-gray-400 text-center mb-2">
       Tu Balance
     </h2>
 

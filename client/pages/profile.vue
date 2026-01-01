@@ -12,7 +12,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </NuxtLink>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 class="font-display text-2xl font-bold text-gray-900 dark:text-white">
             Mi Perfil
           </h1>
         </div>
@@ -49,7 +49,7 @@
         <!-- User Info Card -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
           <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 class="font-display text-lg font-semibold text-gray-900 dark:text-white">
               Información personal
             </h2>
           </div>
@@ -109,7 +109,7 @@
         <!-- Payment Info Card -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 class="font-display text-lg font-semibold text-gray-900 dark:text-white">
               Información de pago
             </h2>
             <button

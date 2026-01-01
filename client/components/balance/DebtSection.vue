@@ -2,7 +2,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
     <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
       <IconCashOut class="w-5 h-5 text-negative-500" />
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+      <h3 class="font-display text-base font-semibold text-gray-900 dark:text-white">
         Tenes que pagar
       </h3>
     </div>

@@ -12,8 +12,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'Roboto', 'system-ui', 'sans-serif'],
-        mono: ['Monaco', 'Courier New', 'monospace']
+        display: ['Poppins', 'sans-serif'],  // For app name & headings
+        sans: ['Inter', 'Roboto', 'system-ui', 'sans-serif'],  // For body text (default)
+        mono: ['Monaco', 'Courier New', 'monospace']  // For numbers (keep existing)
       },
       colors: {
         // Color coding as per requirements
