@@ -28,14 +28,37 @@
             <!-- Balance Summary -->
             <BalanceSummary :balance="myBalance" />
 
-            <!-- Debts Section (people I owe) -->
-            <DebtSection
-              :debts="myDebts"
-              @show-payment-info="showPaymentInfo"
-            />
+            <!-- When simplification is ON, show redirect message -->
+            <div v-if="useSimplifiedSettlements" class="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4 text-center">
+              <div class="text-blue-600 dark:text-blue-400 mb-2">
+                <IconCalculator class="w-8 h-8 mx-auto" />
+              </div>
+              <p class="text-sm text-blue-800 dark:text-blue-300 font-medium mb-1">
+                Las deudas estan simplificadas
+              </p>
+              <p class="text-xs text-blue-600 dark:text-blue-400 mb-3">
+                Las transferencias se optimizaron para minimizar pagos.
+                Mira la pestaña "Grupo" para ver quien paga a quien.
+              </p>
+              <button
+                @click="switchTab('grupo')"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Ver en Grupo
+              </button>
+            </div>
 
-            <!-- Credits Section (people who owe me) -->
-            <CreditSection :credits="myCredits" />
+            <!-- When simplification is OFF, show normal debt lists -->
+            <template v-else>
+              <!-- Debts Section (people I owe) -->
+              <DebtSection
+                :debts="myDebts"
+                @show-payment-info="showPaymentInfo"
+              />
+
+              <!-- Credits Section (people who owe me) -->
+              <CreditSection :credits="myCredits" />
+            </template>
 
             <!-- My Recent Activity -->
             <ExpenseList
@@ -116,6 +139,8 @@
 </template>
 
 <script setup>
+import IconCalculator from '~icons/mdi/calculator'
+
 definePageMeta({
   middleware: ['auth'],
   ssr: false  // Disable SSR - Firebase auth only works on client
@@ -126,7 +151,7 @@ const expenseStore = useExpenseStore()
 const paymentStore = usePaymentStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
-const { activeTab, openExpenseModal, openEditExpenseModal } = useNavigationState()
+const { activeTab, switchTab, openExpenseModal, openEditExpenseModal } = useNavigationState()
 
 // Start with loading = true, only set to false when we KNOW data is ready
 // This prevents any flash of empty content during hydration

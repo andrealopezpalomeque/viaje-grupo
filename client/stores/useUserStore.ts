@@ -156,14 +156,15 @@ export const useUserStore = defineStore('user', {
         }
       })
 
-      // Convert map to array
+      // Convert map to array with rounded values for consistency
       return this.users.map(user => {
         const data = balances.get(user.id) || { paid: 0, share: 0, paymentAdjustment: 0 }
+        const rawNet = data.paid - data.share + data.paymentAdjustment
         return {
           userId: user.id,
-          paid: data.paid,
-          share: data.share,
-          net: data.paid - data.share + data.paymentAdjustment
+          paid: Math.round(data.paid),
+          share: Math.round(data.share),
+          net: Math.round(rawNet)
         }
       })
     },
@@ -294,9 +295,10 @@ export const useUserStore = defineStore('user', {
       })
 
       // Convert debt graph to settlement list
+      // Only include settlements > $1 to filter out tiny amounts
       debtGraph.forEach((creditors, debtorId) => {
         creditors.forEach((amount, creditorId) => {
-          if (amount > 0.01) { // Only meaningful debts
+          if (amount > 1) {
             settlements.push({
               fromUserId: debtorId,
               toUserId: creditorId,
@@ -320,13 +322,14 @@ export const useUserStore = defineStore('user', {
       const settlements: Settlement[] = []
 
       // Separate into debtors (negative net) and creditors (positive net)
+      // Use threshold of 1 to filter out tiny amounts (< $1)
       const debtors = balances
-        .filter(b => b.net < -0.01)
+        .filter(b => b.net < -1)
         .map(b => ({ id: b.userId, amount: Math.abs(b.net) }))
         .sort((a, b) => b.amount - a.amount)
 
       const creditors = balances
-        .filter(b => b.net > 0.01)
+        .filter(b => b.net > 1)
         .map(b => ({ id: b.userId, amount: b.net }))
         .sort((a, b) => b.amount - a.amount)
 
@@ -348,7 +351,8 @@ export const useUserStore = defineStore('user', {
         // Settlement amount is the minimum of what debtor owes and creditor is owed
         const amount = Math.min(debtor.amount, creditor.amount)
 
-        if (amount > 0.01) {
+        // Only include settlements > $1 to filter out tiny amounts
+        if (amount > 1) {
           settlements.push({
             fromUserId: debtor.id,
             toUserId: creditor.id,
@@ -361,8 +365,8 @@ export const useUserStore = defineStore('user', {
         creditor.amount -= amount
 
         // Move to next debtor/creditor if fully settled
-        if (debtor.amount < 0.01) i++
-        if (creditor.amount < 0.01) j++
+        if (debtor.amount < 1) i++
+        if (creditor.amount < 1) j++
       }
 
       return settlements.sort((a, b) => b.amount - a.amount)
