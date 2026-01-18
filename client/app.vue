@@ -1,26 +1,26 @@
 <template>
   <div>
-    <div v-show="!authLoading">
-      <NuxtPage />
+    <!-- Loading state - always visible during auth init -->
+    <div
+      v-if="authLoading"
+      class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"
+    >
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-500 dark:text-gray-400">Cargando...</p>
+      </div>
     </div>
 
-    <!-- Global loading overlay while auth initializes - ClientOnly to prevent SSR hydration issues -->
-    <ClientOnly>
-      <div
-        v-if="authLoading"
-        class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center"
-      >
-        <div class="text-center">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
-          <p class="text-gray-600 dark:text-gray-400">Cargando...</p>
-        </div>
-      </div>
-    </ClientOnly>
+    <!-- Account linking screen -->
+    <AuthAccountLinking v-else-if="needsAccountLinking" />
+
+    <!-- Main app content -->
+    <NuxtPage v-else />
   </div>
 </template>
 
 <script setup>
-const { isAuthenticated, firestoreUser, loading: authLoading } = useAuth()
+const { isAuthenticated, firestoreUser, loading: authLoading, needsAccountLinking } = useAuth()
 const expenseStore = useExpenseStore()
 const paymentStore = usePaymentStore()
 const userStore = useUserStore()

@@ -6,21 +6,22 @@ export default defineNuxtRouteMiddleware((to) => {
   }
 
   // Client-side auth check
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, needsAccountLinking } = useAuth()
 
   // While loading, don't redirect - let the page show loading state
   if (loading.value) {
     return
   }
 
+  // If needs account linking, allow navigation (app.vue will show linking screen)
+  if (needsAccountLinking.value) {
+    return
+  }
+
   // After auth is loaded, check authentication
   // If not authenticated and trying to access a protected route, redirect to login
-  // Use direct window.location.href for a true full page reload
-  // This ensures the pre-rendered login page with styles is fetched fresh
   if (!isAuthenticated.value && to.path !== '/login') {
-    window.location.href = '/login'
-    // Abort the current navigation
-    return abortNavigation()
+    return navigateTo('/login')
   }
 
   // If authenticated and trying to access login page, redirect to home

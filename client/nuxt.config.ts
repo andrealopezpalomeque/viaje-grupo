@@ -67,12 +67,6 @@ export default defineNuxtConfig({
     }
   },
 
-  // Route rules for static generation
-  // Don't prerender root "/" - it requires auth check
-  // The SPA fallback (200.html) will handle it client-side
-  routeRules: {
-    '/': { prerender: false },
-    '/login': { prerender: true },
-    '/profile': { prerender: true }
-  }
+  // All pages are SPA - handled client-side with Firebase Auth
+  ssr: false
 })
