@@ -34,7 +34,7 @@
           totalSizeClass
         ]"
       >
-        {{ formatCurrency(totalSpent) }}
+        {{ formatCurrency(Math.round(totalSpent)) }}
       </p>
     </div>
   </div>
@@ -52,9 +52,8 @@ const props = defineProps({
 })
 
 const totalSizeClass = computed(() => {
-  if (props.totalSpent >= 100000) return 'text-[0.625rem] md:text-sm'
-  if (props.totalSpent >= 10000) return 'text-xs md:text-base'
-  if (props.totalSpent >= 1000) return 'text-sm md:text-lg'
+  if (props.totalSpent >= 1000000) return 'text-sm md:text-lg'
+  if (props.totalSpent >= 100000) return 'text-base md:text-lg'
   return 'text-lg'
 })
 </script>

@@ -47,7 +47,7 @@ service cloud.firestore {
         && data.description is string
         && data.description.size() >= 1
         && data.description.size() <= 500  // Max 500 characters
-        && data.category in ['food', 'transport', 'accommodation', 'entertainment', 'general']
+        && data.category in ['food', 'transport', 'accommodation', 'entertainment', 'shopping', 'general']
         && data.originalInput is string
         && data.timestamp is timestamp
         // Optional fields validation
