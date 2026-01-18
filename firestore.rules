@@ -160,18 +160,15 @@ service cloud.firestore {
                     && request.resource.data.authUid == request.auth.uid
                     && isValidExpenseCreate();
 
-      // Users can only update their own expenses
-      // Uses lookup to support both WhatsApp and Dashboard-created expenses
+      // Any authenticated user can update expenses (collaborative editing)
+      // This allows group members to fix/edit any expense in their group
       allow update: if isAuthenticated()
-                    && isItemOwnerByLookup(resource.data.userId)
                     && isValidExpenseUpdate()
                     // Prevent changing the owner of an expense
                     && request.resource.data.userId == resource.data.userId;
 
-      // Users can only delete their own expenses
-      // Uses lookup to support both WhatsApp and Dashboard-created expenses
-      allow delete: if isAuthenticated()
-                    && isItemOwnerByLookup(resource.data.userId);
+      // Any authenticated user can delete expenses (collaborative management)
+      allow delete: if isAuthenticated();
     }
 
     // ============================================
