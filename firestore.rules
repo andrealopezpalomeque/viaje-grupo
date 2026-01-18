@@ -34,8 +34,8 @@ service cloud.firestore {
       return !('authUid' in resource.data) || resource.data.authUid == request.auth.uid;
     }
 
-    // Validate expense data structure and constraints
-    function isValidExpense() {
+    // Validate expense data structure and constraints for CREATE
+    function isValidExpenseCreate() {
       let data = request.resource.data;
 
       return data.keys().hasAll(['userId', 'userName', 'authUid', 'amount', 'description', 'category', 'timestamp', 'originalInput'])
@@ -51,6 +51,29 @@ service cloud.firestore {
         && data.originalInput is string
         && data.timestamp is timestamp
         // Optional fields validation
+        && (!data.keys().hasAny(['originalAmount']) || data.originalAmount is number)
+        && (!data.keys().hasAny(['originalCurrency']) || data.originalCurrency is string)
+        && (!data.keys().hasAny(['splitAmong']) || data.splitAmong is list);
+    }
+
+    // Validate expense data structure and constraints for UPDATE
+    // More lenient: authUid and originalInput are optional (WhatsApp-created expenses may not have them)
+    function isValidExpenseUpdate() {
+      let data = request.resource.data;
+
+      return data.keys().hasAll(['userId', 'userName', 'amount', 'description', 'category', 'timestamp'])
+        && data.userId is string
+        && data.userName is string
+        && data.amount is number
+        && data.amount > 0  // Amount must be positive
+        && data.description is string
+        && data.description.size() >= 1
+        && data.description.size() <= 500  // Max 500 characters
+        && data.category in ['food', 'transport', 'accommodation', 'entertainment', 'shopping', 'general']
+        && data.timestamp is timestamp
+        // Optional fields validation
+        && (!data.keys().hasAny(['authUid']) || data.authUid is string)
+        && (!data.keys().hasAny(['originalInput']) || data.originalInput is string)
         && (!data.keys().hasAny(['originalAmount']) || data.originalAmount is number)
         && (!data.keys().hasAny(['originalCurrency']) || data.originalCurrency is string)
         && (!data.keys().hasAny(['splitAmong']) || data.splitAmong is list);
@@ -135,13 +158,13 @@ service cloud.firestore {
       // Note: WhatsApp-created expenses bypass rules (Admin SDK), so this only applies to Dashboard
       allow create: if isAuthenticated()
                     && request.resource.data.authUid == request.auth.uid
-                    && isValidExpense();
+                    && isValidExpenseCreate();
 
       // Users can only update their own expenses
       // Uses lookup to support both WhatsApp and Dashboard-created expenses
       allow update: if isAuthenticated()
                     && isItemOwnerByLookup(resource.data.userId)
-                    && isValidExpense()
+                    && isValidExpenseUpdate()
                     // Prevent changing the owner of an expense
                     && request.resource.data.userId == resource.data.userId;
 
