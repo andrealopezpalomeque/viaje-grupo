@@ -97,18 +97,26 @@ definePageMeta({
   middleware: ['auth']
 })
 
-const { signInWithGoogle, error: authError, isAuthenticated } = useAuth()
-const router = useRouter()
+const { signInWithGoogle, error: authError, isAuthenticated, loading: authLoading } = useAuth()
 
 // Track if we're actively signing in (completely separate from auth loading)
 // This ensures the button is never disabled during initial page load
 const isSigningIn = ref(false)
 
+// Redirect authenticated users to home
+// Uses navigateTo with replace to prevent back button issues
+const redirectIfAuthenticated = () => {
+  if (isAuthenticated.value) {
+    navigateTo('/', { replace: true })
+  }
+}
+
 const handleGoogleSignIn = async () => {
   isSigningIn.value = true
   try {
     await signInWithGoogle()
-    router.push('/')
+    // Use navigateTo with replace for consistent behavior
+    navigateTo('/', { replace: true })
   } catch (error) {
     // Error is already set in useAuth
   } finally {
@@ -116,10 +124,20 @@ const handleGoogleSignIn = async () => {
   }
 }
 
-// Watch for auth state changes (handles redirect flow and session restoration)
+// Watch for auth state changes - handles when auth loads and user is already authenticated
+// This catches the case when user opens /login in a new tab while already logged in
 watch(isAuthenticated, (authenticated) => {
   if (authenticated) {
-    router.push('/')
+    navigateTo('/', { replace: true })
   }
-}, { immediate: true })
+})
+
+// Also check on mount for immediate redirect
+// This handles cases where the watch might miss the initial state
+onMounted(() => {
+  // If auth is already loaded and user is authenticated, redirect immediately
+  if (!authLoading.value && isAuthenticated.value) {
+    navigateTo('/', { replace: true })
+  }
+})
 </script>

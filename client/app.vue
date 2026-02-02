@@ -21,6 +21,7 @@
 
 <script setup>
 const { isAuthenticated, firestoreUser, loading: authLoading } = useAuth()
+const route = useRoute()
 const expenseStore = useExpenseStore()
 const paymentStore = usePaymentStore()
 const userStore = useUserStore()
@@ -44,6 +45,20 @@ const initializeData = async () => {
   }
 }
 
+// SECURITY: Watch for auth loading to complete and enforce access control
+// This catches cases where the middleware allowed access during loading
+watch(authLoading, (loading) => {
+  if (!loading) {
+    // Auth has finished loading - enforce access control
+    const currentPath = route.path
+
+    if (!isAuthenticated.value && currentPath !== '/login') {
+      // User is not authenticated and on a protected route - redirect to login
+      window.location.href = '/login'
+    }
+  }
+})
+
 // Watch for auth changes
 watch(isAuthenticated, async (authenticated) => {
   if (authenticated) {
@@ -53,6 +68,11 @@ watch(isAuthenticated, async (authenticated) => {
     expenseStore.stopListeners()
     paymentStore.stopListeners()
     groupStore.clearGroups()
+
+    // If not on login page, redirect to login
+    if (route.path !== '/login') {
+      window.location.href = '/login'
+    }
   }
 }, { immediate: true })
 
