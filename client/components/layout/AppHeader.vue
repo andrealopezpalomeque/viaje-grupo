@@ -33,7 +33,7 @@
           <!-- Mobile Report Button (inline with group name, only show with 3+ expenses) -->
           <NuxtLink
             v-if="showReportButton"
-            to="/reporte"
+            to="/report"
             class="md:hidden inline-flex items-center gap-1 ml-2 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
           >
             <IconChartBox class="w-3.5 h-3.5" />
@@ -75,7 +75,7 @@
         <!-- Report Button (only show with 3+ expenses) -->
         <NuxtLink
           v-if="showReportButton"
-          to="/reporte"
+          to="/report"
           class="flex items-center gap-1.5 px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
           title="Ver reporte del viaje"
         >
