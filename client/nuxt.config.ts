@@ -68,11 +68,11 @@ export default defineNuxtConfig({
   },
 
   // Route rules for static generation
-  // Don't prerender root "/" - it requires auth check
-  // The SPA fallback (200.html) will handle it client-side
+  // Auth-protected pages use ssr: false and shouldn't be prerendered
+  // The SPA fallback (200.html) will handle client-side routing
   routeRules: {
     '/': { prerender: false },
-    '/login': { prerender: true },
-    '/profile': { prerender: true }
+    '/login': { prerender: false },
+    '/profile': { prerender: false }
   }
 })
