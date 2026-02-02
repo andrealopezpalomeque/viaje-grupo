@@ -108,12 +108,18 @@ const handleGoogleSignIn = async () => {
   isSigningIn.value = true
   try {
     await signInWithGoogle()
-    // Redirect to home page after successful login
     router.push('/')
   } catch (error) {
-    console.error('Login failed:', error)
+    // Error is already set in useAuth
   } finally {
     isSigningIn.value = false
   }
 }
+
+// Watch for auth state changes (handles redirect flow and session restoration)
+watch(isAuthenticated, (authenticated) => {
+  if (authenticated) {
+    router.push('/')
+  }
+}, { immediate: true })
 </script>

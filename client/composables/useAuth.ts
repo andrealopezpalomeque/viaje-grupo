@@ -23,6 +23,9 @@ interface AuthenticatedUser {
   firestoreUser: User
 }
 
+// Track if auth has been initialized (outside of reactive state to prevent multiple inits)
+let authInitialized = false
+
 export const useAuth = () => {
   const { $auth, $db } = useNuxtApp()
   const auth = $auth as Auth | undefined
@@ -134,7 +137,11 @@ export const useAuth = () => {
   // Initialize auth state listener
   // Returns a promise that resolves when the first auth state is determined
   const initAuth = (): Promise<void> => {
-    loading.value = true
+    // Prevent multiple initializations
+    if (authInitialized) {
+      return Promise.resolve()
+    }
+    authInitialized = true
 
     return new Promise((resolve) => {
       try {
@@ -185,6 +192,12 @@ export const useAuth = () => {
 
     try {
       const provider = new GoogleAuthProvider()
+
+      // Force account selection (prevents auto-selecting cached account)
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      })
+
       const result = await signInWithPopup(requireAuth(), provider)
       const firebaseUser = result.user
 
