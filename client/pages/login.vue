@@ -3,7 +3,7 @@
     <div class="max-w-md w-full">
       <!-- Logo/Title Card -->
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 class="font-display text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Text The Check
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
@@ -32,7 +32,7 @@
         <!-- Login Card - Only show if auth is loaded AND user is NOT authenticated -->
         <div v-else class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
           <div class="text-center mb-6">
-            <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h2 class="font-display text-2xl font-semibold text-gray-900 dark:text-white mb-2">
               Iniciar Sesión
             </h2>
             <p class="text-gray-600 dark:text-gray-400 text-sm">
