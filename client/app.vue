@@ -48,6 +48,9 @@ const initializeData = async () => {
 // SECURITY: Watch for auth loading to complete and enforce access control
 // This catches cases where the middleware allowed access during loading
 watch(authLoading, (loading) => {
+  // Only run on client side
+  if (import.meta.server) return
+
   if (!loading) {
     // Auth has finished loading - enforce access control
     const currentPath = route.path
@@ -69,8 +72,8 @@ watch(isAuthenticated, async (authenticated) => {
     paymentStore.stopListeners()
     groupStore.clearGroups()
 
-    // If not on login page, redirect to login
-    if (route.path !== '/login') {
+    // Only redirect on client side, and only if not on login page
+    if (import.meta.client && route.path !== '/login') {
       window.location.href = '/login'
     }
   }

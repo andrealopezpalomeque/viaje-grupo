@@ -11,13 +11,15 @@
         </p>
       </div>
 
-      <!-- Show loading state if authenticated (while redirecting) -->
-      <div v-if="isAuthenticated" class="text-center py-12">
+      <!-- Show loading state while auth is initializing OR if authenticated (redirecting) -->
+      <div v-if="authLoading || isAuthenticated" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mb-4"></div>
-        <p class="text-gray-600 dark:text-gray-400">Redirigiendo...</p>
+        <p class="text-gray-600 dark:text-gray-400">
+          {{ isAuthenticated ? 'Redirigiendo...' : 'Cargando...' }}
+        </p>
       </div>
 
-      <!-- Login Card - Only show if NOT authenticated -->
+      <!-- Login Card - Only show if auth is loaded AND user is NOT authenticated -->
       <div v-else class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         <div class="text-center mb-6">
           <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
