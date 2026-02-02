@@ -1,11 +1,11 @@
 <template>
   <header class="mb-6">
     <div class="flex items-center justify-between">
-      <div>
+      <div class="flex-1">
         <h1 class="font-display text-2xl font-bold text-gray-900 dark:text-white">
           Text The Check
         </h1>
-        <!-- Group Selector -->
+        <!-- Group Selector with Report Button -->
         <div class="mt-1 flex items-center gap-2">
           <IconLocation class="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <select
@@ -29,6 +29,16 @@
           >
             {{ groupStore.selectedGroup?.name || 'Cargando...' }}
           </span>
+
+          <!-- Mobile Report Button (inline with group name, only show with 3+ expenses) -->
+          <NuxtLink
+            v-if="showReportButton"
+            to="/reporte"
+            class="md:hidden inline-flex items-center gap-1 ml-2 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
+          >
+            <IconChartBox class="w-3.5 h-3.5" />
+            <span>Reporte</span>
+          </NuxtLink>
         </div>
       </div>
 
@@ -61,6 +71,17 @@
             <span>Grupo</span>
           </button>
         </nav>
+
+        <!-- Report Button (only show with 3+ expenses) -->
+        <NuxtLink
+          v-if="showReportButton"
+          to="/reporte"
+          class="flex items-center gap-1.5 px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+          title="Ver reporte del viaje"
+        >
+          <IconChartBox class="w-5 h-5" />
+          <span>Reporte</span>
+        </NuxtLink>
         <!-- Add Expense Button -->
         <button
           @click="handleAddExpense"
@@ -109,10 +130,15 @@ import IconLocation from '~icons/mdi/map-marker'
 import IconPlus from '~icons/mdi/plus'
 import IconHome from '~icons/mdi/home'
 import IconGroup from '~icons/mdi/account-group'
+import IconChartBox from '~icons/mdi/chart-box'
 
 const { user } = useAuth()
 const groupStore = useGroupStore()
+const expenseStore = useExpenseStore()
 const { activeTab, switchTab, openExpenseModal } = useNavigationState()
+
+// Only show report button when there are 3+ expenses (meaningful data for a report)
+const showReportButton = computed(() => expenseStore.expenses.length >= 3)
 
 const handleAddExpense = () => {
   openExpenseModal()

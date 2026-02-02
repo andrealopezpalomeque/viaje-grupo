@@ -107,15 +107,6 @@
               @edit-expense="handleEditExpense"
               @delete-expense="confirmDeleteExpense"
             />
-
-            <!-- Trip Report Link -->
-            <NuxtLink
-              to="/reporte"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors mt-4"
-            >
-              <IconChartBar class="w-5 h-5" />
-              Ver Reporte del Viaje
-            </NuxtLink>
           </div>
         </div>
       </ClientOnly>
@@ -149,7 +140,6 @@
 
 <script setup>
 import IconCalculator from '~icons/mdi/calculator'
-import IconChartBar from '~icons/mdi/chart-bar'
 
 definePageMeta({
   middleware: ['auth'],
